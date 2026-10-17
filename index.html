@@ -23,7 +23,7 @@ h3{margin:0;font:600 15px var(--head);letter-spacing:.1em;color:var(--dim);text-
 .scroll{overflow-x:auto;min-width:0}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 th{font:600 13px var(--head);letter-spacing:.1em;color:var(--gold);text-transform:uppercase;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:3px 6px;border-bottom:1px solid #222228;vertical-align:top;font-size:12.5px}td.num{text-align:right}td.wrap{white-space:normal;overflow-wrap:anywhere;max-width:460px}
+td{padding:3px 6px;border-bottom:1px solid #222228;vertical-align:top;font-size:12.5px}td.num{text-align:right}td.x{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px;cursor:pointer}td.x.open{white-space:normal;overflow-wrap:anywhere}td{white-space:nowrap}
 tr.click{cursor:pointer}tr.click:hover td{background:#232329}tr.sel td{background:#1d2a31}
 .chip{display:inline-block;padding:0 7px;border-radius:9px;border:1px solid currentColor;font-size:11px;white-space:nowrap}
 .who b{font-weight:600}.who .nm{color:var(--cyan);white-space:nowrap}
@@ -34,29 +34,30 @@ tr.click{cursor:pointer}tr.click:hover td{background:#232329}tr.sel td{backgroun
 .col h3{display:flex;justify-content:space-between}
 .card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);padding:6px 8px;display:grid;gap:3px;cursor:pointer;min-width:0}
 .card:hover{border-color:var(--cyan)}.card.on{border-color:var(--cyan);background:#1d2a31}.card.mine{box-shadow:inset 0 0 0 1px var(--gold)}
-.card .t{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.card .d{overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.card .t{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.card .d{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .detail{border:1px solid var(--cyan);padding:10px;display:grid;gap:8px;background:var(--bg)}
 pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 var(--mono);color:var(--dim);max-height:260px;overflow:auto}
 .msg{padding:8px 10px;border:1px dashed var(--line);color:var(--dim)}.msg.err{border-color:var(--red);color:var(--red)}
 a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--dim)}.legend i{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
 .tl{position:relative}.tl svg{display:block;width:100%;height:auto}.tip{position:absolute;pointer-events:none;background:#0c0c0e;border:1px solid var(--cyan);padding:6px 8px;max-width:360px;z-index:5;font-size:12px;white-space:pre-wrap}
-.md ul{margin:4px 0 8px 18px;padding:0}.md li{margin:2px 0}.md p{margin:4px 0;max-width:90ch}
+.cl-v{display:flex;gap:10px;align-items:baseline;margin-top:6px}.cl-row{display:flex;gap:8px;padding:3px 6px;border-bottom:1px solid #222228;cursor:pointer;min-width:0}.cl-row:hover{background:#232329}.cl-t{color:var(--gold);white-space:nowrap}.cl-d{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.cl-row.open .cl-d{white-space:normal;overflow-wrap:anywhere}
+.hello{font:600 18px var(--head);letter-spacing:.08em;color:var(--fg)}.hello b{color:var(--cyan)}
 input.link{width:100%;min-width:220px;color:var(--dim)}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
-<header><h1>PIXEL FORMATION STUDIO</h1><span class="sub" id="status">Loading...</span><span class="spacer"></span><button id="refresh">Refresh</button></header>
+<header><h1>PIXEL FORMATION STUDIO</h1><span class="hello" id="hello"></span><span class="sub" id="status">Loading...</span><span class="spacer"></span><button id="refresh">Refresh</button></header>
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
 <nav id="tabs">
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="tasks" aria-selected="false" hidden>TASKS</button><button data-tab="telemetry" aria-selected="false" hidden>TELEMETRY</button>
-<button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
+<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
 <button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div><div class="cols">
 <div class="panel"><h2>New bugs</h2><div id="ov-bugs"></div></div>
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
 <div class="panel"><h2>Coming up</h2><div id="ov-cal"></div></div></div>
-<div class="panel"><h2>Team links</h2><div class="muted">Each person opens the panel with their own link. Add or remove people in the TEAM tab of PIXEL FORMATION CODES.</div><div class="scroll"><table id="team-t"></table></div></div></section>
+</section>
 
 <section class="panel" data-pane="bugs" hidden>
 <div class="bar"><input id="b-q" type="search" placeholder="SEARCH ID, TEXT OR TESTER..." style="flex:1;min-width:200px">
@@ -78,9 +79,16 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Code</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t"></table></div><button id="ev-more" hidden>Show more</button></div>
 </section>
 
-<section class="panel md" data-pane="changelog" hidden><div id="cl"></div></section>
+<section class="panel" data-pane="people" hidden>
+<div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
+<label for="p-cat">Category</label><select id="p-cat"></select><label for="p-type">Code type</label><select id="p-type"></select>
+<label for="p-use">Show</label><select id="p-use"><option value="">ALL</option><option value="given">GIVEN TO SOMEONE</option><option value="played">PLAYED</option><option value="free">NOT GIVEN</option><option value="panel">WITH PANEL ACCESS</option></select><span class="muted" id="p-n"></span></div>
+<div class="muted">One row per game code and per panel person. Codes are edited in the Codes tab, panel people in the PEOPLE tab of PIXEL FORMATION CODES (CATEGORY: ADMIN, TEAM, FRIEND, GUEST; an empty KEY fills itself).</div>
+<div class="scroll"><table id="p-t"></table></div></section>
+
+<section class="panel" data-pane="changelog" hidden><div id="cl"></div></section>
 <section class="panel" data-pane="calendar" hidden><div class="bar"><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div><div id="cal"></div></section>
-<section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (TEAM tab) gives it to them.</span></div><div id="files"></div></section>
+<section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
 </div>
 <script>
 // PIXEL FORMATION STUDIO (1184.4 / 1184.7): this page asks the PLAYTEST web app for its data, without cookies (as the
@@ -115,8 +123,8 @@ var allowed = function (t) { return !!D && D.tabs.indexOf(t) >= 0; };
 function table(v) { v = v || []; if (!v.length) return { head: [], rows: [] }; var head = v[0].map(String); return { head: head, rows: v.slice(1).map(function (r) { var o = {}; head.forEach(function (h, i) { o[h] = r[i] == null ? "" : r[i]; }); return o; }) }; }
 function grid(specs, rows, rowAttr) {
   var used = specs.filter(function (s) { return rows.some(function (r) { var v = s[1](r); return v !== "" && v != null; }); });
-  return "<thead><tr>" + used.map(function (s) { return "<th class='" + (s[2] || "") + "'>" + esc(s[0]) + "</th>"; }).join("") + "</tr></thead><tbody>" +
-    rows.map(function (r) { return "<tr" + (rowAttr ? rowAttr(r) : "") + ">" + used.map(function (s) { var v = s[1](r); return "<td class='" + (s[2] || "") + "'>" + (v == null ? "" : v) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
+  return "<thead><tr>" + used.map(function (s) { return "<th class='" + (typeof s[2] === "string" ? s[2] : "") + "'>" + esc(s[0]) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+    rows.map(function (r) { return "<tr" + (rowAttr ? rowAttr(r) : "") + ">" + used.map(function (s) { var v = s[1](r), cls = typeof s[2] === "function" ? s[2](r) : s[2] || ""; return "<td class='" + cls + "'>" + (v == null ? "" : v) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
 }
 function person(code) { var c = String(code || "").toLowerCase(); var r = table(D && D.people).rows.find(function (x) { return String(x.CODE).toLowerCase() === c; }); return r ? { name: r.NAME || r["GIVEN TO"] || "", type: r.TYPE || "" } : { name: "", type: "" }; }
 function who(code) { var p = person(code); return "<span class='who'><b>" + esc(code) + "</b>" + (p.name ? " <span class='nm'>" + esc(p.name) + "</span>" : "") + "</span>"; }
@@ -152,13 +160,15 @@ function render() {
   document.querySelectorAll("#tabs button").forEach(function (b) { b.hidden = !allowed(b.dataset.tab); });
   $("tabs").hidden = D.tabs.length < 2;
   var errs = Object.keys(D.errors || {});
-  $("status").textContent = (D.name ? D.name + " (" + D.role + ")  " : "") + "loaded " + new Date().toLocaleTimeString() + (errs.length ? ". Did not load: " + errs.join(", ") : "");
+  $("hello").innerHTML = D.name ? "Hello <b>" + esc(D.name) + "</b>" : "";
+  $("status").textContent = "loaded " + new Date().toLocaleTimeString() + (errs.length ? ". Did not load: " + errs.join(", ") : "");
   var t0 = curTab; if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} }
   showTab(t0 || D.tabs[0]);
   if (allowed("overview")) renderOverview();
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
   if (allowed("telemetry")) renderTelemetry();
+  if (allowed("people")) renderPeople();
   if (allowed("changelog")) renderChangelog();
   if (allowed("calendar")) renderCalendar();
   if (allowed("files")) renderFiles();
@@ -166,7 +176,7 @@ function render() {
 
 // ── bugs ──
 var SEV = ["BLOCKER", "CRITICAL", "MAJOR", "MINOR"];
-var owner = function () { return D.role === "OWNER"; };
+var owner = function () { return !!D.canSetStatus; };
 var isMine = function (r) { return (D.mine || []).indexOf(String(r.CODE).toLowerCase()) >= 0; };
 function bugRows() { var t = table(D.bugs && D.bugs.values); return t.rows.map(function (r, i) { r._i = i + 1; return r; }).filter(function (r) { return r.ID; }).map(function (r) { r.STATUS = r.STATUS || "NEW"; return r; }); }
 function bugLinks(r) { if (!D.bugs.links) return ""; var head = D.bugs.values[0], row = D.bugs.links[r._i] || []; return ["SCREENSHOT", "SAVE", "SETTINGS"].map(function (h) { var j = head.indexOf(h); return j >= 0 && row[j] ? "<a href='" + esc(row[j]) + "' target='_blank' rel='noopener'>" + h + "</a>" : ""; }).filter(Boolean).join(" "); }
@@ -233,7 +243,7 @@ function renderTasks() {
     ["#", function (t) { return "<b>" + esc(t.no) + "</b>"; }],
     ["State", function (t) { return "<span class='chip " + (t.state === "doing" ? "st-IN_PROGRESS" : t.state === "done" ? "st-FIXED" : "st-NEW") + "'>" + t.state.toUpperCase() + "</span>"; }],
     ["Kind", function (t) { return esc(t.code); }],
-    ["Task", function (t) { return esc(t.title) + (openTask[t.no] && t.lines.length ? "<pre>" + esc(t.lines.join("\n\n")) + "</pre>" : ""); }, "wrap"],
+    ["Task", function (t) { return esc(t.title) + (openTask[t.no] && t.lines.length ? "<pre>" + esc(t.lines.join("\n\n")) + "</pre>" : ""); }, function (t) { return "x" + (openTask[t.no] ? " open" : ""); }],
     ["Bugs", function (t) { return t.bugs.map(function (b) { return "<span class='chip st-CONFIRMED'>" + esc(b) + "</span>"; }).join(" "); }],
     ["Session", function (t) { return "<span class='muted'>" + esc(t.session) + "</span>"; }],
   ], list.slice(0, 400), function (t) { return " class='click' data-task='" + esc(t.no) + "'"; });
@@ -277,7 +287,7 @@ function renderTelemetry() {
     ["Platform", function (r) { return esc(r.PLATFORM); }], ["First", function (r) { return esc(r["FIRST START"]); }], ["Last seen", function (r) { return esc(r["LAST SEEN"]); }],
     ["Stage", function (r) { return esc(r.STAGE); }], ["Day", function (r) { return esc(r["GAME DAY"]); }, "num"], ["Min", function (r) { return esc(r["PLAY MINUTES"]); }, "num"],
     ["Battles W / L", function (r) { return (r["BATTLES WON"] || r["BATTLES LOST"]) ? esc((r["BATTLES WON"] || 0) + " / " + (r["BATTLES LOST"] || 0)) : ""; }, "num"],
-    ["Last action", function (r) { return esc(r["LAST ACTION"]); }], ["Last report", function (r) { return esc(r.EVENT); }, "wrap muted"],
+    ["Last action", function (r) { return esc(r["LAST ACTION"]); }], ["Last report", function (r) { return esc(r.EVENT); }, "x muted"],
   ], rows, function (r) { return /^selftest/.test(r.CODE) ? " class='muted'" : ""; });
   var evs = events(), ss = sessions(evs);
   var sel = $("s-code"), k = sel.value, codes = Array.from(new Set(ss.map(function (s) { return s.code; })));
@@ -334,7 +344,7 @@ function renderEvents(evs) {
     ["Time", function (e) { return esc(e.time.slice(5)); }], ["Who", function (e) { return who(e.code); }],
     ["Kind", function (e) { var k = kindById(e.kind); return "<span class='chip' style='color:" + k.color + "'>" + k.label + "</span>"; }],
     ["Event", function (e) { return esc(e.event) + (e.count > 1 ? " <span class='muted'>x" + e.count + "</span>" : ""); }],
-    ["Values", function (e) { return esc(e.values); }, "wrap muted"], ["Mode", function (e) { return esc(e.mode); }], ["At", function (e) { return fmtSec(e.sec); }, "num"],
+    ["Values", function (e) { return esc(e.values); }, "x muted"], ["Mode", function (e) { return esc(e.mode); }], ["At", function (e) { return fmtSec(e.sec); }, "num"],
   ], list.slice(0, evLimit));
   $("ev-more").hidden = list.length <= evLimit;
 }
@@ -355,36 +365,78 @@ function renderOverview() {
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
   var cal = (D.calendar || []).filter(function (e) { return e.end >= Date.now(); }).slice(0, 6);
   $("ov-cal").innerHTML = cal.length ? cal.map(function (e) { return "<div><b>" + esc(day(e.start)) + "</b> " + (e.allDay ? "" : esc(hm(e.start)) + " ") + esc(e.title) + "</div>"; }).join("") : "<div class='muted'>Nothing on the calendar.</div>";
-  $("team-t").innerHTML = grid([
-    ["Name", function (t) { return "<b>" + esc(t.name) + "</b>"; }], ["Role", function (t) { return "<span class='chip'>" + esc(t.role) + "</span>"; }],
-    ["Game codes", function (t) { return esc(t.codes); }], ["Packages", function (t) { return esc(t.packages); }],
-    ["Link", function (t) { return "<input class='link' readonly value='" + esc(SITE + "?k=" + t.key) + "'>"; }], ["", function () { return "<button data-copy>Copy</button>"; }],
-  ], D.team || []);
 }
 $("ov-bugs").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = c.dataset.bug; showTab("bugs"); renderBugs(); });
-$("team-t").addEventListener("click", function (e) {
+// ── people (owner): every game code and every panel person in one table ──
+function peopleRows() {
+  var low = function (s) { return String(s || "").trim().toLowerCase(); };
+  var codes = table(D.people).rows.filter(function (c) { return c.CODE; }), play = table(D.codes).rows, bugs = D.bugs ? bugRows() : [], team = D.team || [];
+  var rows = codes.map(function (c) {
+    var lc = low(c.CODE), pl = play.find(function (x) { return low(x.CODE) === lc; }) || {}, t = team.find(function (x) { return x.codes.indexOf(lc) >= 0; });
+    return { name: c.NAME || (t ? t.name : ""), mail: c["GIVEN TO"], code: c.CODE, type: c.TYPE, days: c.DAYS, perms: c.PERMISSIONS, note: c.NOTE || (t ? t.note : ""),
+      first: pl["FIRST START"] || "", last: pl["LAST SEEN"] || "", min: pl["PLAY MINUTES"] || "", stage: pl.STAGE || "",
+      bugs: bugs.filter(function (b) { return low(b.CODE) === lc; }).length, t: t };
+  });
+  team.forEach(function (t) { if (!t.codes.some(function (c) { return codes.some(function (x) { return low(x.CODE) === c; }); })) rows.push({ name: t.name, mail: "", code: "", type: "", note: t.note, bugs: 0, t: t }); });
+  var rank = function (x) { return x.t ? 0 : x.mail || x.name ? 1 : x.last ? 2 : 3; };
+  return rows.sort(function (a, b) { return rank(a) - rank(b) || String(b.last).localeCompare(String(a.last)) || String(a.code).localeCompare(String(b.code)); });
+}
+var CAT_COLOR = { OWNER: "var(--gold)", ADMIN: "var(--red)", TEAM: "var(--cyan)", FRIEND: "var(--green)", GUEST: "var(--dim)" };
+function renderPeople() {
+  var rows = peopleRows();
+  var keep = function (id, vals) { var s = $(id), v = s.value; s.innerHTML = "<option value=''>ALL</option>" + vals.map(function (x) { return "<option value='" + esc(x) + "'>" + esc(x) + "</option>"; }).join(""); s.value = vals.indexOf(v) >= 0 ? v : ""; };
+  keep("p-cat", ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST", "NO PANEL"]);
+  keep("p-type", Array.from(new Set(rows.map(function (r) { return r.type; }).filter(Boolean))));
+  var cat = $("p-cat").value, ty = $("p-type").value, use = $("p-use").value, q = $("p-q").value.trim().toLowerCase();
+  var list = rows.filter(function (r) {
+    return (!cat || (cat === "NO PANEL" ? !r.t : r.t && r.t.category === cat)) && (!ty || r.type === ty) &&
+      (!use || (use === "given" ? !!(r.mail || r.name) : use === "played" ? !!r.last : use === "free" ? !(r.mail || r.name || r.t) : !!r.t)) &&
+      (!q || [r.name, r.mail, r.code, r.type, r.note, r.t ? r.t.category : ""].join(" ").toLowerCase().indexOf(q) >= 0);
+  });
+  $("p-n").textContent = list.length + " OF " + rows.length;
+  $("p-t").innerHTML = grid([
+    ["Name", function (r) { return "<b>" + esc(r.name) + "</b>"; }], ["Mail", function (r) { return esc(r.mail); }, "x muted"],
+    ["Category", function (r) { return r.t ? "<span class='chip' style='color:" + (CAT_COLOR[r.t.category] || "var(--dim)") + "'>" + esc(r.t.category) + "</span>" : ""; }],
+    ["Code", function (r) { return esc(r.code); }], ["Type", function (r) { return esc(r.type); }], ["Days", function (r) { return esc(r.days); }, "num"],
+    ["Permissions", function (r) { return esc(r.perms); }, "x muted"], ["First", function (r) { return esc(short(r.first)); }], ["Last seen", function (r) { return esc(short(r.last)); }],
+    ["Min", function (r) { return esc(r.min); }, "num"], ["Stage", function (r) { return esc(r.stage); }], ["Bugs", function (r) { return r.bugs ? String(r.bugs) : ""; }, "num"],
+    ["Packages", function (r) { return r.t ? esc(r.t.packages) : ""; }],
+    ["Panel link", function (r) { return r.t ? "<input class='link' readonly value='" + esc(SITE + "?k=" + r.t.key) + "'>" : ""; }], ["", function (r) { return r.t ? "<button data-copy>Copy</button>" : ""; }],
+    ["Note", function (r) { return esc(r.note); }, "x muted"],
+  ], list);
+}
+["p-q", "p-cat", "p-type", "p-use"].forEach(function (id) { $(id).addEventListener("input", renderPeople); });
+$("p-t").addEventListener("click", function (e) {
   var b = e.target.closest("button[data-copy]"); if (!b) return;
   var inp = b.closest("tr").querySelector("input.link"); inp.select();
   var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1500); };
   try { if (document.execCommand("copy")) { done(); return; } } catch (err) {}
   if (navigator.clipboard) navigator.clipboard.writeText(inp.value).then(done, function () { b.textContent = "Select + Ctrl+C"; });
 });
+// one-line cells everywhere: a click opens the whole text (the task table opens its own rows)
+document.addEventListener("click", function (e) { var td = e.target.closest("td.x"); if (td && !td.closest("#t-t")) td.classList.toggle("open"); });
 
 // ── changelog / calendar / files ──
+// CHANGELOG.md: "## VERSION — DATE" headings and "- TITLE: what changed" lines (a line may go on, indented). One row each:
+// the title in colour, the rest opens on a click; text outside the entries is not shown.
 function renderChangelog() {
   if (!D.changelog) { $("cl").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; return; }
-  var html = "", inList = false;
+  var items = [], cur = null;
   D.changelog.text.split(/\r?\n/).forEach(function (l) {
-    var li = l.match(/^- (.*)/), cont = /^\s{2,}\S/.test(l);
-    if (li) { if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + esc(li[1]); return; }
-    if (cont && inList) { html += " " + esc(l.trim()); return; }
-    if (inList) { html += "</ul>"; inList = false; }
-    if (/^# /.test(l)) return;
-    if (/^## /.test(l)) { html += "<h2>" + esc(l.slice(3)) + "</h2>"; return; }
-    if (l.trim()) html += "<p class='muted'>" + esc(l) + "</p>";
+    var li = l.match(/^- (.*)/);
+    if (li) { cur = { text: li[1] }; items.push(cur); return; }
+    if (cur && /^\s{2,}\S/.test(l)) { cur.text += " " + l.trim(); return; }
+    cur = null;
+    var v = l.match(/^## (\S+)\s*[—-]?\s*(.*)$/);
+    if (v) items.push({ version: v[1], date: v[2] });
   });
-  $("cl").innerHTML = html + (inList ? "</ul>" : "") + "<p class='muted'>Sent " + new Date(D.changelog.updated).toLocaleString() + "</p>";
+  $("cl").innerHTML = items.map(function (it) {
+    if (it.version) return "<div class='cl-v'><h2>" + esc(it.version) + "</h2><span class='muted'>" + esc(it.date) + "</span></div>";
+    var m = it.text.match(/^([^:]{1,70}):\s*(.*)$/);
+    return "<div class='cl-row'><span class='cl-t'>" + esc(m ? m[1] : it.text) + "</span>" + (m && m[2] ? "<span class='cl-d'>" + esc(m[2]) + "</span>" : "") + "</div>";
+  }).join("") + "<p class='muted'>Sent " + new Date(D.changelog.updated).toLocaleString() + "</p>";
 }
+$("cl").addEventListener("click", function (e) { var r = e.target.closest(".cl-row"); if (r) r.classList.toggle("open"); });
 function renderCalendar() {
   if (!D.calendar) { $("cal").innerHTML = "<div class='msg err'>The calendar did not load: " + esc(D.errors.calendar || "") + "</div>"; return; }
   if (!D.calendar.length) { $("cal").innerHTML = "<div class='msg'>Nothing in the last week or the next 90 days. Add playtests and dates in Google Calendar.</div>"; return; }
@@ -395,7 +447,7 @@ function renderCalendar() {
 function renderFiles() {
   if (!D.files) { $("files").innerHTML = "<div class='msg err'>FILES did not load: " + esc(D.errors.files || "") + "</div>"; return; }
   $("f-bar").hidden = !D.files.url; if (D.files.url) $("f-open").href = D.files.url;
-  if (!D.files.packages.length) { $("files").innerHTML = "<div class='msg'>" + (owner() ? "No packages yet. Make a sub-folder in SHARES (e.g. DIALOGS_PL), put the files in, write its name in someone's PACKAGES." : "Nothing here for you yet.") + "</div>"; return; }
+  if (!D.files.packages.length) { $("files").innerHTML = "<div class='msg'>" + (D.category === "OWNER" ? "No packages yet. Make a sub-folder in SHARES (e.g. DIALOGS_PL), put the files in, write its name in someone's PACKAGES." : "Nothing here for you yet.") + "</div>"; return; }
   $("files").innerHTML = D.files.packages.map(function (p) { return "<div class='panel'><div class='bar'><h2>" + esc(p.name) + "</h2>" + (p.url ? "<a href='" + esc(p.url) + "' target='_blank' rel='noopener'>OPEN</a>" : "") + (p.people ? "<span class='muted'>" + (p.people.length ? "for " + esc(p.people.join(", ")) : "nobody has it yet") + "</span>" : "") + "</div>" +
     (p.files.length ? "<table>" + p.files.map(function (f) { return "<tr><td>" + esc(f.name) + "</td><td class='num muted'>" + (f.size / 1048576).toFixed(2) + " MB</td><td class='muted'>" + esc(new Date(f.updated).toLocaleDateString()) + "</td><td><button data-f='" + esc(f.id) + "'>Download</button></td></tr>"; }).join("") + "</table>" : "<div class='muted'>Empty.</div>") + "</div>"; }).join("");
 }
