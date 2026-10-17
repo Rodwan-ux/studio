@@ -1,0 +1,412 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PIXEL FORMATION STUDIO</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--bg:#121214;--panel:#1b1b1f;--line:#2c2c33;--fg:#e6e4e0;--dim:#8e8b86;--gold:#e6ad47;--cyan:#4dccff;--red:#ff8c73;--blood:#d93a3a;--green:#74b84a;--amber:#d1a35c;--violet:#a796c4;--head:"Barlow Condensed","Arial Narrow",sans-serif;--mono:"JetBrains Mono",Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--mono)}
+.wrap{max-width:1400px;margin:0 auto;padding:16px 16px 40px;display:grid;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}h1{margin:0;font:700 28px/1 var(--head);letter-spacing:.05em;color:var(--gold)}
+.sub,.muted{color:var(--dim)}.spacer{flex:1}
+button,select,input,textarea{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 9px}
+button{cursor:pointer;text-transform:uppercase;letter-spacing:.05em}button:hover{border-color:var(--cyan);color:var(--cyan)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+nav{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+nav button{border:1px solid transparent;border-bottom:none;border-radius:4px 4px 0 0;background:transparent;font:600 16px var(--head);letter-spacing:.1em;color:var(--dim);padding:6px 14px}
+nav button[aria-selected=true]{color:var(--gold);background:var(--panel);border-color:var(--line)}
+.panel{background:var(--panel);border:1px solid var(--line);padding:12px;display:grid;gap:10px;min-width:0}
+h2{margin:0;font:600 18px var(--head);letter-spacing:.1em;color:var(--gold);text-transform:uppercase}
+h3{margin:0;font:600 15px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.tile{background:var(--bg);border:1px solid var(--line);padding:8px 10px;display:grid;gap:2px;min-width:0}
+.tile b{font:600 22px var(--mono);font-variant-numeric:tabular-nums}.tile span{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.bar label{font:600 13px var(--head);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.scroll{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{font:600 13px var(--head);letter-spacing:.1em;color:var(--gold);text-transform:uppercase;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:3px 6px;border-bottom:1px solid #222228;vertical-align:top;font-size:12.5px}td.num{text-align:right}td.wrap{white-space:normal;overflow-wrap:anywhere;max-width:460px}
+tr.click{cursor:pointer}tr.click:hover td{background:#232329}tr.sel td{background:#1d2a31}
+.chip{display:inline-block;padding:0 7px;border-radius:9px;border:1px solid currentColor;font-size:11px;white-space:nowrap}
+.who b{font-weight:600}.who .nm{color:var(--cyan);white-space:nowrap}
+.sev-BLOCKER{color:var(--blood)}.sev-CRITICAL{color:var(--red)}.sev-MAJOR{color:var(--amber)}.sev-MINOR{color:var(--dim)}
+.st-NEW{color:var(--gold)}.st-CONFIRMED{color:var(--cyan)}.st-IN_PROGRESS{color:var(--violet)}.st-FIXED{color:var(--green)}.st-REJECTED,.st-DUPLICATE{color:var(--dim)}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media (max-width:900px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:520px){.board{grid-template-columns:1fr}}
+.col{background:var(--bg);border:1px solid var(--line);padding:6px;display:grid;gap:6px;align-content:start;min-width:0}
+.col h3{display:flex;justify-content:space-between}
+.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);padding:6px 8px;display:grid;gap:3px;cursor:pointer;min-width:0}
+.card:hover{border-color:var(--cyan)}.card.on{border-color:var(--cyan);background:#1d2a31}.card.mine{box-shadow:inset 0 0 0 1px var(--gold)}
+.card .t{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.card .d{overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.detail{border:1px solid var(--cyan);padding:10px;display:grid;gap:8px;background:var(--bg)}
+pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 var(--mono);color:var(--dim);max-height:260px;overflow:auto}
+.msg{padding:8px 10px;border:1px dashed var(--line);color:var(--dim)}.msg.err{border-color:var(--red);color:var(--red)}
+a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--dim)}.legend i{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
+.tl{position:relative}.tl svg{display:block;width:100%;height:auto}.tip{position:absolute;pointer-events:none;background:#0c0c0e;border:1px solid var(--cyan);padding:6px 8px;max-width:360px;z-index:5;font-size:12px;white-space:pre-wrap}
+.md ul{margin:4px 0 8px 18px;padding:0}.md li{margin:2px 0}.md p{margin:4px 0;max-width:90ch}
+input.link{width:100%;min-width:220px;color:var(--dim)}
+[hidden]{display:none!important}
+</style></head><body><div class="wrap">
+<header><h1>PIXEL FORMATION STUDIO</h1><span class="sub" id="status">Loading...</span><span class="spacer"></span><button id="refresh">Refresh</button></header>
+<div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
+<nav id="tabs">
+<button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
+<button data-tab="tasks" aria-selected="false" hidden>TASKS</button><button data-tab="telemetry" aria-selected="false" hidden>TELEMETRY</button>
+<button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
+<button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
+
+<section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div><div class="cols">
+<div class="panel"><h2>New bugs</h2><div id="ov-bugs"></div></div>
+<div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
+<div class="panel"><h2>Coming up</h2><div id="ov-cal"></div></div></div>
+<div class="panel"><h2>Team links</h2><div class="muted">Each person opens the panel with their own link. Add or remove people in the TEAM tab of PIXEL FORMATION CODES.</div><div class="scroll"><table id="team-t"></table></div></div></section>
+
+<section class="panel" data-pane="bugs" hidden>
+<div class="bar"><input id="b-q" type="search" placeholder="SEARCH ID, TEXT OR TESTER..." style="flex:1;min-width:200px">
+<label for="b-sev">Severity</label><select id="b-sev"></select><label for="b-type">Type</label><select id="b-type"></select>
+<label for="b-who">Tester</label><select id="b-who"></select><label id="b-mine-l" hidden><input type="checkbox" id="b-mine"> my reports</label><label><input type="checkbox" id="b-closed"> rejected / duplicate</label></div>
+<div id="b-msg" class="msg" hidden></div><div class="detail" id="b-detail" hidden></div><div class="board" id="b-board"></div></section>
+
+<section class="panel" data-pane="tasks" hidden>
+<div class="bar"><input id="t-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px">
+<label for="t-st">State</label><select id="t-st"><option value="active">OPEN + DOING</option><option value="doing">DOING</option><option value="open">OPEN</option><option value="bug">WITH A BUG</option><option value="done">DONE</option></select>
+<label for="t-code">Kind</label><select id="t-code"></select><span class="muted" id="t-n"></span></div>
+<div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></section>
+
+<section class="panel" data-pane="telemetry" hidden>
+<nav id="tel-tabs"><button data-t="codes" aria-selected="true">CODES</button><button data-t="sessions" aria-selected="false">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button></nav>
+<div data-tp="codes" class="scroll"><table id="codes-t"></table></div>
+<div data-tp="sessions" hidden><div class="bar"><label for="s-code">Code</label><select id="s-code"></select><span class="muted">Click a session for its time line.</span></div><div class="scroll"><table id="sess-t"></table></div></div>
+<div data-tp="timeline" hidden><div class="bar"><label for="tl-sess">Session</label><select id="tl-sess"></select></div><div class="legend" id="tl-legend"></div><div class="tl" id="tl"><div class="tip" id="tip" hidden></div></div></div>
+<div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Code</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t"></table></div><button id="ev-more" hidden>Show more</button></div>
+</section>
+
+<section class="panel md" data-pane="changelog" hidden><div id="cl"></div></section>
+<section class="panel" data-pane="calendar" hidden><div class="bar"><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div><div id="cal"></div></section>
+<section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (TEAM tab) gives it to them.</span></div><div id="files"></div></section>
+</div>
+<script>
+// PIXEL FORMATION STUDIO (1184.4 / 1184.7): this page asks the PLAYTEST web app for its data, without cookies (as the
+// game does). Opened through the link (API + ?k=KEY) the web app puts the key in (PRESET_KEY); opened from the disk the
+// key is typed once. Either way it is remembered in this browser.
+var API = "https://script.google.com/macros/s/AKfycbxh3QH8N51TvszNQc9sCDNQUU9qZ-CSO7vN7MKF5aiZ1-E3R-2YlydVR7BfU566igPJxQ/exec";
+var KEY = "";
+try { KEY = localStorage.getItem("studio_key") || ""; } catch (e) {}
+if (typeof PRESET_KEY === "string" && PRESET_KEY) saveKey(PRESET_KEY);
+// 1184.8: the page on GitHub Pages (SITE) takes the key from its link, SITE?k=KEY, the link TEAM LINKS gives out.
+var SITE = "https://rodwan-ux.github.io/studio/";
+(function () { var m = location.search.match(/[?&]k=([\w-]+)/); if (m && location.protocol !== "file:") { saveKey(m[1]); history.replaceState(null, "", location.pathname); } })();
+function saveKey(k) { KEY = k; try { if (k) localStorage.setItem("studio_key", k); else localStorage.removeItem("studio_key"); } catch (e) {} }
+function apiGet(params) {
+  return fetch(API + "?" + new URLSearchParams(params), { credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
+    var j; try { j = JSON.parse(t); } catch (e) { throw new Error("The panel's address did not answer with data"); }
+    if (j && j.error) throw new Error(j.error);
+    return j;
+  });
+}
+function apiPost(body) {
+  return fetch(API, { method: "POST", body: JSON.stringify(body), credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) { if (t !== "OK") throw new Error(t); });
+}
+var D = null, pickedBug = "", pickedSession = "", evLimit = 300, openTask = {}, curTab = "";
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+var fmtSec = function (s) { s = Math.max(0, Math.round(+s || 0)); var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0"); };
+var short = function (s) { s = String(s || ""); return /^\d{4}-\d\d-\d\d/.test(s) ? s.slice(5, 16) : s; };
+var day = function (ms) { return new Date(ms).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); };
+var hm = function (ms) { return new Date(ms).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }); };
+var allowed = function (t) { return !!D && D.tabs.indexOf(t) >= 0; };
+function table(v) { v = v || []; if (!v.length) return { head: [], rows: [] }; var head = v[0].map(String); return { head: head, rows: v.slice(1).map(function (r) { var o = {}; head.forEach(function (h, i) { o[h] = r[i] == null ? "" : r[i]; }); return o; }) }; }
+function grid(specs, rows, rowAttr) {
+  var used = specs.filter(function (s) { return rows.some(function (r) { var v = s[1](r); return v !== "" && v != null; }); });
+  return "<thead><tr>" + used.map(function (s) { return "<th class='" + (s[2] || "") + "'>" + esc(s[0]) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+    rows.map(function (r) { return "<tr" + (rowAttr ? rowAttr(r) : "") + ">" + used.map(function (s) { var v = s[1](r); return "<td class='" + (s[2] || "") + "'>" + (v == null ? "" : v) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
+}
+function person(code) { var c = String(code || "").toLowerCase(); var r = table(D && D.people).rows.find(function (x) { return String(x.CODE).toLowerCase() === c; }); return r ? { name: r.NAME || r["GIVEN TO"] || "", type: r.TYPE || "" } : { name: "", type: "" }; }
+function who(code) { var p = person(code); return "<span class='who'><b>" + esc(code) + "</b>" + (p.name ? " <span class='nm'>" + esc(p.name) + "</span>" : "") + "</span>"; }
+
+// tabs (the last one picked is remembered in this browser)
+function showTab(t) {
+  if (!allowed(t)) t = D.tabs[0];
+  curTab = t;
+  document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
+  document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
+  try { localStorage.setItem("tab", t); } catch (e) {}
+  if (t === "telemetry") drawTimeline();
+}
+$("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); });
+function showTel(t) { document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); }
+$("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) showTel(b.dataset.t); });
+
+// loading
+function load() {
+  if (!KEY) { askKey(""); return; }
+  $("status").textContent = "Loading...";
+  apiGet({ api: "data", k: KEY }).then(function (j) { D = j; evCache = null; $("key-box").hidden = true; render(); }, function (e) {
+    var m = String(e && e.message || e);
+    if (m === "No access") { saveKey(""); askKey("This key does not open the panel."); return; }
+    $("status").textContent = "Could not load: " + m;
+  });
+}
+$("refresh").addEventListener("click", load);
+function askKey(why) { $("status").textContent = why || "Enter your key."; $("key-box").hidden = false; $("key-in").focus(); }
+$("key-go").addEventListener("click", function () { var k = $("key-in").value.trim(); if (!k) return; saveKey(k); load(); });
+$("key-in").addEventListener("keydown", function (e) { if (e.key === "Enter") $("key-go").click(); });
+function render() {
+  document.querySelectorAll("#tabs button").forEach(function (b) { b.hidden = !allowed(b.dataset.tab); });
+  $("tabs").hidden = D.tabs.length < 2;
+  var errs = Object.keys(D.errors || {});
+  $("status").textContent = (D.name ? D.name + " (" + D.role + ")  " : "") + "loaded " + new Date().toLocaleTimeString() + (errs.length ? ". Did not load: " + errs.join(", ") : "");
+  var t0 = curTab; if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} }
+  showTab(t0 || D.tabs[0]);
+  if (allowed("overview")) renderOverview();
+  if (allowed("bugs")) renderBugs();
+  if (allowed("tasks")) renderTasks();
+  if (allowed("telemetry")) renderTelemetry();
+  if (allowed("changelog")) renderChangelog();
+  if (allowed("calendar")) renderCalendar();
+  if (allowed("files")) renderFiles();
+}
+
+// ── bugs ──
+var SEV = ["BLOCKER", "CRITICAL", "MAJOR", "MINOR"];
+var owner = function () { return D.role === "OWNER"; };
+var isMine = function (r) { return (D.mine || []).indexOf(String(r.CODE).toLowerCase()) >= 0; };
+function bugRows() { var t = table(D.bugs && D.bugs.values); return t.rows.map(function (r, i) { r._i = i + 1; return r; }).filter(function (r) { return r.ID; }).map(function (r) { r.STATUS = r.STATUS || "NEW"; return r; }); }
+function bugLinks(r) { if (!D.bugs.links) return ""; var head = D.bugs.values[0], row = D.bugs.links[r._i] || []; return ["SCREENSHOT", "SAVE", "SETTINGS"].map(function (h) { var j = head.indexOf(h); return j >= 0 && row[j] ? "<a href='" + esc(row[j]) + "' target='_blank' rel='noopener'>" + h + "</a>" : ""; }).filter(Boolean).join(" "); }
+function stCls(s) { return "st-" + String(s).replace(" ", "_"); }
+function bugCard(r) {
+  return "<div class='card" + (r.ID === pickedBug ? " on" : "") + (!owner() && isMine(r) ? " mine" : "") + "' data-bug='" + esc(r.ID) + "' style='border-left-color:" + ({ BLOCKER: "var(--blood)", CRITICAL: "var(--red)", MAJOR: "var(--amber)" }[r.SEVERITY] || "var(--line)") + "'>" +
+    "<div class='t'><b>" + esc(r.ID.slice(0, 4)) + "</b><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY || "-") + "</span><span class='muted'>" + esc(r.TYPE) + "</span>" + (r.TASK ? "<span class='chip st-IN_PROGRESS'>#" + esc(r.TASK) + "</span>" : "") + (r["FIXED IN"] ? "<span class='chip st-FIXED'>" + esc(r["FIXED IN"]) + "</span>" : "") + "</div>" +
+    "<div class='d'>" + esc(r.DESCRIPTION) + "</div><div class='muted'>" + who(r.CODE) + " · " + esc(short(r.TIME)) + "</div></div>";
+}
+function renderBugs() {
+  var msg = $("b-msg");
+  if (!D.bugs) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "BUGS did not load: " + (D.errors.bugs || ""); return; }
+  msg.hidden = true;
+  $("b-mine-l").hidden = owner() || !(D.mine || []).length;
+  var rows = bugRows();
+  var keep = function (id, vals) { var s = $(id), v = s.value; s.innerHTML = "<option value=''>ALL</option>" + vals.map(function (x) { return "<option value='" + esc(x[0]) + "'>" + esc(x[1]) + "</option>"; }).join(""); s.value = vals.some(function (x) { return x[0] === v; }) ? v : ""; };
+  keep("b-sev", SEV.map(function (s) { return [s, s]; }));
+  keep("b-type", Array.from(new Set(rows.map(function (r) { return r.TYPE; }).filter(Boolean))).sort().map(function (t) { return [t, t]; }));
+  keep("b-who", Array.from(new Set(rows.map(function (r) { return r.CODE; }))).map(function (c) { return [c, c + (person(c).name ? "  " + person(c).name : "")]; }));
+  var q = $("b-q").value.trim().toLowerCase();
+  var list = rows.filter(function (r) { return (!$("b-sev").value || r.SEVERITY === $("b-sev").value) && (!$("b-type").value || r.TYPE === $("b-type").value) && (!$("b-who").value || r.CODE === $("b-who").value) &&
+    (!$("b-mine").checked || isMine(r)) && (!q || (r.ID + " " + r.DESCRIPTION + " " + r.CODE + " " + person(r.CODE).name + " " + (r.NOTE || "")).toLowerCase().indexOf(q) >= 0); }).reverse();
+  var cols = ["NEW", "CONFIRMED", "IN PROGRESS", "FIXED"]; if ($("b-closed").checked) cols = cols.concat(["REJECTED", "DUPLICATE"]);
+  $("b-board").innerHTML = cols.map(function (c) { var l = list.filter(function (r) { return r.STATUS === c; }); return "<div class='col'><h3><span class='" + stCls(c) + "'>" + c + "</span><span>" + l.length + "</span></h3>" + (l.map(bugCard).join("") || "<div class='muted'>-</div>") + "</div>"; }).join("");
+  renderBugDetail();
+}
+function renderBugDetail() {
+  var box = $("b-detail"), r = bugRows().find(function (x) { return x.ID === pickedBug; });
+  if (!r) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = "<div class='bar'><b>" + esc(r.ID) + "</b><span class='chip " + stCls(r.STATUS) + "'>" + esc(r.STATUS) + "</span><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY) + "</span>" + who(r.CODE) + "<span class='muted'>" + esc(r.TIME) + "</span><span class='spacer'></span><button id='bd-x'>Close</button></div>" +
+    "<div>" + esc(r.DESCRIPTION) + "</div><div class='muted'>" + esc([r.MODE, r.DAY ? "day " + r.DAY : "", r.PLATFORM, r.VERSION ? "v" + r.VERSION : ""].filter(Boolean).join(" / ")) + "  " + bugLinks(r) + (r.EMAIL ? "  " + esc(r.EMAIL) : "") + "</div>" +
+    (r.TASK ? "<div>Task <b>#" + esc(r.TASK) + "</b>" + (r["FIXED IN"] ? " · fixed in " + esc(r["FIXED IN"]) : "") + "</div>" : "") +
+    (owner() ? "<div class='bar'>" + ["CONFIRMED", "REJECTED", "DUPLICATE", "NEW"].map(function (s) { return "<button data-set='" + s + "'>" + (s === "NEW" ? "REOPEN" : s === "CONFIRMED" ? "CONFIRM" : s) + "</button>"; }).join("") +
+      "<input id='bd-note' placeholder='NOTE...' value='" + esc(r.NOTE) + "' style='flex:1;min-width:180px'><button data-set='" + esc(r.STATUS) + "'>Save note</button></div>" : "") +
+    (r["RECENT EVENTS"] ? "<h3>What the player did last</h3><pre>" + esc(r["RECENT EVENTS"]) + "</pre>" : "");
+}
+$("b-board").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = pickedBug === c.dataset.bug ? "" : c.dataset.bug; renderBugs(); if (pickedBug) $("b-detail").scrollIntoView({ block: "nearest" }); });
+$("b-detail").addEventListener("click", function (e) {
+  if (e.target.id === "bd-x") { pickedBug = ""; renderBugs(); return; }
+  var b = e.target.closest("button[data-set]"); if (!b) return;
+  var st = b.dataset.set, note = $("bd-note").value, id = pickedBug;
+  b.disabled = true; b.textContent = "Saving...";
+  apiPost({ action: "studio_set_bug", k: KEY, id: id, status: st, note: note }).then(function () {
+    var head = D.bugs.values[0], r = D.bugs.values.findIndex(function (x) { return x[0] === id; });
+    if (r > 0) { D.bugs.values[r][head.indexOf("STATUS")] = st; var cn = head.indexOf("NOTE"); if (cn >= 0) D.bugs.values[r][cn] = note; }
+    renderBugs(); if (allowed("overview")) renderOverview(); },
+    function (err) { b.disabled = false; b.textContent = "Not saved: " + (err && err.message || err); });
+});
+["b-q", "b-sev", "b-type", "b-who", "b-mine", "b-closed"].forEach(function (id) { $(id).addEventListener("input", renderBugs); });
+
+// ── tasks ──
+function renderTasks() {
+  var msg = $("t-msg");
+  if (!D.tasks) { msg.hidden = false; msg.className = "msg"; msg.textContent = "TASKS.md has not been sent here yet. It comes from the project after the next turn of a session."; $("t-t").innerHTML = ""; return; }
+  msg.hidden = true;
+  var cs = $("t-code"), kc = cs.value, codes = Array.from(new Set(D.tasks.map(function (t) { return t.code; }))).sort();
+  cs.innerHTML = "<option value=''>ALL</option>" + codes.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join(""); cs.value = codes.indexOf(kc) >= 0 ? kc : "";
+  var st = $("t-st").value, q = $("t-q").value.trim().toLowerCase();
+  var list = D.tasks.filter(function (t) { return (st === "active" ? t.state !== "done" : st === "bug" ? t.bugs.length > 0 : t.state === st) && (!cs.value || t.code === cs.value) && (!q || (t.no + " " + t.title).toLowerCase().indexOf(q) >= 0); })
+    .sort(function (a, b) { return (a.state === "doing" ? 0 : 1) - (b.state === "doing" ? 0 : 1) || parseFloat(b.no) - parseFloat(a.no); });
+  $("t-n").textContent = list.length + " OF " + D.tasks.length + (D.tasksFile ? " · sent " + new Date(D.tasksFile.updated).toLocaleString() : "");
+  $("t-t").innerHTML = grid([
+    ["#", function (t) { return "<b>" + esc(t.no) + "</b>"; }],
+    ["State", function (t) { return "<span class='chip " + (t.state === "doing" ? "st-IN_PROGRESS" : t.state === "done" ? "st-FIXED" : "st-NEW") + "'>" + t.state.toUpperCase() + "</span>"; }],
+    ["Kind", function (t) { return esc(t.code); }],
+    ["Task", function (t) { return esc(t.title) + (openTask[t.no] && t.lines.length ? "<pre>" + esc(t.lines.join("\n\n")) + "</pre>" : ""); }, "wrap"],
+    ["Bugs", function (t) { return t.bugs.map(function (b) { return "<span class='chip st-CONFIRMED'>" + esc(b) + "</span>"; }).join(" "); }],
+    ["Session", function (t) { return "<span class='muted'>" + esc(t.session) + "</span>"; }],
+  ], list.slice(0, 400), function (t) { return " class='click' data-task='" + esc(t.no) + "'"; });
+}
+$("t-t").addEventListener("click", function (e) { var r = e.target.closest("tr[data-task]"); if (!r) return; openTask[r.dataset.task] = !openTask[r.dataset.task]; renderTasks(); });
+["t-q", "t-st", "t-code"].forEach(function (id) { $(id).addEventListener("input", renderTasks); });
+
+// ── telemetry ──
+var KINDS = [
+  { id: "flow", label: "FLOW", color: "#e6ad47", test: function (e) { return /^(session_start|mode\.|playtest|mode_over|load|save|exit|day_end|feedback|bug_report|settings\.)/.test(e); } },
+  { id: "battle", label: "BATTLE", color: "#ff8c73", test: function (e) { return /^(battle_|rout)/.test(e); } },
+  { id: "death", label: "DEATHS", color: "#d93a3a", test: function (e) { return /^unit_death/.test(e); } },
+  { id: "sail", label: "SAILING", color: "#4dccff", test: function (e) { return /^(sail_leg|fish_catch|chest|castaway|throw_|story_city|story_periplus)/.test(e); } },
+  { id: "camp", label: "CAMP / LAND", color: "#74b84a", test: function (e) { return /^(camp_|dig_|build|dismantle|chop_|hunt_|heal_|person_|march_leg|army_to_camp|story_camp)/.test(e); } },
+  { id: "story", label: "TALK / TRADE", color: "#a796c4", test: function (e) { return /^(dialog|trade|quest|enemy_talk|story_)/.test(e); } },
+  { id: "click", label: "CLICKS", color: "#8e8b86", test: function (e) { return /^btn\./.test(e); } },
+];
+var kindOf = function (e) { return (KINDS.find(function (k) { return k.test(e); }) || KINDS[0]).id; };
+var kindById = function (id) { return KINDS.find(function (k) { return k.id === id; }); };
+var evCache = null;
+function events() {
+  if (evCache) return evCache;
+  var t = table(D.events), seen = {}, out = [];
+  t.rows.forEach(function (r) { var k = r.SESSION + "|" + r.SEQ; if (!r.EVENT || seen[k]) return; seen[k] = 1;
+    out.push({ code: r.CODE, session: r.SESSION, seq: +r.SEQ || 0, time: r.TIME, sec: +r.SEC || 0, mode: r.MODE, day: r.DAY, event: r.EVENT, values: r.VALUES, count: +r.COUNT || 1, kind: kindOf(r.EVENT) }); });
+  return evCache = out;
+}
+function sessions(evs) {
+  var m = {};
+  evs.forEach(function (e) { var s = m[e.session]; if (!s) s = m[e.session] = { id: e.session, code: e.code, start: e.time, end: e.time, len: 0, n: 0, battles: 0, deaths: 0, bugs: 0, clicks: 0, modes: {} };
+    if (e.time < s.start) s.start = e.time; if (e.time > s.end) s.end = e.time; s.len = Math.max(s.len, e.sec); s.n++;
+    if (e.event === "battle_start") s.battles++; if (e.event === "unit_death") s.deaths += e.count; if (e.event === "bug_report") s.bugs++; if (e.kind === "click") s.clicks += e.count;
+    if (/^playtest\./.test(e.event)) s.modes[e.event.slice(9).toUpperCase()] = 1; });
+  return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.start.localeCompare(a.start); });
+}
+function renderTelemetry() {
+  evCache = null;
+  var t = table(D.codes), rows = t.rows.filter(function (r) { return r.CODE; }).sort(function (a, b) { return String(b["LAST SEEN"]).localeCompare(String(a["LAST SEEN"])); });
+  $("codes-t").innerHTML = grid([
+    ["Code", function (r) { return who(r.CODE); }], ["Type", function (r) { return person(r.CODE).type ? "<span class='chip'>" + esc(person(r.CODE).type) + "</span>" : ""; }],
+    ["Platform", function (r) { return esc(r.PLATFORM); }], ["First", function (r) { return esc(r["FIRST START"]); }], ["Last seen", function (r) { return esc(r["LAST SEEN"]); }],
+    ["Stage", function (r) { return esc(r.STAGE); }], ["Day", function (r) { return esc(r["GAME DAY"]); }, "num"], ["Min", function (r) { return esc(r["PLAY MINUTES"]); }, "num"],
+    ["Battles W / L", function (r) { return (r["BATTLES WON"] || r["BATTLES LOST"]) ? esc((r["BATTLES WON"] || 0) + " / " + (r["BATTLES LOST"] || 0)) : ""; }, "num"],
+    ["Last action", function (r) { return esc(r["LAST ACTION"]); }], ["Last report", function (r) { return esc(r.EVENT); }, "wrap muted"],
+  ], rows, function (r) { return /^selftest/.test(r.CODE) ? " class='muted'" : ""; });
+  var evs = events(), ss = sessions(evs);
+  var sel = $("s-code"), k = sel.value, codes = Array.from(new Set(ss.map(function (s) { return s.code; })));
+  sel.innerHTML = "<option value=''>ALL</option>" + codes.map(function (c) { return "<option value='" + esc(c) + "'>" + esc(c + (person(c).name ? "  " + person(c).name : "")) + "</option>"; }).join(""); sel.value = codes.indexOf(k) >= 0 ? k : "";
+  var list = ss.filter(function (s) { return !sel.value || s.code === sel.value; });
+  var n = function (v) { return v ? String(v) : ""; };
+  $("sess-t").innerHTML = grid([
+    ["Start", function (s) { return esc(short(s.start)); }], ["Who", function (s) { return who(s.code); }], ["Length", function (s) { return fmtSec(s.len); }, "num"],
+    ["Modes", function (s) { return Object.keys(s.modes).map(function (m) { return "<span class='chip'>" + esc(m) + "</span>"; }).join(" "); }],
+    ["Events", function (s) { return n(s.n); }, "num"], ["Clicks", function (s) { return n(s.clicks); }, "num"], ["Battles", function (s) { return n(s.battles); }, "num"],
+    ["Deaths", function (s) { return n(s.deaths); }, "num"], ["Bugs", function (s) { return n(s.bugs); }, "num"],
+  ], list, function (s) { return " class='click" + (s.id === pickedSession ? " sel" : "") + "' data-s='" + esc(s.id) + "'"; });
+  var tl = $("tl-sess");
+  tl.innerHTML = ss.map(function (s) { return "<option value='" + esc(s.id) + "'>" + esc(short(s.start) + "  " + s.code + (person(s.code).name ? " " + person(s.code).name : "") + "  " + fmtSec(s.len) + "  (" + s.n + " events)") + "</option>"; }).join("");
+  if (!pickedSession && ss[0]) pickedSession = ss[0].id; tl.value = pickedSession;
+  $("tl-legend").innerHTML = KINDS.map(function (k) { return "<span><i style='background:" + k.color + "'></i>" + k.label + "</span>"; }).join("") + "<span><i style='background:#3a5d3a'></i>SANDBOX</span><span><i style='background:#6a3a33'></i>BATTLE</span><span><i style='background:#2d5566'></i>SAIL</span>";
+  renderEvents(evs); drawTimeline();
+}
+$("s-code").addEventListener("change", renderTelemetry);
+$("sess-t").addEventListener("click", function (e) { var tr = e.target.closest("tr[data-s]"); if (!tr) return; pickedSession = tr.dataset.s; $("tl-sess").value = pickedSession; showTel("timeline"); });
+$("tl-sess").addEventListener("change", function (e) { pickedSession = e.target.value; drawTimeline(); });
+var BAND = { SANDBOX: "#3a5d3a", BATTLE: "#6a3a33", SAIL: "#2d5566" };
+function drawTimeline() {
+  if (!D || !D.events) return;
+  var box = $("tl"); box.querySelectorAll("svg").forEach(function (s) { s.remove(); });
+  var evs = events().filter(function (e) { return e.session === pickedSession; }).sort(function (a, b) { return a.seq - b.seq; });
+  if (!evs.length) return;
+  var W = 1000, L = 108, R = 12, lane = 26, top = 22, H = top + KINDS.length * lane + 30, max = Math.max(10, Math.max.apply(null, evs.map(function (e) { return e.sec; })));
+  var x = function (s) { return L + (W - L - R) * (s / max); };
+  var svg = "<svg viewBox='0 0 " + W + " " + H + "' role='img' aria-label='Time line'>", cur = null, from = 0, bands = [];
+  evs.forEach(function (e) { var p = (e.mode || "").split(".")[0]; if (p !== cur) { if (cur !== null) bands.push([cur, from, e.sec]); cur = p; from = e.sec; } }); bands.push([cur, from, max]);
+  bands.forEach(function (b) { if (BAND[b[0]]) svg += "<rect x='" + x(b[1]).toFixed(1) + "' y='" + (top - 6) + "' width='" + Math.max(1, x(b[2]) - x(b[1])).toFixed(1) + "' height='" + (KINDS.length * lane + 6) + "' fill='" + BAND[b[0]] + "' fill-opacity='.35'/>"; });
+  var step = max > 3600 ? 600 : max > 900 ? 300 : 60;
+  for (var s = 0; s <= max; s += step) svg += "<line x1='" + x(s) + "' x2='" + x(s) + "' y1='" + (top - 6) + "' y2='" + (top + KINDS.length * lane) + "' stroke='#2c2c33'/><text x='" + x(s) + "' y='" + (H - 10) + "' fill='#8e8b86' font-size='11' text-anchor='middle' font-family='JetBrains Mono,monospace'>" + fmtSec(s) + "</text>";
+  KINDS.forEach(function (k, i) { var y = top + i * lane; svg += "<text x='" + (L - 8) + "' y='" + (y + 15) + "' fill='#8e8b86' font-size='12' text-anchor='end' font-family='Barlow Condensed,sans-serif'>" + k.label + "</text><line x1='" + L + "' x2='" + (W - R) + "' y1='" + (y + lane - 1) + "' y2='" + (y + lane - 1) + "' stroke='#222228'/>"; });
+  evs.forEach(function (e, n) { var i = KINDS.findIndex(function (k) { return k.id === e.kind; }), y = top + i * lane, h = Math.min(lane - 6, 6 + Math.log2(e.count + 1) * 4);
+    svg += "<rect data-n='" + n + "' x='" + (x(e.sec) - 2).toFixed(1) + "' y='" + (y + (lane - h) / 2).toFixed(1) + "' width='4' height='" + h.toFixed(1) + "' rx='1' fill='" + kindById(e.kind).color + "' style='cursor:crosshair'/>"; });
+  box.insertAdjacentHTML("beforeend", svg + "</svg>");
+  var tip = $("tip"), el = box.querySelector("svg");
+  el.addEventListener("mousemove", function (ev) { var r = ev.target.closest("rect[data-n]"); if (!r) { tip.hidden = true; return; } var e = evs[+r.dataset.n];
+    tip.textContent = fmtSec(e.sec) + "  " + e.time.slice(11) + "  day " + e.day + "\n" + e.event + (e.count > 1 ? "  x" + e.count : "") + (e.values ? "\n" + e.values : "") + "\n" + e.mode;
+    var bx = box.getBoundingClientRect(); tip.hidden = false; tip.style.left = Math.min(ev.clientX - bx.left + 12, bx.width - 240) + "px"; tip.style.top = (ev.clientY - bx.top + 12) + "px"; });
+  el.addEventListener("mouseleave", function () { tip.hidden = true; });
+}
+function renderEvents(evs) {
+  var cs = $("ev-code"), ks = $("ev-cat"), kc = cs.value, kk = ks.value, codes = Array.from(new Set(evs.map(function (e) { return e.code; })));
+  cs.innerHTML = "<option value=''>ALL</option>" + codes.map(function (c) { return "<option value='" + esc(c) + "'>" + esc(c + (person(c).name ? "  " + person(c).name : "")) + "</option>"; }).join(""); cs.value = codes.indexOf(kc) >= 0 ? kc : "";
+  ks.innerHTML = "<option value=''>ALL</option>" + KINDS.map(function (k) { return "<option value='" + k.id + "'>" + k.label + "</option>"; }).join(""); ks.value = kk;
+  var q = $("ev-q").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  var list = evs.filter(function (e) { return (!cs.value || e.code === cs.value) && (!ks.value || e.kind === ks.value) && q.every(function (w) { return (e.event + " " + e.values + " " + e.mode + " " + person(e.code).name).toLowerCase().indexOf(w) >= 0; }); })
+    .sort(function (a, b) { return (b.time + b.seq).localeCompare(a.time + a.seq); });
+  $("ev-n").textContent = list.length + " OF " + evs.length;
+  $("ev-t").innerHTML = grid([
+    ["Time", function (e) { return esc(e.time.slice(5)); }], ["Who", function (e) { return who(e.code); }],
+    ["Kind", function (e) { var k = kindById(e.kind); return "<span class='chip' style='color:" + k.color + "'>" + k.label + "</span>"; }],
+    ["Event", function (e) { return esc(e.event) + (e.count > 1 ? " <span class='muted'>x" + e.count + "</span>" : ""); }],
+    ["Values", function (e) { return esc(e.values); }, "wrap muted"], ["Mode", function (e) { return esc(e.mode); }], ["At", function (e) { return fmtSec(e.sec); }, "num"],
+  ], list.slice(0, evLimit));
+  $("ev-more").hidden = list.length <= evLimit;
+}
+["ev-q", "ev-code", "ev-cat"].forEach(function (id) { $(id).addEventListener("input", function () { evLimit = 300; renderEvents(events()); }); });
+$("ev-more").addEventListener("click", function () { evLimit += 300; renderEvents(events()); });
+
+// ── overview (owner) ──
+function renderOverview() {
+  var rows = D.bugs ? bugRows() : [], cnt = function (s) { return rows.filter(function (r) { return r.STATUS === s; }).length; };
+  var evs = D.events ? events() : [], ss = sessions(evs), week = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+  var active = Array.from(new Set(ss.filter(function (s) { return s.start.slice(0, 10) >= week; }).map(function (s) { return s.code; })));
+  var ver = D.changelog && (D.changelog.text.match(/^##\s+(\d+\.\d+\.\d+)/m) || [])[1];
+  var tiles = [["New bugs", cnt("NEW")], ["Confirmed", cnt("CONFIRMED")], ["In progress", cnt("IN PROGRESS")], ["Fixed", cnt("FIXED")],
+    ["Testers this week", active.length], ["Open tasks", D.tasks ? D.tasks.filter(function (t) { return t.state !== "done"; }).length : "-"], ["Version", ver || "-"]];
+  $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
+  var nb = rows.filter(function (r) { return r.STATUS === "NEW"; }).reverse().slice(0, 8);
+  $("ov-bugs").innerHTML = nb.length ? nb.map(bugCard).join("") : "<div class='muted'>No new bugs.</div>";
+  $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
+  var cal = (D.calendar || []).filter(function (e) { return e.end >= Date.now(); }).slice(0, 6);
+  $("ov-cal").innerHTML = cal.length ? cal.map(function (e) { return "<div><b>" + esc(day(e.start)) + "</b> " + (e.allDay ? "" : esc(hm(e.start)) + " ") + esc(e.title) + "</div>"; }).join("") : "<div class='muted'>Nothing on the calendar.</div>";
+  $("team-t").innerHTML = grid([
+    ["Name", function (t) { return "<b>" + esc(t.name) + "</b>"; }], ["Role", function (t) { return "<span class='chip'>" + esc(t.role) + "</span>"; }],
+    ["Game codes", function (t) { return esc(t.codes); }], ["Packages", function (t) { return esc(t.packages); }],
+    ["Link", function (t) { return "<input class='link' readonly value='" + esc(SITE + "?k=" + t.key) + "'>"; }], ["", function () { return "<button data-copy>Copy</button>"; }],
+  ], D.team || []);
+}
+$("ov-bugs").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = c.dataset.bug; showTab("bugs"); renderBugs(); });
+$("team-t").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-copy]"); if (!b) return;
+  var inp = b.closest("tr").querySelector("input.link"); inp.select();
+  var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1500); };
+  try { if (document.execCommand("copy")) { done(); return; } } catch (err) {}
+  if (navigator.clipboard) navigator.clipboard.writeText(inp.value).then(done, function () { b.textContent = "Select + Ctrl+C"; });
+});
+
+// ── changelog / calendar / files ──
+function renderChangelog() {
+  if (!D.changelog) { $("cl").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; return; }
+  var html = "", inList = false;
+  D.changelog.text.split(/\r?\n/).forEach(function (l) {
+    var li = l.match(/^- (.*)/), cont = /^\s{2,}\S/.test(l);
+    if (li) { if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + esc(li[1]); return; }
+    if (cont && inList) { html += " " + esc(l.trim()); return; }
+    if (inList) { html += "</ul>"; inList = false; }
+    if (/^# /.test(l)) return;
+    if (/^## /.test(l)) { html += "<h2>" + esc(l.slice(3)) + "</h2>"; return; }
+    if (l.trim()) html += "<p class='muted'>" + esc(l) + "</p>";
+  });
+  $("cl").innerHTML = html + (inList ? "</ul>" : "") + "<p class='muted'>Sent " + new Date(D.changelog.updated).toLocaleString() + "</p>";
+}
+function renderCalendar() {
+  if (!D.calendar) { $("cal").innerHTML = "<div class='msg err'>The calendar did not load: " + esc(D.errors.calendar || "") + "</div>"; return; }
+  if (!D.calendar.length) { $("cal").innerHTML = "<div class='msg'>Nothing in the last week or the next 90 days. Add playtests and dates in Google Calendar.</div>"; return; }
+  var byDay = {}; D.calendar.forEach(function (e) { var k = new Date(e.start).toDateString(); (byDay[k] = byDay[k] || []).push(e); });
+  $("cal").innerHTML = Object.keys(byDay).map(function (k) { var l = byDay[k], past = l[0].end < Date.now();
+    return "<div class='panel" + (past ? " muted" : "") + "'><h3>" + esc(day(l[0].start)) + "</h3>" + l.map(function (e) { return "<div>" + (e.allDay ? "<span class='muted'>all day</span>" : esc(hm(e.start) + "-" + hm(e.end))) + "  <b>" + esc(e.title) + "</b>" + (e.where ? " <span class='muted'>" + esc(e.where) + "</span>" : "") + (e.note ? "<div class='muted'>" + esc(e.note) + "</div>" : "") + "</div>"; }).join("") + "</div>"; }).join("");
+}
+function renderFiles() {
+  if (!D.files) { $("files").innerHTML = "<div class='msg err'>FILES did not load: " + esc(D.errors.files || "") + "</div>"; return; }
+  $("f-bar").hidden = !D.files.url; if (D.files.url) $("f-open").href = D.files.url;
+  if (!D.files.packages.length) { $("files").innerHTML = "<div class='msg'>" + (owner() ? "No packages yet. Make a sub-folder in SHARES (e.g. DIALOGS_PL), put the files in, write its name in someone's PACKAGES." : "Nothing here for you yet.") + "</div>"; return; }
+  $("files").innerHTML = D.files.packages.map(function (p) { return "<div class='panel'><div class='bar'><h2>" + esc(p.name) + "</h2>" + (p.url ? "<a href='" + esc(p.url) + "' target='_blank' rel='noopener'>OPEN</a>" : "") + (p.people ? "<span class='muted'>" + (p.people.length ? "for " + esc(p.people.join(", ")) : "nobody has it yet") + "</span>" : "") + "</div>" +
+    (p.files.length ? "<table>" + p.files.map(function (f) { return "<tr><td>" + esc(f.name) + "</td><td class='num muted'>" + (f.size / 1048576).toFixed(2) + " MB</td><td class='muted'>" + esc(new Date(f.updated).toLocaleDateString()) + "</td><td><button data-f='" + esc(f.id) + "'>Download</button></td></tr>"; }).join("") + "</table>" : "<div class='muted'>Empty.</div>") + "</div>"; }).join("");
+}
+$("files").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-f]"); if (!b) return;
+  b.disabled = true; b.textContent = "Getting...";
+  apiGet({ api: "download", k: KEY, f: b.dataset.f }).then(function (f) {
+    var bin = atob(f.data), bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([bytes], { type: f.type })); a.download = f.name;
+    document.body.appendChild(a); a.click(); a.remove(); b.disabled = false; b.textContent = "Download";
+  }, function (err) { b.disabled = false; b.textContent = "Failed: " + (err && err.message || err); });
+});
+load();
+</script></body></html>
