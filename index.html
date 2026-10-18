@@ -43,11 +43,13 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .cl-v{display:flex;gap:10px;align-items:baseline;margin-top:8px}.cl-row{padding:4px 6px;border-bottom:1px solid #222228;min-width:0}.cl-row.has{cursor:pointer}.cl-row.has:hover{background:#232329}.cl-t{color:var(--gold)}.cl-d{display:none;color:var(--dim);margin-top:2px;overflow-wrap:anywhere}.cl-row.open .cl-d{display:block}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cal-h{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}.cal-d{background:var(--bg);border:1px solid var(--line);min-height:64px;padding:3px 5px;display:grid;align-content:start;gap:2px;min-width:0}.cal-d.past{opacity:.45}.cal-d.today{border-color:var(--cyan)}.cal-n{font-size:11px;color:var(--dim)}.cal-d.today .cal-n{color:var(--cyan)}.cal-e{font-size:11px;background:#232329;border-left:2px solid var(--gold);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card[draggable=true]{cursor:grab}.col.drop{border-color:var(--cyan);background:#16232a}
+.viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:1px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
 .hello{font:600 18px var(--head);letter-spacing:.08em;color:var(--fg)}.hello b{color:var(--cyan)}
 input.link{width:100%;min-width:220px;color:var(--dim)}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
-<header><h1>PIXEL FORMATION STUDIO</h1><span class="hello" id="hello"></span><span class="sub" id="status">Loading...</span><span class="spacer"></span><button id="refresh">Refresh</button></header>
+<header><h1>PIXEL FORMATION STUDIO</h1><span class="hello" id="hello"></span><select id="view-as" hidden aria-label="View as"></select><span class="sub" id="status">Loading...</span><span class="spacer"></span><button id="refresh">Refresh</button></header>
+<div class="viewbar" id="viewbar" hidden>VIEWING AS <b id="viewbar-cat"></b><span class="muted">what this category sees; status changes are off</span><span class="spacer"></span><button id="viewbar-back">Back to owner</button></div>
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
 <nav id="tabs">
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
@@ -112,6 +114,8 @@ function apiGet(params) {
 function apiPost(body) {
   return fetch(API, { method: "POST", body: JSON.stringify(body), credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) { if (t !== "OK") throw new Error(t); });
 }
+// 1184.11: the owner's VIEW AS (a category), "" = as the owner
+var VIEW_AS = "";
 var D = null, pickedBug = "", pickedSession = "", evLimit = 300, openTask = {}, curTab = "";
 var $ = function (id) { return document.getElementById(id); };
 var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
@@ -147,13 +151,15 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 function load() {
   if (!KEY) { askKey(""); return; }
   $("status").textContent = "Loading...";
-  apiGet({ api: "data", k: KEY }).then(function (j) { D = j; evCache = null; $("key-box").hidden = true; render(); }, function (e) {
+  apiGet(VIEW_AS ? { api: "data", k: KEY, as: VIEW_AS } : { api: "data", k: KEY }).then(function (j) { D = j; evCache = null; $("key-box").hidden = true; render(); }, function (e) {
     var m = String(e && e.message || e);
     if (m === "No access") { saveKey(""); askKey("This key does not open the panel."); return; }
     $("status").textContent = "Could not load: " + m;
   });
 }
 $("refresh").addEventListener("click", load);
+$("view-as").addEventListener("change", function (e) { VIEW_AS = e.target.value === "OWNER" ? "" : e.target.value; pickedBug = ""; load(); });
+$("viewbar-back").addEventListener("click", function () { VIEW_AS = ""; load(); });
 function askKey(why) { $("status").textContent = why || "Enter your key."; $("key-box").hidden = false; $("key-in").focus(); }
 $("key-go").addEventListener("click", function () { var k = $("key-in").value.trim(); if (!k) return; saveKey(k); load(); });
 $("key-in").addEventListener("keydown", function (e) { if (e.key === "Enter") $("key-go").click(); });
@@ -162,6 +168,10 @@ function render() {
   $("tabs").hidden = D.tabs.length < 2;
   var errs = Object.keys(D.errors || {});
   $("hello").innerHTML = D.name ? "Hello <b>" + esc(D.name) + "</b>" : "";
+  var va = $("view-as");
+  va.hidden = !D.isOwner;
+  if (D.isOwner) { va.innerHTML = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"].map(function (c) { return "<option value='" + c + "'>VIEW AS " + c + "</option>"; }).join(""); va.value = D.viewAs || "OWNER"; }
+  $("viewbar").hidden = !D.viewAs; $("viewbar-cat").textContent = D.viewAs || "";
   $("status").textContent = "loaded " + new Date().toLocaleTimeString() + (errs.length ? ". Did not load: " + errs.join(", ") : "");
   var t0 = curTab; if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} }
   showTab(t0 || D.tabs[0]);
