@@ -68,7 +68,8 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
 <button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
 
-<section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div><div class="cols">
+<section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
+<div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll"><div id="ov-heat"></div></div></div><div class="cols">
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
 <div class="panel" id="ov-cal-p"><h2>Coming up</h2><div id="ov-cal"></div></div></div>
 </section>
@@ -453,13 +454,48 @@ function renderEvents(evs) {
 ["ev-q", "ev-code", "ev-cat"].forEach(function (id) { $(id).addEventListener("input", function () { evLimit = 300; renderEvents(events()); }); });
 $("ev-more").addEventListener("click", function () { evLimit += 300; renderEvents(events()); });
 
-// ── overview (owner) ──
+// ── overview ──
+var dayKey = function (d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+// 1204: the changes heatmap — a column per week, a square per day (Monday on top), the last 12 months; colour by the
+// day's file edits in the project's Claude sessions (ACTIVITY.json), hover = the date and the count.
+var HEAT = ["#1f1f24", "#4a3a1c", "#7a5a22", "#b8862f", "#e6ad47"];
+function renderHeatmap() {
+  var act = D.activity || {}, now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var start = new Date(today); start.setDate(start.getDate() - (start.getDay() + 6) % 7 - 52 * 7);
+  var C = 13, L = 30, T = 16, vals = Object.keys(act).filter(function (k) { return k >= dayKey(start); }).map(function (k) { return act[k]; });
+  var max = Math.max(1, Math.max.apply(null, vals.concat([0]))), total = vals.reduce(function (a, v) { return a + v; }, 0);
+  var lvl = function (v) { if (!v) return 0; var q = v / max; return q <= 0.15 ? 1 : q <= 0.35 ? 2 : q <= 0.6 ? 3 : 4; };
+  var svg = "<svg width='" + (L + 53 * C) + "' height='" + (T + 7 * C) + "' role='img' aria-label='Changes per day'>", lastMonth = -1;
+  ["MON", "", "WED", "", "FRI", "", ""].forEach(function (t, i) { if (t) svg += "<text x='0' y='" + (T + i * C + 10) + "' fill='#8e8b86' font-size='9' font-family='JetBrains Mono,monospace'>" + t + "</text>"; });
+  for (var w = 0; w < 53; w++) {
+    for (var d = 0; d < 7; d++) {
+      var x = new Date(start); x.setDate(start.getDate() + w * 7 + d);
+      if (x > today) continue;
+      if (d === 0 && x.getMonth() !== lastMonth) { lastMonth = x.getMonth(); svg += "<text x='" + (L + w * C) + "' y='10' fill='#8e8b86' font-size='9' font-family='JetBrains Mono,monospace'>" + MONTHS[x.getMonth()] + "</text>"; }
+      var k = dayKey(x), v = act[k] || 0;
+      svg += "<rect x='" + (L + w * C) + "' y='" + (T + d * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='" + HEAT[lvl(v)] + "'" + (k === dayKey(today) ? " stroke='#4dccff'" : "") + "><title>" + esc(day(x.getTime())) + ": " + v + (v === 1 ? " change" : " changes") + "</title></rect>";
+    }
+  }
+  $("ov-heat").innerHTML = svg + "</svg>";
+  $("ov-heat-n").textContent = total + " changes in the last 12 months";
+}
 function renderOverview() {
   var evs = D.events ? events() : [], ss = sessions(evs), week = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-  var active = Array.from(new Set(ss.filter(function (s) { return s.start.slice(0, 10) >= week; }).map(function (s) { return nameOf(s.code); })));
   var ver = D.changelog && (D.changelog.text.match(/^##\s+(\d+\.\d+\.\d+)/m) || [])[1];
-  var tiles = [["Testers this week", active.length]].concat(D.tasks ? [["Open tasks", D.tasks.filter(function (t) { return t.state !== "done"; }).length]] : [], [["Version", ver || "-"]]);
+  // 1204: this week = the last 7 days, today included
+  var from = dayKey(new Date(Date.now() - 6 * 864e5)), act = D.activity || {};
+  var changes = Object.keys(act).filter(function (k) { return k >= from; }).reduce(function (a, k) { return a + act[k]; }, 0);
+  var tiles = [["Changes this week", changes]];
+  if (D.tasks) tiles.push(["Tasks done this week", D.tasks.filter(function (t) { return t.state === "done" && String(t.updated || "").slice(0, 10) >= from; }).length]);
+  if (D.events) {
+    tiles.push(["Game events this week", evs.filter(function (e) { return String(e.time).slice(0, 10) >= from; }).length]);
+    tiles.push(["Play time this week", fmtSec(ss.filter(function (s) { return s.start.slice(0, 10) >= from; }).reduce(function (a, s) { return a + s.len; }, 0))]);
+  }
+  if (D.bugs) tiles.push(["Bugs reported this week", bugRows().filter(function (r) { return String(r.TIME).slice(0, 10) >= from; }).length]);
+  if (D.tasks) tiles.push(["Open tasks", D.tasks.filter(function (t) { return t.state !== "done"; }).length]);
+  tiles.push(["Version", ver || "-"]);
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
+  renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
   $("ov-cal-p").hidden = !allowed("calendar");
   var cal = (D.calendar || []).filter(function (e) { return e.end >= Date.now(); }).slice(0, 6);
