@@ -71,7 +71,7 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
 <div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll"><div id="ov-heat"></div></div></div><div class="cols">
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
-<div class="panel" id="ov-cal-p"><h2>Coming up</h2><div id="ov-cal"></div></div></div>
+<div class="panel"><h2>Latest changes</h2><div id="ov-ch"></div></div></div>
 </section>
 
 <section class="panel" data-pane="bugs" hidden>
@@ -495,9 +495,13 @@ function renderOverview() {
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
   renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
-  $("ov-cal-p").hidden = !allowed("calendar");
-  var cal = (D.calendar || []).filter(function (e) { return e.end >= Date.now(); }).slice(0, 6);
-  $("ov-cal").innerHTML = cal.length ? cal.map(function (e) { return "<div><b>" + esc(day(e.start)) + "</b> " + (e.allDay ? "" : esc(hm(e.start)) + " ") + esc(e.title) + "</div>"; }).join("") : "<div class='muted'>Nothing on the calendar.</div>";
+  // 1218: LATEST CHANGES — the newest CHANGELOG lines, NEXT BUILD first, one row each (section + title)
+  var ch = [], sec = "";
+  String(D.changelog ? D.changelog.text : "").split(/\r?\n/).forEach(function (l) {
+    var h = l.match(/^## (.*)$/); if (h) { sec = /^NEXT BUILD/i.test(h[1]) ? "NEXT BUILD" : h[1].split(/\s+[—-]\s+/)[0]; return; }
+    var li = l.match(/^- ([^:]{1,70}):/) || l.match(/^- (.{1,70})/); if (li && sec) ch.push([sec, li[1]]);
+  });
+  $("ov-ch").innerHTML = ch.length ? ch.slice(0, 8).map(function (c) { return "<div><b>" + esc(c[0]) + "</b>  " + esc(c[1]) + "</div>"; }).join("") : "<div class='muted'>No changes.</div>";
 }
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
 var CAT_ORDER = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"];
