@@ -480,8 +480,7 @@ function renderHeatmap() {
   $("ov-heat-n").textContent = total + " changes in the last 12 months";
 }
 function renderOverview() {
-  var evs = D.events ? events() : [], ss = sessions(evs), week = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-  var ver = D.changelog && (D.changelog.text.match(/^##\s+(\d+\.\d+\.\d+)/m) || [])[1];
+  var evs = D.events ? events() : [], ss = sessions(evs);
   // 1204: this week = the last 7 days, today included
   var from = dayKey(new Date(Date.now() - 6 * 864e5)), act = D.activity || {};
   var changes = Object.keys(act).filter(function (k) { return k >= from; }).reduce(function (a, k) { return a + act[k]; }, 0);
@@ -493,7 +492,6 @@ function renderOverview() {
   }
   if (D.bugs) tiles.push(["Bugs reported this week", bugRows().filter(function (r) { return String(r.TIME).slice(0, 10) >= from; }).length]);
   if (D.tasks) tiles.push(["Open tasks", D.tasks.filter(function (t) { return t.state !== "done"; }).length]);
-  tiles.push(["Version", ver || "-"]);
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
   renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
