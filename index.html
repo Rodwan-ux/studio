@@ -29,7 +29,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:#232329}tr.sel td{backgroun
 .who b{font-weight:600}.who .nm{color:var(--cyan);white-space:nowrap}
 .sev-BLOCKER{color:var(--blood)}.sev-CRITICAL{color:var(--red)}.sev-MAJOR{color:var(--amber)}.sev-MINOR{color:var(--dim)}
 .st-NEW{color:var(--gold)}.st-CONFIRMED{color:var(--cyan)}.st-IN_PROGRESS{color:var(--violet)}.st-FIXED{color:var(--green)}.st-REJECTED,.st-DUPLICATE{color:var(--dim)}
-.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media (max-width:900px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:520px){.board{grid-template-columns:1fr}}
+.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}@media (max-width:620px){.board{grid-template-columns:1fr}}.newbugs{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px}
 .col{background:var(--bg);border:1px solid var(--line);padding:6px;display:grid;gap:6px;align-content:start;min-width:0}
 .col h3{display:flex;justify-content:space-between}
 .card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);padding:6px 8px;display:grid;gap:3px;cursor:pointer;min-width:0}
@@ -68,12 +68,13 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div><div class="cols">
-<div class="panel"><h2>New bugs</h2><div id="ov-bugs"></div></div>
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
 <div class="panel" id="ov-cal-p"><h2>Coming up</h2><div id="ov-cal"></div></div></div>
 </section>
 
 <section class="panel" data-pane="bugs" hidden>
+<div class="tiles" id="b-tiles"></div>
+<div class="panel" id="b-new-p"><h2>New bugs</h2><div class="newbugs" id="b-new"></div></div>
 <div class="bar"><input id="b-q" type="search" placeholder="SEARCH ID, TEXT OR TESTER..." style="flex:1;min-width:200px">
 <label for="b-sev">Severity</label><select id="b-sev"></select><label for="b-type">Type</label><select id="b-type"></select>
 <label for="b-who">Tester</label><select id="b-who"></select><label id="b-mine-l" hidden><input type="checkbox" id="b-mine"> my reports</label><label><input type="checkbox" id="b-closed"> rejected / duplicate</label></div>
@@ -226,7 +227,7 @@ function bugLinks(r) { if (!D.bugs.links) return ""; var head = D.bugs.values[0]
 function stCls(s) { return "st-" + String(s).replace(" ", "_"); }
 function bugCard(r) {
   return "<div class='card" + (r.ID === pickedBug ? " on" : "") + (!owner() && isMine(r) ? " mine" : "") + "' data-bug='" + esc(r.ID) + "'" + (owner() ? " draggable='true'" : "") + " style='border-left-color:" + ({ BLOCKER: "var(--blood)", CRITICAL: "var(--red)", MAJOR: "var(--amber)" }[r.SEVERITY] || "var(--line)") + "'>" +
-    "<div class='t'><b>" + esc(r.ID.slice(0, 4)) + "</b><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY || "-") + "</span><span class='muted'>" + esc(r.TYPE) + "</span>" + (r.TASK ? "<span class='chip st-IN_PROGRESS'>#" + esc(r.TASK) + "</span>" : "") + (r["FIXED IN"] ? "<span class='chip st-FIXED'>" + esc(r["FIXED IN"]) + "</span>" : "") + "</div>" +
+    "<div class='t'><b>" + esc(r.ID.slice(0, 4)) + "</b><span class='chip " + stCls(r.STATUS) + "'>" + esc(r.STATUS) + "</span><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY || "-") + "</span><span class='muted'>" + esc(r.TYPE) + "</span>" + (r.TASK ? "<span class='chip st-IN_PROGRESS'>#" + esc(r.TASK) + "</span>" : "") + (r["FIXED IN"] ? "<span class='chip st-FIXED'>" + esc(r["FIXED IN"]) + "</span>" : "") + "</div>" +
     "<div class='d'>" + esc(r.DESCRIPTION) + "</div><div class='muted'><span class='nm'>" + esc(nameOf(r.CODE)) + "</span> · " + esc(short(r.TIME)) + "</div></div>";
 }
 function renderBugs() {
@@ -242,8 +243,16 @@ function renderBugs() {
   var q = $("b-q").value.trim().toLowerCase();
   var list = rows.filter(function (r) { return (!$("b-sev").value || r.SEVERITY === $("b-sev").value) && (!$("b-type").value || r.TYPE === $("b-type").value) && (!$("b-who").value || nameOf(r.CODE) === $("b-who").value) &&
     (!$("b-mine").checked || isMine(r)) && (!q || (r.ID + " " + r.DESCRIPTION + " " + r.CODE + " " + person(r.CODE).name + " " + (r.NOTE || "")).toLowerCase().indexOf(q) >= 0); }).reverse();
-  var cols = ["NEW", "CONFIRMED", "IN PROGRESS", "FIXED"]; if ($("b-closed").checked) cols = cols.concat(["REJECTED", "DUPLICATE"]);
-  $("b-board").innerHTML = cols.map(function (c) { var l = list.filter(function (r) { return r.STATUS === c; }); return "<div class='col' data-col='" + c + "'><h3><span class='" + stCls(c) + "'>" + c + "</span><span>" + l.length + "</span></h3>" + (l.map(bugCard).join("") || "<div class='muted'>-</div>") + "</div>"; }).join("");
+  // the BUGS overview: counts and the NEW bugs (all of them, whatever the filters)
+  var cnt = function (s) { return rows.filter(function (r) { return r.STATUS === s; }).length; };
+  $("b-tiles").innerHTML = [["New", "NEW"], ["Confirmed", "CONFIRMED"], ["In progress", "IN PROGRESS"], ["Fixed", "FIXED"]].map(function (t) { return "<div class='tile'><span class='" + stCls(t[1]) + "'>" + t[0] + "</span><b>" + cnt(t[1]) + "</b></div>"; }).join("");
+  var nb = rows.filter(function (r) { return r.STATUS === "NEW"; }).reverse();
+  $("b-new").innerHTML = nb.length ? nb.map(bugCard).join("") : "<div class='muted'>No new bugs.</div>";
+  // the board: TO DO (new, confirmed, in progress) and DONE (fixed; rejected / duplicate with the checkbox)
+  var done = { FIXED: true }; if ($("b-closed").checked) { done.REJECTED = true; done.DUPLICATE = true; }
+  var cols = [["TODO", "TO DO", "st-NEW", function (r) { return r.STATUS === "NEW" || r.STATUS === "CONFIRMED" || r.STATUS === "IN PROGRESS"; }],
+    ["DONE", "DONE", "st-FIXED", function (r) { return !!done[r.STATUS]; }]];
+  $("b-board").innerHTML = cols.map(function (c) { var l = list.filter(c[3]); return "<div class='col' data-col='" + c[0] + "'><h3><span class='" + c[2] + "'>" + c[1] + "</span><span>" + l.length + "</span></h3>" + (l.map(bugCard).join("") || "<div class='muted'>-</div>") + "</div>"; }).join("");
   renderBugDetail();
 }
 function renderBugDetail() {
@@ -257,6 +266,7 @@ function renderBugDetail() {
       "<input id='bd-note' placeholder='NOTE...' value='" + esc(r.NOTE) + "' style='flex:1;min-width:180px'><button data-set='" + esc(r.STATUS) + "'>Save note</button></div>" : "") +
     (r["RECENT EVENTS"] ? "<h3>What the player did last</h3><pre>" + esc(r["RECENT EVENTS"]) + "</pre>" : "");
 }
+$("b-new").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = pickedBug === c.dataset.bug ? "" : c.dataset.bug; renderBugs(); if (pickedBug) $("b-detail").scrollIntoView({ block: "nearest" }); });
 $("b-board").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = pickedBug === c.dataset.bug ? "" : c.dataset.bug; renderBugs(); if (pickedBug) $("b-detail").scrollIntoView({ block: "nearest" }); });
 $("b-detail").addEventListener("click", function (e) {
   if (e.target.id === "bd-x") { pickedBug = ""; renderBugs(); return; }
@@ -269,12 +279,12 @@ $("b-detail").addEventListener("click", function (e) {
     renderBugs(); if (allowed("overview")) renderOverview(); },
     function (err) { b.disabled = false; b.textContent = "Not saved: " + (err && err.message || err); });
 });
-// drag a card onto another column = its new status (OWNER / ADMIN)
-var dragId = "";
+// drag a card to the other column (OWNER / ADMIN): into DONE = FIXED, back into TO DO = CONFIRMED
+var dragId = "", dragFrom = "";
 var clearDrop = function () { document.querySelectorAll(".col.drop").forEach(function (x) { x.classList.remove("drop"); }); };
-$("b-board").addEventListener("dragstart", function (e) { var c = e.target.closest("[data-bug]"); if (!c || !owner()) return; dragId = c.dataset.bug; e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragId); } catch (err) {} });
+$("b-board").addEventListener("dragstart", function (e) { var c = e.target.closest("[data-bug]"); if (!c || !owner()) return; dragId = c.dataset.bug; dragFrom = (c.closest(".col[data-col]") || {}).dataset ? c.closest(".col[data-col]").dataset.col : ""; e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragId); } catch (err) {} });
 $("b-board").addEventListener("dragover", function (e) { var col = e.target.closest(".col[data-col]"); if (!col || !dragId) return; e.preventDefault(); if (!col.classList.contains("drop")) { clearDrop(); col.classList.add("drop"); } });
-$("b-board").addEventListener("drop", function (e) { e.preventDefault(); var col = e.target.closest(".col[data-col]"), id = dragId; dragId = ""; clearDrop(); if (col && id) moveBug(id, col.dataset.col); });
+$("b-board").addEventListener("drop", function (e) { e.preventDefault(); var col = e.target.closest(".col[data-col]"), id = dragId; dragId = ""; clearDrop(); if (col && id && col.dataset.col !== dragFrom) moveBug(id, col.dataset.col === "DONE" ? "FIXED" : "CONFIRMED"); });
 $("b-board").addEventListener("dragend", function () { dragId = ""; clearDrop(); });
 function moveBug(id, st) {
   var head = D.bugs.values[0], cs = head.indexOf("STATUS"), r = D.bugs.values.findIndex(function (x) { return x[0] === id; });
@@ -451,21 +461,16 @@ $("ev-more").addEventListener("click", function () { evLimit += 300; renderEvent
 
 // ── overview (owner) ──
 function renderOverview() {
-  var rows = D.bugs ? bugRows() : [], cnt = function (s) { return rows.filter(function (r) { return r.STATUS === s; }).length; };
   var evs = D.events ? events() : [], ss = sessions(evs), week = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
   var active = Array.from(new Set(ss.filter(function (s) { return s.start.slice(0, 10) >= week; }).map(function (s) { return nameOf(s.code); })));
   var ver = D.changelog && (D.changelog.text.match(/^##\s+(\d+\.\d+\.\d+)/m) || [])[1];
-  var tiles = [["New bugs", cnt("NEW")], ["Confirmed", cnt("CONFIRMED")], ["In progress", cnt("IN PROGRESS")], ["Fixed", cnt("FIXED")],
-    ["Testers this week", active.length]].concat(D.tasks ? [["Open tasks", D.tasks.filter(function (t) { return t.state !== "done"; }).length]] : [], [["Version", ver || "-"]]);
+  var tiles = [["Testers this week", active.length]].concat(D.tasks ? [["Open tasks", D.tasks.filter(function (t) { return t.state !== "done"; }).length]] : [], [["Version", ver || "-"]]);
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
-  var nb = rows.filter(function (r) { return r.STATUS === "NEW"; }).reverse().slice(0, 8);
-  $("ov-bugs").innerHTML = nb.length ? nb.map(bugCard).join("") : "<div class='muted'>No new bugs.</div>";
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
   $("ov-cal-p").hidden = !allowed("calendar");
   var cal = (D.calendar || []).filter(function (e) { return e.end >= Date.now(); }).slice(0, 6);
   $("ov-cal").innerHTML = cal.length ? cal.map(function (e) { return "<div><b>" + esc(day(e.start)) + "</b> " + (e.allDay ? "" : esc(hm(e.start)) + " ") + esc(e.title) + "</div>"; }).join("") : "<div class='muted'>Nothing on the calendar.</div>";
 }
-$("ov-bugs").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = c.dataset.bug; showTab("bugs"); renderBugs(); });
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
 var CAT_ORDER = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"];
 function peopleRows() {
