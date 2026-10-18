@@ -150,7 +150,7 @@ function grid(specs, rows, rowAttr) {
 // people by game code, built once per load; a code with no NAME = UNNAMED TESTER n (codes are shown only in PEOPLE)
 var _people = null, _unnamed = null;
 function person(code) {
-  if (!_people) { _people = {}; table(D && D.people).rows.forEach(function (r) { _people[String(r.CODE).toLowerCase()] = { name: r.NAME || "", type: r.TYPE || "" }; }); }
+  if (!_people) { _people = {}; table(D && D.people).rows.forEach(function (r) { _people[String(r.CODE).toLowerCase()] = { name: r.NICK || r.NAME || "", full: r.NAME || "", type: r.TYPE || "" }; }); }
   return _people[String(code || "").toLowerCase()] || { name: "", type: "" };
 }
 function nameOf(code) {
@@ -166,7 +166,11 @@ function nameOf(code) {
   }
   return _unnamed[String(code || "").toLowerCase()] || "UNNAMED TESTER";
 }
-function who(code) { return "<span class='nm'>" + esc(nameOf(code)) + "</span>"; }
+// 1220: one fixed colour per person, from the name shown; used wherever a person's name shows
+var PERSON_COLORS = ["#4dccff", "#74b84a", "#e6ad47", "#ff8c73", "#a796c4", "#5fd3b3", "#e07fb0", "#8fb8ff", "#c9d65a", "#f0a35e"];
+function personColor(name) { var s = String(name || ""), x = 0; for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) >>> 0; return PERSON_COLORS[x % PERSON_COLORS.length]; }
+function nameTag(name) { return "<span class='nm' style='color:" + personColor(name) + "'>" + esc(name) + "</span>"; }
+function who(code) { return nameTag(nameOf(code)); }
 
 // tabs (the last one picked is remembered in this browser)
 function showTab(t) {
@@ -201,7 +205,7 @@ function render() {
   document.querySelectorAll("#tabs button").forEach(function (b) { b.hidden = !allowed(b.dataset.tab); });
   $("tabs").hidden = D.tabs.length < 2;
   var errs = Object.keys(D.errors || {});
-  $("hello").innerHTML = D.name ? "Hello <b>" + esc(D.name) + "</b>" : "";
+  $("hello").innerHTML = D.name ? "Hello <b style='color:" + personColor(D.name) + "'>" + esc(D.name) + "</b>" : "";
   var va = $("view-as");
   va.hidden = !D.isOwner;
   if (D.isOwner) { va.innerHTML = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"].map(function (c) { return "<option value='" + c + "'>VIEW AS " + c + "</option>"; }).join(""); va.value = D.viewAs || "OWNER"; }
@@ -229,7 +233,7 @@ function stCls(s) { return "st-" + String(s).replace(" ", "_"); }
 function bugCard(r) {
   return "<div class='card" + (r.ID === pickedBug ? " on" : "") + (!owner() && isMine(r) ? " mine" : "") + "' data-bug='" + esc(r.ID) + "'" + (owner() ? " draggable='true'" : "") + " style='border-left-color:" + ({ BLOCKER: "var(--blood)", CRITICAL: "var(--red)", MAJOR: "var(--amber)" }[r.SEVERITY] || "var(--line)") + "'>" +
     "<div class='t'><b>" + esc(r.ID.slice(0, 4)) + "</b><span class='chip " + stCls(r.STATUS) + "'>" + esc(r.STATUS) + "</span><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY || "-") + "</span><span class='muted'>" + esc(r.TYPE) + "</span>" + (r.TASK ? "<span class='chip st-IN_PROGRESS'>#" + esc(r.TASK) + "</span>" : "") + (r["FIXED IN"] ? "<span class='chip st-FIXED'>" + esc(r["FIXED IN"]) + "</span>" : "") + "</div>" +
-    "<div class='d'>" + esc(r.DESCRIPTION) + "</div><div class='muted'><span class='nm'>" + esc(nameOf(r.CODE)) + "</span> · " + esc(short(r.TIME)) + "</div></div>";
+    "<div class='d'>" + esc(r.DESCRIPTION) + "</div><div class='muted'>" + who(r.CODE) + " · " + esc(short(r.TIME)) + "</div></div>";
 }
 function renderBugs() {
   var msg = $("b-msg");
@@ -255,7 +259,7 @@ function renderBugDetail() {
   var box = $("b-detail"), r = bugRows().find(function (x) { return x.ID === pickedBug; });
   if (!r) { box.hidden = true; return; }
   box.hidden = false;
-  box.innerHTML = "<div class='bar'><b>" + esc(r.ID) + "</b><span class='chip " + stCls(r.STATUS) + "'>" + esc(r.STATUS) + "</span><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY) + "</span><span class='nm'>" + esc(nameOf(r.CODE)) + "</span><span class='muted'>" + esc(r.TIME) + "</span><span class='spacer'></span><button id='bd-x'>Close</button></div>" +
+  box.innerHTML = "<div class='bar'><b>" + esc(r.ID) + "</b><span class='chip " + stCls(r.STATUS) + "'>" + esc(r.STATUS) + "</span><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY) + "</span>" + who(r.CODE) + "<span class='muted'>" + esc(r.TIME) + "</span><span class='spacer'></span><button id='bd-x'>Close</button></div>" +
     "<div>" + esc(r.DESCRIPTION) + "</div><div class='muted'>" + esc([r.MODE, r.DAY ? "day " + r.DAY : "", r.PLATFORM, r.VERSION ? "v" + r.VERSION : ""].filter(Boolean).join(" / ")) + "  " + bugLinks(r) + (r.EMAIL ? "  " + esc(r.EMAIL) : "") + "</div>" +
     (r.TASK ? "<div>Task <b>#" + esc(r.TASK) + "</b>" + (r["FIXED IN"] ? " · fixed in " + esc(r["FIXED IN"]) : "") + "</div>" : "") +
     (owner() ? "<div class='bar'>" + ["CONFIRMED", "REJECTED", "DUPLICATE", "NEW"].map(function (s) { return "<button data-set='" + s + "'>" + (s === "NEW" ? "REOPEN" : s === "CONFIRMED" ? "CONFIRM" : s) + "</button>"; }).join("") +
@@ -383,7 +387,7 @@ function renderTelemetry() {
     });
     $("s-hint").textContent = "Click a person for their sessions.";
     $("sess-t").innerHTML = grid([
-      ["Who", function (p) { return "<span class='nm'>" + esc(p.name) + "</span>"; }], ["Sessions", function (p) { return n(p.n); }, "num"],
+      ["Who", function (p) { return nameTag(p.name); }], ["Sessions", function (p) { return n(p.n); }, "num"],
       ["Time played", function (p) { return fmtSec(p.len); }, "num"], ["Last played", function (p) { return esc(short(p.last)); }],
       ["Events", function (p) { return n(p.events); }, "num"], ["Clicks", function (p) { return n(p.clicks); }, "num"], ["Battles", function (p) { return n(p.battles); }, "num"],
       ["Deaths", function (p) { return n(p.deaths); }, "num"], ["Bugs", function (p) { return n(p.bugs); }, "num"],
@@ -501,7 +505,8 @@ function renderOverview() {
     var h = l.match(/^## (.*)$/); if (h) { sec = /^NEXT BUILD/i.test(h[1]) ? "NEXT BUILD" : h[1].split(/\s+[—-]\s+/)[0]; return; }
     var li = l.match(/^- ([^:]{1,70}):/) || l.match(/^- (.{1,70})/); if (li && sec) ch.push([sec, li[1]]);
   });
-  $("ov-ch").innerHTML = ch.length ? ch.slice(0, 8).map(function (c) { return "<div><b>" + esc(c[0]) + "</b>  " + esc(c[1]) + "</div>"; }).join("") : "<div class='muted'>No changes.</div>";
+  var last = "";
+  $("ov-ch").innerHTML = ch.length ? ch.slice(0, 8).map(function (c) { var head = c[0] !== last ? "<h3 style='margin-top:4px'>" + esc(c[0]) + "</h3>" : ""; last = c[0]; return head + "<div>" + esc(c[1]) + "</div>"; }).join("") : "<div class='muted'>No changes.</div>";
 }
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
 var CAT_ORDER = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"];
@@ -511,7 +516,7 @@ function peopleRows() {
   var by = {}, order = [];
   var get = function (name) { var k = low(name); if (!by[k]) { by[k] = { name: name, mail: "", codes: [], t: null, note: "" }; order.push(k); } return by[k]; };
   var addCode = function (p, c) { if (c && p.codes.indexOf(c) < 0) p.codes.push(c); };
-  (D.team || []).forEach(function (t) { var p = get(t.name); p.t = t; p.note = t.note; t.codes.forEach(function (c) { addCode(p, c); }); });
+  (D.team || []).forEach(function (t) { var p = get(t.name); p.t = t; p.note = t.note; p.nick = t.nick || ""; t.codes.forEach(function (c) { addCode(p, c); }); });
   codes.forEach(function (c) { if (!c.NAME) return; var p = get(c.NAME); if (!p.mail) p.mail = c["GIVEN TO"]; addCode(p, low(c.CODE)); });
   var rank = function (p) { var i = p.t ? CAT_ORDER.indexOf(p.t.category) : -1; return i < 0 ? CAT_ORDER.length : i; };
   return order.map(function (k) {
@@ -541,7 +546,7 @@ function renderPeople() {
   });
   $("p-n").textContent = list.length + " OF " + rows.length;
   $("p-t").innerHTML = grid([
-    ["Name", function (r) { return "<b>" + esc(r.name) + "</b>"; }],
+    ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return r.nick ? esc(r.name) : ""; }, "muted"],
     ["Category", function (r) { return r.t ? "<span class='chip' style='color:" + (CAT_COLOR[r.t.category] || "var(--dim)") + "'>" + esc(r.t.category) + "</span>" : ""; }],
     ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return esc(r.codes.join(", ")); }, "x"],
     ["First", function (r) { return esc(short(r.first)); }], ["Last seen", function (r) { return esc(short(r.last)); }],
