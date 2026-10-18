@@ -89,7 +89,16 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <div class="scroll"><table id="p-t"></table></div></section>
 
 <section class="panel" data-pane="changelog" hidden><div id="cl"></div></section>
-<section class="panel" data-pane="calendar" hidden><div class="bar"><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div><div id="cal"></div></section>
+<section class="panel" data-pane="calendar" hidden><div class="bar"><button id="nm-open" hidden>New meeting</button><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div>
+<div class="detail" id="nm" hidden>
+<div class="bar"><label for="nm-title">Title</label><input id="nm-title" style="flex:1;min-width:200px" placeholder="PIXEL FORMATION — TEAM CALL"></div>
+<div class="bar"><label for="nm-date">Day</label><input id="nm-date" type="date"><label for="nm-time">Time (Warsaw)</label><input id="nm-time" type="time" value="21:00">
+<label for="nm-len">Length</label><select id="nm-len"><option value="30">30 MIN</option><option value="60" selected>1 H</option><option value="90">1.5 H</option><option value="120">2 H</option></select>
+<label><input type="checkbox" id="nm-meet" checked> Google Meet link</label></div>
+<div class="bar"><label>Guests</label><span id="nm-guests"></span></div>
+<div class="bar"><input id="nm-more" placeholder="OTHER E-MAILS, COMMA-SEPARATED" style="flex:1;min-width:200px"></div>
+<div class="bar"><button id="nm-send">Create and send invitations</button><button id="nm-x">Cancel</button><span class="muted" id="nm-msg"></span></div>
+</div><div id="cal"></div></section>
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
 </div>
 <script>
@@ -534,7 +543,28 @@ function renderChangelog() {
 $("cl").addEventListener("click", function (e) { var r = e.target.closest(".cl-row.has"); if (r) r.classList.toggle("open"); });
 // The calendar: one tile per day, Monday to Sunday, from the week before this one to 90 days ahead; today in cyan.
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+// NEW MEETING (OWNER / ADMIN): an event in the studio calendar; Google e-mails the invitations to the guests ticked here
+// (people with a NAME and an e-mail in the Codes tab) and to any other address typed in.
+function renderMeetingGuests() {
+  var seen = {}, list = [];
+  table(D.people).rows.forEach(function (r) { var m = String(r["GIVEN TO"] || "").trim(); if (r.NAME && m && !seen[m.toLowerCase()]) { seen[m.toLowerCase()] = 1; list.push({ name: r.NAME, mail: m }); } });
+  $("nm-guests").innerHTML = list.length ? list.map(function (g) { return "<label><input type='checkbox' value='" + esc(g.mail) + "'> " + esc(g.name) + "</label>"; }).join(" ") : "<span class='muted'>Nobody with an e-mail in the Codes tab.</span>";
+}
+$("nm-open").addEventListener("click", function () { $("nm").hidden = false; $("nm-msg").textContent = ""; renderMeetingGuests(); $("nm-title").focus(); });
+$("nm-x").addEventListener("click", function () { $("nm").hidden = true; });
+$("nm-send").addEventListener("click", function () {
+  var guests = Array.from(document.querySelectorAll("#nm-guests input:checked")).map(function (c) { return c.value; })
+    .concat($("nm-more").value.split(",").map(function (s) { return s.trim(); }).filter(Boolean));
+  var body = { action: "studio_add_event", k: KEY, title: $("nm-title").value.trim(), date: $("nm-date").value, time: $("nm-time").value,
+    minutes: +$("nm-len").value, guests: guests, meet: $("nm-meet").checked };
+  if (!body.title || !body.date || !body.time) { $("nm-msg").textContent = "Title, day and time are needed."; return; }
+  if (!confirm("Google will e-mail the invitation to " + guests.length + " " + (guests.length === 1 ? "person" : "people") + ". Send?")) return;
+  var b = $("nm-send"); b.disabled = true; $("nm-msg").textContent = "Sending...";
+  apiPost(body).then(function () { b.disabled = false; $("nm").hidden = true; load(); },
+    function (err) { b.disabled = false; $("nm-msg").textContent = "Not sent: " + (err && err.message || err); });
+});
 function renderCalendar() {
+  $("nm-open").hidden = !D.canSetStatus;
   if (!D.calendar) { $("cal").innerHTML = "<div class='msg err'>The calendar did not load: " + esc(D.errors.calendar || "") + "</div>"; return; }
   var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var dkey = function (d) { return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); };
