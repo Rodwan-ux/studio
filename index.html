@@ -29,7 +29,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:#232329}tr.sel td{backgroun
 .who b{font-weight:600}.who .nm{color:var(--cyan);white-space:nowrap}
 .sev-BLOCKER{color:var(--blood)}.sev-CRITICAL{color:var(--red)}.sev-MAJOR{color:var(--amber)}.sev-MINOR{color:var(--dim)}
 .st-NEW{color:var(--gold)}.st-CONFIRMED{color:var(--cyan)}.st-IN_PROGRESS{color:var(--violet)}.st-FIXED{color:var(--green)}.st-REJECTED,.st-DUPLICATE{color:var(--dim)}
-.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}@media (max-width:620px){.board{grid-template-columns:1fr}}.newbugs{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px}
+.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}@media (max-width:620px){.board{grid-template-columns:1fr}}
 .col{background:var(--bg);border:1px solid var(--line);padding:6px;display:grid;gap:6px;align-content:start;min-width:0}
 .col h3{display:flex;justify-content:space-between}
 .card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);padding:6px 8px;display:grid;gap:3px;cursor:pointer;min-width:0}
@@ -73,8 +73,6 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 </section>
 
 <section class="panel" data-pane="bugs" hidden>
-<div class="tiles" id="b-tiles"></div>
-<div class="panel" id="b-new-p"><h2>New bugs</h2><div class="newbugs" id="b-new"></div></div>
 <div class="bar"><input id="b-q" type="search" placeholder="SEARCH ID, TEXT OR TESTER..." style="flex:1;min-width:200px">
 <label for="b-sev">Severity</label><select id="b-sev"></select><label for="b-type">Type</label><select id="b-type"></select>
 <label for="b-who">Tester</label><select id="b-who"></select><label id="b-mine-l" hidden><input type="checkbox" id="b-mine"> my reports</label><label><input type="checkbox" id="b-closed"> rejected / duplicate</label></div>
@@ -243,11 +241,6 @@ function renderBugs() {
   var q = $("b-q").value.trim().toLowerCase();
   var list = rows.filter(function (r) { return (!$("b-sev").value || r.SEVERITY === $("b-sev").value) && (!$("b-type").value || r.TYPE === $("b-type").value) && (!$("b-who").value || nameOf(r.CODE) === $("b-who").value) &&
     (!$("b-mine").checked || isMine(r)) && (!q || (r.ID + " " + r.DESCRIPTION + " " + r.CODE + " " + person(r.CODE).name + " " + (r.NOTE || "")).toLowerCase().indexOf(q) >= 0); }).reverse();
-  // the BUGS overview: counts and the NEW bugs (all of them, whatever the filters)
-  var cnt = function (s) { return rows.filter(function (r) { return r.STATUS === s; }).length; };
-  $("b-tiles").innerHTML = [["New", "NEW"], ["Confirmed", "CONFIRMED"], ["In progress", "IN PROGRESS"], ["Fixed", "FIXED"]].map(function (t) { return "<div class='tile'><span class='" + stCls(t[1]) + "'>" + t[0] + "</span><b>" + cnt(t[1]) + "</b></div>"; }).join("");
-  var nb = rows.filter(function (r) { return r.STATUS === "NEW"; }).reverse();
-  $("b-new").innerHTML = nb.length ? nb.map(bugCard).join("") : "<div class='muted'>No new bugs.</div>";
   // the board: TO DO (new, confirmed, in progress) and DONE (fixed; rejected / duplicate with the checkbox)
   var done = { FIXED: true }; if ($("b-closed").checked) { done.REJECTED = true; done.DUPLICATE = true; }
   var cols = [["TODO", "TO DO", "st-NEW", function (r) { return r.STATUS === "NEW" || r.STATUS === "CONFIRMED" || r.STATUS === "IN PROGRESS"; }],
@@ -266,7 +259,6 @@ function renderBugDetail() {
       "<input id='bd-note' placeholder='NOTE...' value='" + esc(r.NOTE) + "' style='flex:1;min-width:180px'><button data-set='" + esc(r.STATUS) + "'>Save note</button></div>" : "") +
     (r["RECENT EVENTS"] ? "<h3>What the player did last</h3><pre>" + esc(r["RECENT EVENTS"]) + "</pre>" : "");
 }
-$("b-new").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = pickedBug === c.dataset.bug ? "" : c.dataset.bug; renderBugs(); if (pickedBug) $("b-detail").scrollIntoView({ block: "nearest" }); });
 $("b-board").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = pickedBug === c.dataset.bug ? "" : c.dataset.bug; renderBugs(); if (pickedBug) $("b-detail").scrollIntoView({ block: "nearest" }); });
 $("b-detail").addEventListener("click", function (e) {
   if (e.target.id === "bd-x") { pickedBug = ""; renderBugs(); return; }
