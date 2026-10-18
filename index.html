@@ -559,7 +559,7 @@ $("p-t").addEventListener("click", function (e) {
 document.addEventListener("click", function (e) { var td = e.target.closest("td.x"); if (td && !td.closest("#t-t")) td.classList.toggle("open"); });
 
 // ── changelog / calendar / files ──
-// CHANGELOG.md: "## VERSION — DATE" headings and "- TITLE: what changed" lines (a line may go on, indented). One row each:
+// CHANGELOG.md: "## NEXT BUILD" (changes not shipped yet, 1205), "## VERSION — DATE" headings and "- TITLE: what changed" lines (a line may go on, indented). One row each:
 // the title in colour, the rest opens on a click; text outside the entries is not shown.
 function renderChangelog() {
   if (!D.changelog) { $("cl").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; return; }
@@ -569,6 +569,7 @@ function renderChangelog() {
     if (li) { cur = { text: li[1] }; items.push(cur); return; }
     if (cur && /^\s{2,}\S/.test(l)) { cur.text += " " + l.trim(); return; }
     cur = null;
+    if (/^## NEXT BUILD/i.test(l)) { items.push({ version: "NEXT BUILD", date: "not shipped yet" }); return; }   // 1205
     var v = l.match(/^## (\S+)\s*[—-]?\s*(.*)$/);
     if (v) items.push({ version: v[1], date: v[2] });
   });
