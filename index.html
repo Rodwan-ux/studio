@@ -76,11 +76,11 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></section>
 
 <section class="panel" data-pane="telemetry" hidden>
-<nav id="tel-tabs"><button data-t="codes" aria-selected="true">CODES</button><button data-t="sessions" aria-selected="false">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button></nav>
-<div data-tp="codes" class="scroll"><table id="codes-t"></table></div>
-<div data-tp="sessions" hidden><div class="bar"><label for="s-code">Code</label><select id="s-code"></select><span class="muted">Click a session for its time line.</span></div><div class="scroll"><table id="sess-t"></table></div></div>
+<nav id="tel-tabs"><button data-t="feedback" aria-selected="true">FEEDBACK</button><button data-t="sessions" aria-selected="false">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button></nav>
+<div data-tp="feedback"><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
+<div data-tp="sessions" hidden><div class="bar"><select id="s-mode" aria-label="Sessions view"><option value="person">BY PERSON</option><option value="session">BY SESSION</option></select><label for="s-code">Person</label><select id="s-code"></select><span class="muted" id="s-hint"></span></div><div class="scroll"><table id="sess-t"></table></div></div>
 <div data-tp="timeline" hidden><div class="bar"><label for="tl-sess">Session</label><select id="tl-sess"></select></div><div class="legend" id="tl-legend"></div><div class="tl" id="tl"><div class="tip" id="tip" hidden></div></div></div>
-<div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Code</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t"></table></div><button id="ev-more" hidden>Show more</button></div>
+<div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Person</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t"></table></div><button id="ev-more" hidden>Show more</button></div>
 </section>
 
 <section class="panel" data-pane="people" hidden>
@@ -130,9 +130,26 @@ function grid(specs, rows, rowAttr) {
   return "<thead><tr>" + used.map(function (s) { return "<th class='" + (typeof s[2] === "string" ? s[2] : "") + "'>" + esc(s[0]) + "</th>"; }).join("") + "</tr></thead><tbody>" +
     rows.map(function (r) { return "<tr" + (rowAttr ? rowAttr(r) : "") + ">" + used.map(function (s) { var v = s[1](r), cls = typeof s[2] === "function" ? s[2](r) : s[2] || ""; return "<td class='" + cls + "'>" + (v == null ? "" : v) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
 }
-function person(code) { var c = String(code || "").toLowerCase(); var r = table(D && D.people).rows.find(function (x) { return String(x.CODE).toLowerCase() === c; }); return r ? { name: r.NAME || r["GIVEN TO"] || "", type: r.TYPE || "" } : { name: "", type: "" }; }
-function nameOf(code) { return person(code).name || code; }
-function who(code) { var p = person(code); return "<span class='who'><b>" + esc(code) + "</b>" + (p.name ? " <span class='nm'>" + esc(p.name) + "</span>" : "") + "</span>"; }
+// people by game code, built once per load; a code with no NAME = UNNAMED TESTER n (codes are shown only in PEOPLE)
+var _people = null, _unnamed = null;
+function person(code) {
+  if (!_people) { _people = {}; table(D && D.people).rows.forEach(function (r) { _people[String(r.CODE).toLowerCase()] = { name: r.NAME || "", type: r.TYPE || "" }; }); }
+  return _people[String(code || "").toLowerCase()] || { name: "", type: "" };
+}
+function nameOf(code) {
+  var p = person(code);
+  if (p.name) return p.name;
+  if (!_unnamed) {
+    _unnamed = {};
+    var seen = {};
+    table(D.events).rows.forEach(function (r) { seen[String(r.CODE).toLowerCase()] = 1; });
+    table(D.bugs && D.bugs.values).rows.forEach(function (r) { seen[String(r.CODE).toLowerCase()] = 1; });
+    (D.feedback || []).forEach(function (f) { seen[String(f.code).toLowerCase()] = 1; });
+    Object.keys(seen).filter(function (c) { return c && !person(c).name; }).sort().forEach(function (c, i) { _unnamed[c] = "UNNAMED TESTER " + (i + 1); });
+  }
+  return _unnamed[String(code || "").toLowerCase()] || "UNNAMED TESTER";
+}
+function who(code) { return "<span class='nm'>" + esc(nameOf(code)) + "</span>"; }
 
 // tabs (the last one picked is remembered in this browser)
 function showTab(t) {
@@ -151,7 +168,7 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 function load() {
   if (!KEY) { askKey(""); return; }
   $("status").textContent = "Loading...";
-  apiGet(VIEW_AS ? { api: "data", k: KEY, as: VIEW_AS } : { api: "data", k: KEY }).then(function (j) { D = j; evCache = null; $("key-box").hidden = true; render(); }, function (e) {
+  apiGet(VIEW_AS ? { api: "data", k: KEY, as: VIEW_AS } : { api: "data", k: KEY }).then(function (j) { D = j; evCache = null; _people = null; _unnamed = null; $("key-box").hidden = true; render(); }, function (e) {
     var m = String(e && e.message || e);
     if (m === "No access") { saveKey(""); askKey("This key does not open the panel."); return; }
     $("status").textContent = "Could not load: " + m;
@@ -307,35 +324,73 @@ function sessions(evs) {
     if (/^playtest\./.test(e.event)) s.modes[e.event.slice(9).toUpperCase()] = 1; });
   return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.start.localeCompare(a.start); });
 }
+// FEEDBACK: the messages players sent from the game (mails of the FEEDBACK window), newest first.
+function renderFeedback() {
+  var msg = $("fb-msg"), list = D.feedback || [];
+  if (D.errors && D.errors.feedback) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "FEEDBACK did not load: " + D.errors.feedback; }
+  else if (!list.length) { msg.hidden = false; msg.className = "msg"; msg.textContent = "Nobody has sent feedback from the game yet."; }
+  else msg.hidden = true;
+  var q = $("fb-q").value.trim().toLowerCase();
+  var rows = list.filter(function (f) { return !q || (f.message + " " + nameOf(f.code) + " " + (f.email || "")).toLowerCase().indexOf(q) >= 0; });
+  $("fb-n").textContent = list.length ? rows.length + " OF " + list.length : "";
+  $("fb-t").innerHTML = grid([
+    ["Time", function (f) { return esc(short(new Date(f.time).toISOString().slice(0, 16).replace("T", " "))); }],
+    ["Who", function (f) { return who(f.code); }], ["Message", function (f) { return esc(f.message); }, "x"],
+    ["Reply to", function (f) { return f.email ? "<a href='mailto:" + esc(f.email) + "'>" + esc(f.email) + "</a>" : ""; }],
+    ["Platform", function (f) { return esc(f.platform); }, "muted"],
+  ], rows);
+}
+$("fb-q").addEventListener("input", renderFeedback);
+
+// SESSIONS: BY PERSON = one row per person (all their sessions summed), BY SESSION = every session; a person's row opens
+// their sessions.
+var sessPerson = "";
 function renderTelemetry() {
   evCache = null;
-  var t = table(D.codes), rows = t.rows.filter(function (r) { return r.CODE; }).sort(function (a, b) { return String(b["LAST SEEN"]).localeCompare(String(a["LAST SEEN"])); });
-  $("codes-t").innerHTML = grid([
-    ["Code", function (r) { return who(r.CODE); }], ["Type", function (r) { return person(r.CODE).type ? "<span class='chip'>" + esc(person(r.CODE).type) + "</span>" : ""; }],
-    ["Platform", function (r) { return esc(r.PLATFORM); }], ["First", function (r) { return esc(r["FIRST START"]); }], ["Last seen", function (r) { return esc(r["LAST SEEN"]); }],
-    ["Stage", function (r) { return esc(r.STAGE); }], ["Day", function (r) { return esc(r["GAME DAY"]); }, "num"], ["Min", function (r) { return esc(r["PLAY MINUTES"]); }, "num"],
-    ["Battles W / L", function (r) { return (r["BATTLES WON"] || r["BATTLES LOST"]) ? esc((r["BATTLES WON"] || 0) + " / " + (r["BATTLES LOST"] || 0)) : ""; }, "num"],
-    ["Last action", function (r) { return esc(r["LAST ACTION"]); }], ["Last report", function (r) { return esc(r.EVENT); }, "x muted"],
-  ], rows, function (r) { return /^selftest/.test(r.CODE) ? " class='muted'" : ""; });
-  var evs = events(), ss = sessions(evs);
-  var sel = $("s-code"), k = sel.value, codes = Array.from(new Set(ss.map(function (s) { return s.code; })));
-  sel.innerHTML = "<option value=''>ALL</option>" + codes.map(function (c) { return "<option value='" + esc(c) + "'>" + esc(c + (person(c).name ? "  " + person(c).name : "")) + "</option>"; }).join(""); sel.value = codes.indexOf(k) >= 0 ? k : "";
-  var list = ss.filter(function (s) { return !sel.value || s.code === sel.value; });
+  renderFeedback();
+  var evs = events(), ss = sessions(evs), mode = $("s-mode").value;
+  var sel = $("s-code"), names = Array.from(new Set(ss.map(function (s) { return nameOf(s.code); }))).sort();
+  if (sessPerson) { sel.dataset.v = sessPerson; sessPerson = ""; } else sel.dataset.v = sel.value;
+  sel.innerHTML = "<option value=''>ALL</option>" + names.map(function (n) { return "<option value='" + esc(n) + "'>" + esc(n) + "</option>"; }).join("");
+  sel.value = names.indexOf(sel.dataset.v) >= 0 ? sel.dataset.v : "";
+  var list = ss.filter(function (s) { return !sel.value || nameOf(s.code) === sel.value; });
   var n = function (v) { return v ? String(v) : ""; };
-  $("sess-t").innerHTML = grid([
-    ["Start", function (s) { return esc(short(s.start)); }], ["Who", function (s) { return who(s.code); }], ["Length", function (s) { return fmtSec(s.len); }, "num"],
-    ["Modes", function (s) { return Object.keys(s.modes).map(function (m) { return "<span class='chip'>" + esc(m) + "</span>"; }).join(" "); }],
-    ["Events", function (s) { return n(s.n); }, "num"], ["Clicks", function (s) { return n(s.clicks); }, "num"], ["Battles", function (s) { return n(s.battles); }, "num"],
-    ["Deaths", function (s) { return n(s.deaths); }, "num"], ["Bugs", function (s) { return n(s.bugs); }, "num"],
-  ], list, function (s) { return " class='click" + (s.id === pickedSession ? " sel" : "") + "' data-s='" + esc(s.id) + "'"; });
+  if (mode === "person") {
+    var by = {};
+    list.forEach(function (s) {
+      var k = nameOf(s.code), p = by[k] || (by[k] = { name: k, n: 0, len: 0, last: "", events: 0, clicks: 0, battles: 0, deaths: 0, bugs: 0 });
+      p.n++; p.len += s.len; if (s.start > p.last) p.last = s.start; p.events += s.n; p.clicks += s.clicks; p.battles += s.battles; p.deaths += s.deaths; p.bugs += s.bugs;
+    });
+    $("s-hint").textContent = "Click a person for their sessions.";
+    $("sess-t").innerHTML = grid([
+      ["Who", function (p) { return "<span class='nm'>" + esc(p.name) + "</span>"; }], ["Sessions", function (p) { return n(p.n); }, "num"],
+      ["Time played", function (p) { return fmtSec(p.len); }, "num"], ["Last played", function (p) { return esc(short(p.last)); }],
+      ["Events", function (p) { return n(p.events); }, "num"], ["Clicks", function (p) { return n(p.clicks); }, "num"], ["Battles", function (p) { return n(p.battles); }, "num"],
+      ["Deaths", function (p) { return n(p.deaths); }, "num"], ["Bugs", function (p) { return n(p.bugs); }, "num"],
+    ], Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.last.localeCompare(a.last); }),
+    function (p) { return " class='click' data-person='" + esc(p.name) + "'"; });
+  } else {
+    $("s-hint").textContent = "Click a session for its time line.";
+    $("sess-t").innerHTML = grid([
+      ["Start", function (s) { return esc(short(s.start)); }], ["Who", function (s) { return who(s.code); }], ["Length", function (s) { return fmtSec(s.len); }, "num"],
+      ["Modes", function (s) { return Object.keys(s.modes).map(function (m) { return "<span class='chip'>" + esc(m) + "</span>"; }).join(" "); }],
+      ["Events", function (s) { return n(s.n); }, "num"], ["Clicks", function (s) { return n(s.clicks); }, "num"], ["Battles", function (s) { return n(s.battles); }, "num"],
+      ["Deaths", function (s) { return n(s.deaths); }, "num"], ["Bugs", function (s) { return n(s.bugs); }, "num"],
+    ], list, function (s) { return " class='click" + (s.id === pickedSession ? " sel" : "") + "' data-s='" + esc(s.id) + "'"; });
+  }
   var tl = $("tl-sess");
-  tl.innerHTML = ss.map(function (s) { return "<option value='" + esc(s.id) + "'>" + esc(short(s.start) + "  " + s.code + (person(s.code).name ? " " + person(s.code).name : "") + "  " + fmtSec(s.len) + "  (" + s.n + " events)") + "</option>"; }).join("");
+  tl.innerHTML = ss.map(function (s) { return "<option value='" + esc(s.id) + "'>" + esc(short(s.start) + "  " + nameOf(s.code) + "  " + fmtSec(s.len) + "  (" + s.n + " events)") + "</option>"; }).join("");
   if (!pickedSession && ss[0]) pickedSession = ss[0].id; tl.value = pickedSession;
   $("tl-legend").innerHTML = KINDS.map(function (k) { return "<span><i style='background:" + k.color + "'></i>" + k.label + "</span>"; }).join("") + "<span><i style='background:#3a5d3a'></i>SANDBOX</span><span><i style='background:#6a3a33'></i>BATTLE</span><span><i style='background:#2d5566'></i>SAIL</span>";
   renderEvents(evs); drawTimeline();
 }
 $("s-code").addEventListener("change", renderTelemetry);
-$("sess-t").addEventListener("click", function (e) { var tr = e.target.closest("tr[data-s]"); if (!tr) return; pickedSession = tr.dataset.s; $("tl-sess").value = pickedSession; showTel("timeline"); });
+$("s-mode").addEventListener("change", renderTelemetry);
+$("sess-t").addEventListener("click", function (e) {
+  var pr = e.target.closest("tr[data-person]");
+  if (pr) { $("s-mode").value = "session"; sessPerson = pr.dataset.person; renderTelemetry(); return; }
+  var tr = e.target.closest("tr[data-s]"); if (!tr) return; pickedSession = tr.dataset.s; $("tl-sess").value = pickedSession; showTel("timeline");
+});
 $("tl-sess").addEventListener("change", function (e) { pickedSession = e.target.value; drawTimeline(); });
 var BAND = { SANDBOX: "#3a5d3a", BATTLE: "#6a3a33", SAIL: "#2d5566" };
 function drawTimeline() {
@@ -361,11 +416,11 @@ function drawTimeline() {
   el.addEventListener("mouseleave", function () { tip.hidden = true; });
 }
 function renderEvents(evs) {
-  var cs = $("ev-code"), ks = $("ev-cat"), kc = cs.value, kk = ks.value, codes = Array.from(new Set(evs.map(function (e) { return e.code; })));
-  cs.innerHTML = "<option value=''>ALL</option>" + codes.map(function (c) { return "<option value='" + esc(c) + "'>" + esc(c + (person(c).name ? "  " + person(c).name : "")) + "</option>"; }).join(""); cs.value = codes.indexOf(kc) >= 0 ? kc : "";
+  var cs = $("ev-code"), ks = $("ev-cat"), kc = cs.value, kk = ks.value, names = Array.from(new Set(evs.map(function (e) { return nameOf(e.code); }))).sort();
+  cs.innerHTML = "<option value=''>ALL</option>" + names.map(function (n) { return "<option value='" + esc(n) + "'>" + esc(n) + "</option>"; }).join(""); cs.value = names.indexOf(kc) >= 0 ? kc : "";
   ks.innerHTML = "<option value=''>ALL</option>" + KINDS.map(function (k) { return "<option value='" + k.id + "'>" + k.label + "</option>"; }).join(""); ks.value = kk;
   var q = $("ev-q").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  var list = evs.filter(function (e) { return (!cs.value || e.code === cs.value) && (!ks.value || e.kind === ks.value) && q.every(function (w) { return (e.event + " " + e.values + " " + e.mode + " " + person(e.code).name).toLowerCase().indexOf(w) >= 0; }); })
+  var list = evs.filter(function (e) { return (!cs.value || nameOf(e.code) === cs.value) && (!ks.value || e.kind === ks.value) && q.every(function (w) { return (e.event + " " + e.values + " " + e.mode + " " + nameOf(e.code)).toLowerCase().indexOf(w) >= 0; }); })
     .sort(function (a, b) { return (b.time + b.seq).localeCompare(a.time + a.seq); });
   $("ev-n").textContent = list.length + " OF " + evs.length;
   $("ev-t").innerHTML = grid([
@@ -383,7 +438,7 @@ $("ev-more").addEventListener("click", function () { evLimit += 300; renderEvent
 function renderOverview() {
   var rows = D.bugs ? bugRows() : [], cnt = function (s) { return rows.filter(function (r) { return r.STATUS === s; }).length; };
   var evs = D.events ? events() : [], ss = sessions(evs), week = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-  var active = Array.from(new Set(ss.filter(function (s) { return s.start.slice(0, 10) >= week; }).map(function (s) { return s.code; })));
+  var active = Array.from(new Set(ss.filter(function (s) { return s.start.slice(0, 10) >= week; }).map(function (s) { return nameOf(s.code); })));
   var ver = D.changelog && (D.changelog.text.match(/^##\s+(\d+\.\d+\.\d+)/m) || [])[1];
   var tiles = [["New bugs", cnt("NEW")], ["Confirmed", cnt("CONFIRMED")], ["In progress", cnt("IN PROGRESS")], ["Fixed", cnt("FIXED")],
     ["Testers this week", active.length]].concat(D.tasks ? [["Open tasks", D.tasks.filter(function (t) { return t.state !== "done"; }).length]] : [], [["Version", ver || "-"]]);
