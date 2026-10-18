@@ -3,8 +3,8 @@
 <style>
 :root{--bg:#121214;--panel:#1b1b1f;--line:#2c2c33;--fg:#e6e4e0;--dim:#8e8b86;--gold:#e6ad47;--cyan:#4dccff;--red:#ff8c73;--blood:#d93a3a;--green:#74b84a;--amber:#d1a35c;--violet:#a796c4;--head:"Barlow Condensed","Arial Narrow",sans-serif;--mono:"JetBrains Mono",Consolas,monospace;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--mono)}
-.wrap{max-width:1400px;margin:0 auto;padding:16px 16px 40px;display:grid;gap:12px}
-header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}h1{margin:0;font:700 28px/1 var(--head);letter-spacing:.05em;color:var(--gold)}
+.wrap{max-width:1400px;margin:0 auto;padding:16px 16px 52px;display:grid;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
 .sub,.muted{color:var(--dim)}.spacer{flex:1}
 button,select,input,textarea{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 9px}
 button{cursor:pointer;text-transform:uppercase;letter-spacing:.05em}button:hover{border-color:var(--cyan);color:var(--cyan)}
@@ -54,11 +54,12 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .tl2-ev:hover{background:#2c2c33}
 .card[draggable=true]{cursor:grab}.col.drop{border-color:var(--cyan);background:#16232a}
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:1px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
-.hello{font:600 18px var(--head);letter-spacing:.08em;color:var(--fg)}.hello b{color:var(--cyan)}
+.hello{font:700 30px/1 var(--head);letter-spacing:.06em;color:var(--fg)}
+.mark{position:fixed;left:0;right:0;bottom:8px;display:flex;justify-content:center;pointer-events:none;z-index:4}.mark img{image-rendering:pixelated;width:201px;height:20px;opacity:.85}.hello b{color:var(--cyan)}
 input.link{width:100%;min-width:220px;color:var(--dim)}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
-<header><h1>PIXEL FORMATION STUDIO</h1><span class="hello" id="hello"></span><select id="view-as" hidden aria-label="View as"></select><span class="sub" id="status">Loading...</span><span class="spacer"></span><button id="refresh">Refresh</button></header>
+<header><span class="hello" id="hello"></span><select id="view-as" hidden aria-label="View as"></select><span class="sub" id="status">Loading...</span><span class="spacer"></span><button id="refresh">Refresh</button></header>
 <div class="viewbar" id="viewbar" hidden>VIEWING AS <b id="viewbar-cat"></b><span class="muted">what this category sees; status changes are off</span><span class="spacer"></span><button id="viewbar-back">Back to owner</button></div>
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
 <nav id="tabs">
@@ -106,6 +107,7 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 </section>
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
 </div>
+<div class="mark"><img alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMkAAAAUCAYAAAAnZhn0AAABv0lEQVR42u2aP0sDQRDF98RGwUIINn4ByQdQO8uANoIWVgbrBGy00E4LA8HWykJMFVBBixNsAlpp7ASD6QRJYZXCIuVa3wvsMMzmrnm/7rI7t39uln1vN8mwd+9dgPnyZuIU4PukeGv72vZi97fo+jGQvsHv9zDzvLS+l2j6HLtcypHYOTHlCCFBuEgI4SIhxMY0/tA8bDuLXsT4r8crH9KzUvvaeC2f3YFKn+7XL1Xzg3peqv9y81F4UuA3WF0uO41nybvcWl/6xtxJCKHcIoSLhJDJehLUb9VaxYX0mUQjbSegZ1Vn8BhfrVW8RX9KHqC0MKvSt8cH2yb9K3m+IjyJlAP99x/T+8/ObzPPDyenPlQucX3xFHX8mONbayvcSQih3CKEi4SQAu9JUO+hBm910qCeQ7159/zmYp5ZS3pXureJrYelOwTJsw1Gfz4033mAnuO12zPFI6jxMSekHEPG5jy1/T8P+8edhBDKLUK4SAjJ15OgxpY0M9LqpJn6izNzPlSuPfOW4sfK6y7Y/u5ow9Q/nJ8jt+M1nkk7f3mAHgTHqI1H0INox6y9F9HWl3wzdxJCKLcI4SIhZKL8A3ZeIsZBLc8IAAAAAElFTkSuQmCC"></div>
 <script>
 // PIXEL FORMATION STUDIO (1184.4 / 1184.7): this page asks the PLAYTEST web app for its data, without cookies (as the
 // game does). Opened through the link (API + ?k=KEY) the web app puts the key in (PRESET_KEY); opened from the disk the
