@@ -291,14 +291,14 @@ function moveBug(id, st) {
 // ── tasks ──
 function renderTasks() {
   var msg = $("t-msg");
-  if (!D.tasks) { msg.hidden = false; msg.className = "msg"; msg.textContent = "TASKS.md has not been sent here yet. It comes from the project after the next turn of a session."; $("t-t").innerHTML = ""; return; }
+  if (!D.tasks) { msg.hidden = false; msg.className = "msg"; msg.textContent = "The tasks did not load: " + ((D.errors && D.errors.tasks) || "no tasks yet"); $("t-t").innerHTML = ""; return; }
   msg.hidden = true;
   var cs = $("t-code"), kc = cs.value, codes = Array.from(new Set(D.tasks.map(function (t) { return t.code; }))).sort();
   cs.innerHTML = "<option value=''>ALL</option>" + codes.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join(""); cs.value = codes.indexOf(kc) >= 0 ? kc : "";
   var st = $("t-st").value, q = $("t-q").value.trim().toLowerCase();
   var list = D.tasks.filter(function (t) { return (st === "active" ? t.state !== "done" : st === "bug" ? t.bugs.length > 0 : t.state === st) && (!cs.value || t.code === cs.value) && (!q || (t.no + " " + t.title).toLowerCase().indexOf(q) >= 0); })
     .sort(function (a, b) { return (a.state === "doing" ? 0 : 1) - (b.state === "doing" ? 0 : 1) || parseFloat(b.no) - parseFloat(a.no); });
-  $("t-n").textContent = list.length + " OF " + D.tasks.length + (D.tasksFile ? " · sent " + new Date(D.tasksFile.updated).toLocaleString() : "");
+  $("t-n").textContent = list.length + " OF " + D.tasks.length;
   $("t-t").innerHTML = grid([
     ["#", function (t) { return "<b>" + esc(t.no) + "</b>"; }],
     ["State", function (t) { return "<span class='chip " + (t.state === "doing" ? "st-IN_PROGRESS" : t.state === "done" ? "st-FIXED" : "st-NEW") + "'>" + t.state.toUpperCase() + "</span>"; }],
