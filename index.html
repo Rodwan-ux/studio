@@ -91,7 +91,7 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <section class="panel" data-pane="changelog" hidden><div id="cl"></div></section>
 <section class="panel" data-pane="calendar" hidden><div class="bar"><button id="nm-open" hidden>New meeting</button><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div>
 <div class="detail" id="nm" hidden>
-<div class="bar"><label for="nm-title">Title</label><input id="nm-title" style="flex:1;min-width:200px" placeholder="PIXEL FORMATION — TEAM CALL"></div>
+<div class="bar"><label for="nm-title">Title</label><input id="nm-title" style="flex:1;min-width:200px" value="Team meeting"><label><input type="checkbox" id="nm-num" checked> number it (PX_FRM_nn)</label></div>
 <div class="bar"><label for="nm-date">Day</label><input id="nm-date" type="date"><label for="nm-time">Time (Warsaw)</label><input id="nm-time" type="time" value="21:00">
 <label for="nm-len">Length</label><select id="nm-len"><option value="30">30 MIN</option><option value="60" selected>1 H</option><option value="90">1.5 H</option><option value="120">2 H</option></select>
 <label><input type="checkbox" id="nm-meet" checked> Google Meet link</label></div>
@@ -556,7 +556,7 @@ $("nm-send").addEventListener("click", function () {
   var guests = Array.from(document.querySelectorAll("#nm-guests input:checked")).map(function (c) { return c.value; })
     .concat($("nm-more").value.split(",").map(function (s) { return s.trim(); }).filter(Boolean));
   var body = { action: "studio_add_event", k: KEY, title: $("nm-title").value.trim(), date: $("nm-date").value, time: $("nm-time").value,
-    minutes: +$("nm-len").value, guests: guests, meet: $("nm-meet").checked };
+    minutes: +$("nm-len").value, guests: guests, meet: $("nm-meet").checked, number: $("nm-num").checked };
   if (!body.title || !body.date || !body.time) { $("nm-msg").textContent = "Title, day and time are needed."; return; }
   if (!confirm("Google will e-mail the invitation to " + guests.length + " " + (guests.length === 1 ? "person" : "people") + ". Send?")) return;
   var b = $("nm-send"); b.disabled = true; $("nm-msg").textContent = "Sending...";
