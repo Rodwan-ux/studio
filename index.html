@@ -41,7 +41,7 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 var(--mon
 a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--dim)}.legend i{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
 .tl{position:relative}.tl svg{display:block;width:100%;height:auto}.tip{position:absolute;pointer-events:none;background:#0c0c0e;border:1px solid var(--cyan);padding:6px 8px;max-width:360px;z-index:5;font-size:12px;white-space:pre-wrap}
 .cl-v{display:flex;gap:10px;align-items:baseline;margin-top:8px}.cl-row{padding:4px 6px;border-bottom:1px solid #222228;min-width:0}.cl-row.has{cursor:pointer}.cl-row.has:hover{background:#232329}.cl-t{color:var(--gold)}.cl-d{display:none;color:var(--dim);margin-top:2px;overflow-wrap:anywhere}.cl-row.open .cl-d{display:block}
-.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cal-h{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}.cal-d{background:var(--bg);border:1px solid var(--line);min-height:64px;padding:3px 5px;display:grid;align-content:start;gap:2px;min-width:0}.cal-d.past{opacity:.45}.cal-d.today{border-color:var(--cyan)}.cal-n{font-size:11px;color:var(--dim)}.cal-d.today .cal-n{color:var(--cyan)}.cal-e{font-size:11px;background:#232329;border-left:2px solid var(--gold);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cal-h{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}.cal-d{background:var(--bg);border:1px solid var(--line);min-height:64px;padding:3px 5px;display:grid;align-content:start;gap:2px;min-width:0}.cal-d.past{opacity:.45}.cal-d.today{border-color:var(--cyan)}.cal-n{font-size:11px;color:var(--dim)}.cal-d.today .cal-n{color:var(--cyan)}.cal-e{font-size:11px;background:#232329;border-left:2px solid var(--gold);padding:1px 4px;overflow-wrap:anywhere;line-height:1.3}.cal-e .tm{color:var(--dim);display:block}.cal-tag{display:inline-block;margin-left:4px;padding:0 4px;border:1px solid var(--cyan);border-radius:3px;color:var(--cyan);font-size:10px;white-space:nowrap}.cal-d.has{cursor:pointer}.cal-d.has:hover{border-color:var(--gold)}.cal-d.sel{border-color:var(--gold);background:#1f1c16}.cal-day{border:1px solid var(--gold);padding:10px;display:grid;gap:10px;background:var(--bg)}.cal-day .ev{display:grid;gap:3px}.cal-day .ev pre{max-height:none;color:var(--fg)}
 .card[draggable=true]{cursor:grab}.col.drop{border-color:var(--cyan);background:#16232a}
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:1px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
 .hello{font:600 18px var(--head);letter-spacing:.08em;color:var(--fg)}.hello b{color:var(--cyan)}
@@ -98,7 +98,7 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <div class="bar"><label>Guests</label><span id="nm-guests"></span></div>
 <div class="bar"><input id="nm-more" placeholder="OTHER E-MAILS, COMMA-SEPARATED" style="flex:1;min-width:200px"></div>
 <div class="bar"><button id="nm-send">Create and send invitations</button><button id="nm-x">Cancel</button><span class="muted" id="nm-msg"></span></div>
-</div><div id="cal"></div></section>
+</div><div class="cal-day" id="cal-day" hidden></div><div id="cal"></div></section>
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
 </div>
 <script>
@@ -563,25 +563,38 @@ $("nm-send").addEventListener("click", function () {
   apiPost(body).then(function () { b.disabled = false; $("nm").hidden = true; load(); },
     function (err) { b.disabled = false; $("nm-msg").textContent = "Not sent: " + (err && err.message || err); });
 });
+var calPicked = "";
+var calKey = function (d) { return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); };
+// "Team meeting PX_FRM_00" → ["Team meeting", "PX_FRM_00"]
+var calSplit = function (t) { var m = String(t).match(/^(.*?)\s*(PX_FRM_\d+)\s*(.*)$/); return m ? [(m[1] + " " + m[3]).trim(), m[2]] : [String(t), ""]; };
 function renderCalendar() {
   $("nm-open").hidden = !D.canSetStatus;
   if (!D.calendar) { $("cal").innerHTML = "<div class='msg err'>The calendar did not load: " + esc(D.errors.calendar || "") + "</div>"; return; }
   var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  var dkey = function (d) { return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); };
   var byDay = {};
-  D.calendar.forEach(function (e) { var k = dkey(new Date(e.start)); (byDay[k] = byDay[k] || []).push(e); });
+  D.calendar.forEach(function (e) { var k = calKey(new Date(e.start)); (byDay[k] = byDay[k] || []).push(e); });
+  Object.keys(byDay).forEach(function (k) { byDay[k].sort(function (a, b) { return a.start - b.start; }); });
   var d = new Date(today); d.setDate(d.getDate() - (d.getDay() + 6) % 7 - 7);
   var end = new Date(today); end.setDate(end.getDate() + 90);
   var first = true, html = "<div class='cal'>" + ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(function (x) { return "<div class='cal-h'>" + x + "</div>"; }).join("");
   while (d <= end || d.getDay() !== 1) {
-    var evs = byDay[dkey(d)] || [], t = d.getTime();
-    html += "<div class='cal-d" + (t === today.getTime() ? " today" : t < today.getTime() ? " past" : "") + "'><span class='cal-n'>" + (first || d.getDate() === 1 ? MONTHS[d.getMonth()] + " " : "") + d.getDate() + "</span>" +
-      evs.map(function (e) { return "<div class='cal-e' title='" + esc(e.title + (e.where ? " / " + e.where : "") + (e.note ? "\n" + e.note : "")) + "'>" + (e.allDay ? "" : esc(hm(e.start)) + " ") + esc(e.title) + "</div>"; }).join("") + "</div>";
+    var k = calKey(d), evs = byDay[k] || [], t = d.getTime();
+    html += "<div class='cal-d" + (t === today.getTime() ? " today" : t < today.getTime() ? " past" : "") + (evs.length ? " has" : "") + (k === calPicked ? " sel" : "") + "' data-day='" + k + "'><span class='cal-n'>" + (first || d.getDate() === 1 ? MONTHS[d.getMonth()] + " " : "") + d.getDate() + "</span>" +
+      evs.map(function (e) { var s = calSplit(e.title); return "<div class='cal-e'><span class='tm'>" + (e.allDay ? "ALL DAY" : esc(hm(e.start) + "-" + hm(e.end))) + "</span>" + esc(s[0]) + (s[1] ? "<span class='cal-tag'>" + esc(s[1]) + "</span>" : "") + "</div>"; }).join("") + "</div>";
     first = false;
     d.setDate(d.getDate() + 1);
   }
   $("cal").innerHTML = html + "</div>";
+  // the picked day: every event in full (time, place, the whole note)
+  var box = $("cal-day"), list = byDay[calPicked] || [];
+  box.hidden = !list.length;
+  if (list.length) box.innerHTML = "<div class='bar'><h2>" + esc(day(list[0].start)) + "</h2><span class='spacer'></span><button id='cal-x'>Close</button></div>" + list.map(function (e) {
+    var s = calSplit(e.title);
+    return "<div class='ev'><div><b>" + esc(s[0]) + "</b>" + (s[1] ? "<span class='cal-tag'>" + esc(s[1]) + "</span>" : "") + "</div><div class='muted'>" + (e.allDay ? "all day" : esc(hm(e.start) + " - " + hm(e.end))) + (e.where ? " · " + esc(e.where) : "") + "</div>" + (e.note ? "<pre>" + esc(e.note) + "</pre>" : "") + "</div>";
+  }).join("");
 }
+$("cal").addEventListener("click", function (e) { var c = e.target.closest(".cal-d.has"); if (!c) return; calPicked = calPicked === c.dataset.day ? "" : c.dataset.day; renderCalendar(); if (calPicked) $("cal-day").scrollIntoView({ block: "nearest" }); });
+$("cal-day").addEventListener("click", function (e) { if (e.target.id === "cal-x") { calPicked = ""; renderCalendar(); } });
 function renderFiles() {
   if (!D.files) { $("files").innerHTML = "<div class='msg err'>FILES did not load: " + esc(D.errors.files || "") + "</div>"; return; }
   $("f-bar").hidden = !D.files.url; if (D.files.url) $("f-open").href = D.files.url;
