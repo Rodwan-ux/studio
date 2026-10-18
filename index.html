@@ -54,6 +54,7 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .tl2-ev:hover{background:#2c2c33}
 .card[draggable=true]{cursor:grab}.col.drop{border-color:var(--cyan);background:#16232a}
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:1px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
+.lc{padding:3px 0;border-bottom:1px solid #222228;cursor:pointer;min-width:0}.lc:hover{background:#232329}.lc-t{color:var(--gold)}.lc-d{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lc.open .lc-d{white-space:normal;overflow-wrap:anywhere}
 .hello{font:700 30px/1 var(--head);letter-spacing:.06em;color:var(--fg)}
 .mark{position:fixed;left:0;right:0;bottom:8px;display:flex;justify-content:center;pointer-events:none;z-index:4}.mark img{width:140px;height:14px;opacity:.45}.hello b{color:var(--cyan)}
 input.link{width:100%;min-width:220px;color:var(--dim)}
@@ -499,14 +500,20 @@ function renderOverview() {
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
   renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
-  // 1218: LATEST CHANGES — the newest CHANGELOG lines, NEXT BUILD first, one row each (section + title)
-  var ch = [], sec = "";
+  // 1218 / 1221: LATEST CHANGES — the newest CHANGELOG entries, each section heading once (NEXT BUILD first); a row =
+  // the title in colour + its description on one line, a click opens the whole entry
+  var ch = [], sec = "", cur = null;
   String(D.changelog ? D.changelog.text : "").split(/\r?\n/).forEach(function (l) {
-    var h = l.match(/^## (.*)$/); if (h) { sec = /^NEXT BUILD/i.test(h[1]) ? "NEXT BUILD" : h[1].split(/\s+[—-]\s+/)[0]; return; }
-    var li = l.match(/^- ([^:]{1,70}):/) || l.match(/^- (.{1,70})/); if (li && sec) ch.push([sec, li[1]]);
+    var hd = l.match(/^## (.*)$/); if (hd) { sec = /^NEXT BUILD/i.test(hd[1]) ? "NEXT BUILD" : hd[1].split(/\s+[—-]\s+/)[0]; cur = null; return; }
+    var li = l.match(/^- (.*)$/); if (li && sec) { cur = [sec, li[1]]; ch.push(cur); return; }
+    if (cur && /^\s{2,}\S/.test(l)) cur[1] += " " + l.trim(); else cur = null;
   });
   var last = "";
-  $("ov-ch").innerHTML = ch.length ? ch.slice(0, 8).map(function (c) { var head = c[0] !== last ? "<h3 style='margin-top:4px'>" + esc(c[0]) + "</h3>" : ""; last = c[0]; return head + "<div>" + esc(c[1]) + "</div>"; }).join("") : "<div class='muted'>No changes.</div>";
+  $("ov-ch").innerHTML = ch.length ? ch.slice(0, 8).map(function (c) {
+    var head = c[0] !== last ? "<h3 style='margin-top:4px'>" + esc(c[0]) + "</h3>" : ""; last = c[0];
+    var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/);
+    return head + "<div class='lc'><div class='lc-t'>" + esc(m ? m[1] : c[1]) + "</div>" + (m && m[2] ? "<div class='lc-d'>" + esc(m[2]) + "</div>" : "") + "</div>";
+  }).join("") : "<div class='muted'>No changes.</div>";
 }
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
 var CAT_ORDER = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"];
@@ -584,11 +591,12 @@ function renderChangelog() {
   });
   $("cl").innerHTML = items.map(function (it) {
     if (it.version) return "<div class='cl-v'><h2>" + esc(it.version) + "</h2><span class='muted'>" + esc(it.date) + "</span></div>";
-    var m = it.text.match(/^([^:]{1,70}):\s*(.*)$/);
+    var m = it.text.match(/^([^:]{1,90}):\s*(.*)$/);
     var d = m && m[2] ? m[2] : "";
     return "<div class='cl-row" + (d ? " has" : "") + "'><div class='cl-t'>" + esc(m ? m[1] : it.text) + "</div>" + (d ? "<div class='cl-d'>" + esc(d) + "</div>" : "") + "</div>";
   }).join("") + "<p class='muted'>Sent " + new Date(D.changelog.updated).toLocaleString() + "</p>";
 }
+$("ov-ch").addEventListener("click", function (e) { var r = e.target.closest(".lc"); if (r) r.classList.toggle("open"); });
 $("cl").addEventListener("click", function (e) { var r = e.target.closest(".cl-row.has"); if (r) r.classList.toggle("open"); });
 // The calendar: one tile per day, Monday to Sunday, from the week before this one to 90 days ahead; today in cyan.
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
