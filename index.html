@@ -571,6 +571,10 @@ function peopleRows() {
   }).sort(function (a, b) { return rank(a) - rank(b) || b.last.localeCompare(a.last) || a.name.localeCompare(b.name); });
 }
 var CAT_COLOR = { OWNER: "var(--gold)", ADMIN: "var(--red)", TEAM: "var(--cyan)", FRIEND: "var(--green)", GUEST: "var(--dim)" };
+// 1270: a double-click on a row edits it; each field saves itself on leaving it (Enter too), Esc ends the editing
+var pEdit = "";
+var pId = function (r) { return r.t && r.t.key ? r.t.key : "name:" + String(r.name).toLowerCase(); };
+function pField(r, f, v) { return "<input data-f='" + f + "' data-o='" + esc(v) + "' value='" + esc(v) + "' style='width:100%;min-width:" + (f === "NOTE" || f === "MAIL" ? 180 : 90) + "px'>"; }
 function renderPeople() {
   var rows = peopleRows();
   var s = $("p-cat"), v = s.value;
@@ -581,17 +585,53 @@ function renderPeople() {
       (!q || [r.name, r.mail, r.codes.join(" "), r.note, r.t ? r.t.category : ""].join(" ").toLowerCase().indexOf(q) >= 0);
   });
   $("p-n").textContent = list.length + " OF " + rows.length;
+  var ed = function (r) { return pId(r) === pEdit; };
   $("p-t").innerHTML = grid([
-    ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return r.nick ? esc(r.name) : ""; }, "muted"],
-    ["Category", function (r) { return r.t ? "<span class='chip' style='color:" + (CAT_COLOR[r.t.category] || "var(--dim)") + "'>" + esc(r.t.category) + "</span>" : ""; }],
-    ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return esc(r.codes.join(", ")); }, "x"],
+    ["Name", function (r) { return ed(r) ? pField(r, "NICK", r.nick || "") : "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return ed(r) ? pField(r, "NAME", r.name) : r.nick ? esc(r.name) : ""; }, "muted"],
+    ["Category", function (r) {
+      if (ed(r)) { var c = r.t ? r.t.category : ""; return "<select data-f='CATEGORY' data-o='" + esc(c) + "'>" + [""].concat(CAT_ORDER).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }
+      return r.t && r.t.category ? "<span class='chip' style='color:" + (CAT_COLOR[r.t.category] || "var(--dim)") + "'>" + esc(r.t.category) + "</span>" : "";
+    }],
+    ["Mail", function (r) { return ed(r) ? pField(r, "MAIL", r.mail || "") : esc(r.mail); }, function (r) { return ed(r) ? "" : "x muted"; }],
+    ["Codes", function (r) { return ed(r) ? pField(r, "GAME CODES", r.codes.join(", ")) : esc(r.codes.join(", ")); }, function (r) { return ed(r) ? "" : "x"; }],
     ["First", function (r) { return esc(short(r.first)); }], ["Last seen", function (r) { return esc(short(r.last)); }],
     ["Min", function (r) { return r.min ? String(r.min) : ""; }, "num"], ["Bugs", function (r) { return r.bugs ? String(r.bugs) : ""; }, "num"],
-    ["Packages", function (r) { return r.t ? esc(r.t.packages) : ""; }],
-    ["Panel link", function (r) { return r.t ? "<input class='link' readonly value='" + esc(SITE + "?k=" + r.t.key) + "'>" : ""; }], ["", function (r) { return r.t ? "<button data-copy>Copy</button>" : ""; }],
-    ["Note", function (r) { return esc(r.note); }, "x muted"],
-  ], list);
+    ["Packages", function (r) { return ed(r) ? pField(r, "PACKAGES", r.t ? r.t.packages : "") : r.t ? esc(r.t.packages) : ""; }],
+    ["Panel link", function (r) { return r.t && r.t.key ? "<input class='link' readonly value='" + esc(SITE + "?k=" + r.t.key) + "'>" : ""; }], ["", function (r) { return r.t && r.t.key ? "<button data-copy>Copy</button>" : ""; }],
+    ["Note", function (r) { return ed(r) ? pField(r, "NOTE", r.note || "") : esc(r.note); }, function (r) { return ed(r) ? "" : "x muted"; }],
+    ["", function (r) { return ed(r) ? "<span class='muted' data-st>EDITING</span>" : ""; }],
+  ], list, function (r) { return " data-pk='" + esc(pId(r)) + "'" + (ed(r) ? " class='sel'" : ""); });
 }
+// the saved value goes into the loaded data too, so the row shows it without a reload
+function pApply(r, f, v) {
+  var low = function (s) { return String(s || "").trim().toLowerCase(); }, old = r.name;
+  if (f === "MAIL") { (D.people || []).forEach(function (row, i) { var hd = D.people[0]; if (i && (r.codes.indexOf(low(row[hd.indexOf("CODE")])) >= 0 || low(row[hd.indexOf("NAME")]) === low(old))) row[hd.indexOf("GIVEN TO")] = v; }); return; }
+  if (!r.t) { r.t = { name: r.name, category: "", codes: [], packages: "", key: "", note: "", nick: "" }; D.team = (D.team || []).concat([r.t]); }
+  if (f === "NAME") { (D.people || []).forEach(function (row, i) { var hd = D.people[0]; if (i && low(row[hd.indexOf("NAME")]) === low(old)) row[hd.indexOf("NAME")] = v; }); r.t.name = v; if (!r.t.key) pEdit = "name:" + v.toLowerCase(); }
+  else if (f === "NICK") r.t.nick = v; else if (f === "CATEGORY") r.t.category = v; else if (f === "PACKAGES") r.t.packages = v; else if (f === "NOTE") r.t.note = v;
+  else if (f === "GAME CODES") r.t.codes = v.split(",").map(low).filter(Boolean);
+  _people = null;
+}
+function pSave(el) {
+  var v = el.value.trim(), f = el.dataset.f, tr = el.closest("tr"); if (v === el.dataset.o) return;
+  var r = peopleRows().filter(function (x) { return pId(x) === tr.dataset.pk; })[0], st = tr.querySelector("[data-st]"); if (!r) return;
+  st.textContent = "SAVING..."; st.style.color = "";
+  apiPost({ action: "studio_set_person", k: KEY, key: r.t ? r.t.key : "", name: r.name, codes: r.codes, field: f, value: v }).then(function () {
+    el.dataset.o = v; pApply(r, f, v); tr.dataset.pk = pId(r); st.textContent = "SAVED"; st.style.color = "var(--green)";
+  }, function (e) { st.textContent = String(e && e.message || e); st.style.color = "var(--red)"; });
+}
+$("p-t").addEventListener("dblclick", function (e) {
+  var tr = e.target.closest("tr[data-pk]"); if (!tr || tr.dataset.pk === pEdit || !owner()) return;
+  pEdit = tr.dataset.pk; renderPeople();
+  var tr2 = $("p-t").querySelector("tr.sel [data-f]"); if (tr2) tr2.focus();
+});
+$("p-t").addEventListener("focusout", function (e) { if (e.target.dataset && e.target.dataset.f) pSave(e.target); });
+$("p-t").addEventListener("change", function (e) { if (e.target.tagName === "SELECT" && e.target.dataset.f) pSave(e.target); });
+$("p-t").addEventListener("keydown", function (e) {
+  if (!e.target.dataset || !e.target.dataset.f) return;
+  if (e.key === "Enter") e.target.blur();
+  if (e.key === "Escape") { e.target.value = e.target.dataset.o; pEdit = ""; renderPeople(); }
+});
 ["p-q", "p-cat"].forEach(function (id) { $(id).addEventListener("input", renderPeople); });
 $("p-t").addEventListener("click", function (e) {
   var b = e.target.closest("button[data-copy]"); if (!b) return;
