@@ -185,6 +185,39 @@ function personColor(name) { var s = String(name || ""), x = 0; for (var i = 0; 
 function nameTag(name) { return "<span class='nm' style='color:" + personColor(name) + "'>" + esc(name) + "</span>"; }
 function who(code) { return nameTag(nameOf(code)); }
 
+// 1279: the header lettering as its own squares (one per letter pixel, read from its picture); every 30 s a wave runs
+// through them left to right - each column hops up and back in whole-pixel steps, two columns a step apart
+(function () {
+  var img = document.querySelector("img.brand"); if (!img) return;
+  var build = function () {
+    var w = img.naturalWidth, ht = img.naturalHeight, S = 4, cv = document.createElement("canvas"); cv.width = w; cv.height = ht;
+    var cx = cv.getContext("2d"); cx.drawImage(img, 0, 0);
+    var d = cx.getImageData(0, 0, w, ht).data, g = "";
+    for (var x = 0; x < w; x += S) {
+      var r = "";
+      for (var y = 0; y < ht; y += S) { var i = (y * w + x) * 4; if (d[i + 3] > 0) r += "<rect x='" + x + "' y='" + y + "' width='" + Math.min(S, w - x) + "' height='" + S + "' fill='rgb(" + d[i] + "," + d[i + 1] + "," + d[i + 2] + ")'/>"; }
+      if (r) g += "<g data-c='" + x / S + "'>" + r + "</g>";
+    }
+    img.outerHTML = "<svg class='brand' width='" + w + "' height='" + ht + "' viewBox='0 0 " + w + " " + ht + "' shape-rendering='crispEdges' overflow='visible' role='img' aria-label='RODWAN PIXELS'>" + g + "</svg>";
+    var groups = document.querySelectorAll("svg.brand g"), HOP = [-2, -4, -2, 0], STEP = 50;
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var wave = function () {
+      var t0 = performance.now(), at = [];
+      (function frame(now) {
+        var k = Math.floor((now - t0) / STEP), live = false;
+        groups.forEach(function (gr, i) {
+          var s = k - (+gr.dataset.c >> 1), v = s >= 0 && s < HOP.length ? HOP[s] : 0;
+          if (s < HOP.length) live = true;
+          if (at[i] !== v) { at[i] = v; gr.setAttribute("transform", v ? "translate(0 " + v + ")" : ""); }
+        });
+        if (live) requestAnimationFrame(frame);
+      })(t0);
+    };
+    setTimeout(wave, 3000); setInterval(wave, 30000);
+  };
+  if (img.complete && img.naturalWidth) build(); else img.addEventListener("load", build);
+})();
+
 // tabs (the last one picked is remembered in this browser)
 function showTab(t) {
   if (!D || !D.tabs) return;
