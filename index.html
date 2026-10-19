@@ -65,7 +65,7 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <nav id="tabs">
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="tasks" aria-selected="false" hidden>TASKS</button><button data-tab="telemetry" aria-selected="false" hidden>TELEMETRY</button>
-<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
+<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="players" aria-selected="false" hidden>PLAYERS</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
 <button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
@@ -99,6 +99,15 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <label for="p-cat">Category</label><select id="p-cat"></select><span class="muted" id="p-n"></span></div>
 <div class="scroll"><table id="p-t"></table></div></section>
 
+<section class="panel" data-pane="players" hidden><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
+<div class="cols"><div class="panel"><div class="bar"><h2>Per month</h2><span class="legend"><span><i style="background:var(--cyan)"></i>LIKES</span><span><i style="background:var(--gold)"></i>REPLIES</span></span></div><div class="scroll" id="pl-month"></div></div>
+<div class="panel"><h2>How often they come back</h2><div id="pl-back" style="display:grid;gap:6px"></div></div></div>
+<div class="panel"><div class="bar"><h2>Accounts</h2><input id="pl-q" type="search" placeholder="SEARCH HANDLE OR NAME..." style="flex:1;min-width:200px">
+<label for="pl-sort">Sort</label><select id="pl-sort"><option value="posts">POSTS</option><option value="likes">LIKES</option><option value="replies">REPLIES</option><option value="last">LAST SEEN</option></select>
+<label><input type="checkbox" id="pl-ret"> returning only</label><label><input type="checkbox" id="pl-only"> ticked only</label><span class="muted" id="pl-n"></span></div>
+<div class="bar"><button id="pl-copy">Copy ticked</button><button id="pl-top">Tick top 10</button><button id="pl-clear">Clear ticks</button><span class="muted" id="pl-msg"></span></div>
+<div class="scroll"><table id="pl-t"></table></div></div>
+<div class="panel"><h2>Best posts</h2><div class="scroll"><table id="pl-best"></table></div></div></section>
 <section class="panel" data-pane="changelog" hidden><div id="cl"></div></section>
 <section class="panel" data-pane="calendar" hidden>
 <nav id="cal-tabs"><button data-c="grid" aria-selected="true">CALENDAR</button><button data-c="timeline" aria-selected="false">TIMELINE</button><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener" style="align-self:center">OPEN GOOGLE CALENDAR</a></nav>
@@ -219,6 +228,7 @@ function render() {
   if (allowed("tasks")) renderTasks();
   if (allowed("telemetry")) renderTelemetry();
   if (allowed("people")) renderPeople();
+  if (allowed("players")) renderPlayers();
   if (allowed("changelog")) renderChangelog();
   if (allowed("calendar")) { renderCalendar(); renderTimeline(); }
   if (allowed("files")) renderFiles();
@@ -589,6 +599,97 @@ $("p-t").addEventListener("click", function (e) {
   var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1500); };
   try { if (document.execCommand("copy")) { done(); return; } } catch (err) {}
   if (navigator.clipboard) navigator.clipboard.writeText(inp.value).then(done, function () { b.textContent = "Select + Ctrl+C"; });
+});
+// ── players (1268, OWNER only): who reacts to the X posts, from the sheet the X collection fills ──
+// POSTS: DATE, TEXT, URL, LIKES, REPLIES · ENGAGEMENTS: POST URL, POST DATE, HANDLE, NAME, TYPE (LIKE / REPLY), REPLY DATE, REPLY TEXT
+var plTick = {};
+try { plTick = JSON.parse(localStorage.getItem("pl_tick") || "{}") || {}; } catch (e) {}
+function plSaveTick() { try { localStorage.setItem("pl_tick", JSON.stringify(plTick)); } catch (e) {} }
+var plNum = function (v) { var s = String(v || "").toUpperCase().replace(/,/g, ""), n = parseFloat(s); if (isNaN(n)) return 0; return /K/.test(s) ? n * 1e3 : /M/.test(s) ? n * 1e6 : n; };
+var plDay = function (v) { var s = String(v || ""); return /^\d{4}-\d\d-\d\d/.test(s) ? s.slice(0, 10) : ""; };
+var _pl = null;
+function plData() {
+  if (_pl && _pl.src === D.players) return _pl;
+  var P = D.players || {}, posts = table(P.posts).rows.filter(function (p) { return p.URL || p.DATE; }), eng = table(P.engagements).rows;
+  var acc = {}, byPost = {};
+  posts.forEach(function (p) { byPost[p.URL || p.DATE] = { date: plDay(p.DATE), text: p.TEXT || "", likes: plNum(p.LIKES), replies: plNum(p.REPLIES), seen: 0 }; });
+  eng.forEach(function (r) {
+    var hd = String(r.HANDLE || "").replace(/^@/, "").trim(); if (!hd) return;
+    var k = hd.toLowerCase(), a = acc[k] || (acc[k] = { handle: hd, name: "", likes: 0, replies: 0, posts: {}, first: "", last: "" });
+    if (r.NAME) a.name = r.NAME;
+    var reply = String(r.TYPE).toUpperCase() === "REPLY"; if (reply) a.replies++; else a.likes++;
+    var pk = r["POST URL"] || r["POST DATE"], bp = byPost[pk] || (byPost[pk] = { date: plDay(r["POST DATE"]), text: "", likes: 0, replies: 0, seen: 1 });
+    if (bp.seen) { if (reply) bp.replies++; else bp.likes++; }
+    a.posts[pk] = 1;
+    var d = plDay(reply && r["REPLY DATE"] ? r["REPLY DATE"] : r["POST DATE"]);
+    if (d) { if (!a.first || d < a.first) a.first = d; if (!a.last || d > a.last) a.last = d; }
+  });
+  var list = Object.keys(acc).map(function (k) { var a = acc[k]; a.key = k; a.n = Object.keys(a.posts).length; a.all = a.likes + a.replies; return a; });
+  _pl = { src: D.players, list: list, posts: Object.keys(byPost).map(function (k) { return byPost[k]; }), eng: eng };
+  return _pl;
+}
+function plSorted(by) {
+  var f = { posts: function (a, b) { return b.n - a.n || b.all - a.all; }, likes: function (a, b) { return b.likes - a.likes || b.n - a.n; },
+    replies: function (a, b) { return b.replies - a.replies || b.n - a.n; }, last: function (a, b) { return b.last.localeCompare(a.last) || b.n - a.n; } }[by];
+  var s = plData().list.slice().sort(function (a, b) { return f(a, b) || a.key.localeCompare(b.key); });
+  s.forEach(function (a, i) { a.rank = i + 1; });
+  return s;
+}
+function renderPlayers() {
+  var X = plData(), nPosts = X.posts.length, all = X.list.length;
+  $("pl-empty").hidden = !!X.eng.length; $("pl-empty").textContent = "No data yet: the X sheet has no ENGAGEMENTS rows.";
+  var likes = X.posts.reduce(function (s, p) { return s + p.likes; }, 0), replies = X.posts.reduce(function (s, p) { return s + p.replies; }, 0);
+  var ret = X.list.filter(function (a) { return a.n >= 2; }).length, rows = X.list.reduce(function (s, a) { return s + a.all; }, 0);
+  var top10 = X.list.slice().sort(function (a, b) { return b.all - a.all; }).slice(0, 10).reduce(function (s, a) { return s + a.all; }, 0);
+  var per = function (v) { return nPosts ? (v / nPosts).toFixed(1) : "0"; }, pct = function (v, of) { return of ? Math.round(v * 100 / of) + "%" : "0%"; };
+  $("pl-tiles").innerHTML = [["Posts", nPosts], ["Accounts", all], ["Likes", likes], ["Replies", replies], ["Likes per post", per(likes)], ["Replies per post", per(replies)],
+    ["Returning", ret + " · " + pct(ret, all)], ["Top 10 share", pct(top10, rows)]].map(function (t) { return "<div class='tile'><span>" + esc(t[0]) + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
+  // likes and replies per month of the post
+  var mon = {};
+  X.posts.forEach(function (p) { if (!p.date) return; var m = mon[p.date.slice(0, 7)] || (mon[p.date.slice(0, 7)] = { l: 0, r: 0, p: 0 }); m.l += p.likes; m.r += p.replies; m.p++; });
+  var mk = Object.keys(mon).sort(), max = Math.max(1, Math.max.apply(null, mk.map(function (k) { return mon[k].l + mon[k].r; }).concat([0]))), W = 34, H = 120, T = 14;
+  var svg = "<svg width='" + Math.max(1, mk.length * W) + "' height='" + (H + T + 26) + "' role='img' aria-label='Likes and replies per month'>";
+  mk.forEach(function (k, i) {
+    var m = mon[k], hl = Math.round(m.l / max * H), hr = Math.round(m.r / max * H), x = i * W + 4, base = T + H;
+    svg += "<g><title>" + esc(k + "  " + m.p + " posts  " + m.l + " likes  " + m.r + " replies") + "</title><rect x='" + x + "' y='" + (base - hl) + "' width='" + (W - 8) + "' height='" + hl + "' fill='#4dccff'/><rect x='" + x + "' y='" + (base - hl - hr) + "' width='" + (W - 8) + "' height='" + hr + "' fill='#e6ad47'/></g>";
+    svg += "<text x='" + (x + (W - 8) / 2) + "' y='" + (base - hl - hr - 3) + "' fill='#e6e4e0' font-size='9' text-anchor='middle' font-family='JetBrains Mono,monospace'>" + (m.l + m.r) + "</text>";
+    svg += "<text x='" + (x + (W - 8) / 2) + "' y='" + (base + 12) + "' fill='#8e8b86' font-size='9' text-anchor='middle' font-family='JetBrains Mono,monospace'>" + MONTHS[+k.slice(5, 7) - 1] + "</text>";
+    if (i === 0 || k.slice(5) === "01") svg += "<text x='" + (x + (W - 8) / 2) + "' y='" + (base + 23) + "' fill='#8e8b86' font-size='9' text-anchor='middle' font-family='JetBrains Mono,monospace'>" + k.slice(0, 4) + "</text>";
+  });
+  $("pl-month").innerHTML = mk.length ? svg + "</svg>" : "<span class='muted'>No dated posts.</span>";
+  // how many posts each account reacted to
+  var B = [["1 post", 1, 1], ["2 posts", 2, 2], ["3 to 5", 3, 5], ["6 to 10", 6, 10], ["11 or more", 11, 1e9]].map(function (b) { return [b[0], X.list.filter(function (a) { return a.n >= b[1] && a.n <= b[2]; }).length]; });
+  var bm = Math.max(1, Math.max.apply(null, B.map(function (b) { return b[1]; })));
+  $("pl-back").innerHTML = B.map(function (b) { return "<div class='bar' style='flex-wrap:nowrap'><span style='width:92px;flex:none' class='muted'>" + b[0].toUpperCase() + "</span><span style='flex:1;background:var(--bg);height:14px'><i style='display:block;height:14px;width:" + (b[1] / bm * 100) + "%;background:var(--cyan)'></i></span><b style='width:70px;text-align:right'>" + b[1] + " · " + pct(b[1], all) + "</b></div>"; }).join("");
+  renderPlayerList();
+  // best posts
+  var best = X.posts.slice().sort(function (a, b) { return (b.likes + b.replies) - (a.likes + a.replies); }).slice(0, 10);
+  $("pl-best").innerHTML = grid([["Date", function (p) { return esc(p.date); }], ["Post", function (p) { return esc(p.text); }, "x"],
+    ["Likes", function (p) { return String(p.likes); }, "num"], ["Replies", function (p) { return String(p.replies); }, "num"]], best);
+}
+function renderPlayerList() {
+  var X = plData(), nPosts = X.posts.length, s = plSorted($("pl-sort").value), q = $("pl-q").value.trim().toLowerCase();
+  var list = s.filter(function (a) { return (!q || (a.handle + " " + a.name).toLowerCase().indexOf(q) >= 0) && (!$("pl-ret").checked || a.n >= 2) && (!$("pl-only").checked || plTick[a.key]); });
+  var ticked = Object.keys(plTick).filter(function (k) { return plTick[k]; }).length;
+  $("pl-n").textContent = list.length + " OF " + s.length + " · " + ticked + " TICKED";
+  $("pl-t").innerHTML = grid([
+    ["", function (a) { return "<input type='checkbox' data-pl='" + esc(a.key) + "'" + (plTick[a.key] ? " checked" : "") + " aria-label='Tick'>"; }],
+    ["#", function (a) { return String(a.rank); }, "num muted"], ["Handle", function (a) { return "<b>" + nameTag("@" + a.handle) + "</b>"; }], ["Name", function (a) { return esc(a.name); }, "x muted"],
+    ["Posts", function (a) { return String(a.n); }, "num"], ["Of all posts", function (a) { return nPosts ? Math.round(a.n * 100 / nPosts) + "%" : ""; }, "num"],
+    ["Likes", function (a) { return String(a.likes); }, "num"], ["Replies", function (a) { return String(a.replies); }, "num"],
+    ["First", function (a) { return esc(a.first); }], ["Last", function (a) { return esc(a.last); }],
+  ], list.slice(0, 500), function (a) { return plTick[a.key] ? " class='sel'" : ""; });
+}
+["pl-q", "pl-sort", "pl-ret", "pl-only"].forEach(function (id) { $(id).addEventListener("input", renderPlayerList); });
+$("pl-t").addEventListener("change", function (e) { var c = e.target.closest("input[data-pl]"); if (!c) return; if (c.checked) plTick[c.dataset.pl] = 1; else delete plTick[c.dataset.pl]; plSaveTick(); renderPlayerList(); });
+$("pl-top").addEventListener("click", function () { $("pl-t").querySelectorAll("input[data-pl]").forEach(function (c, i) { if (i < 10) plTick[c.dataset.pl] = 1; }); plSaveTick(); renderPlayerList(); });
+$("pl-clear").addEventListener("click", function () { plTick = {}; plSaveTick(); renderPlayerList(); });
+$("pl-copy").addEventListener("click", function () {
+  var t = plSorted($("pl-sort").value).filter(function (a) { return plTick[a.key]; }).map(function (a) { return "@" + a.handle; }).join("\n"), m = $("pl-msg");
+  if (!t) { m.textContent = "Nothing ticked."; return; }
+  var n = t.split("\n").length, ok = function () { m.textContent = n + " handles copied."; };
+  var fallback = function () { var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { if (document.execCommand("copy")) ok(); else m.textContent = "Copy did not work."; } catch (e) { m.textContent = "Copy did not work."; } ta.remove(); };
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, fallback); else fallback();
 });
 // one-line cells everywhere: a click opens the whole text (the task table opens its own rows)
 document.addEventListener("click", function (e) { var td = e.target.closest("td.x"); if (td && !td.closest("#t-t")) td.classList.toggle("open"); });
