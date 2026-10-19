@@ -57,9 +57,14 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .hello{font:700 30px/1 var(--head);letter-spacing:.06em;color:var(--fg)}
 .mark{position:fixed;left:0;right:0;bottom:8px;display:flex;justify-content:center;pointer-events:none;z-index:4}.mark img{width:140px;height:14px;opacity:.45}.hello b{color:var(--cyan)}
 input.link{width:100%;min-width:220px;color:var(--dim)}
+.ld{display:grid;gap:4px;transition:opacity .6s}.ld-track{height:8px;background:repeating-linear-gradient(90deg,#232329 0 6px,#17171b 6px 8px);border:1px solid var(--line);overflow:hidden}
+.ld-track i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--gold) 0 6px,#b98a35 6px 8px);transition:width .3s steps(6)}
+#ld-txt{font:600 15px var(--head);letter-spacing:.12em;color:var(--gold);text-transform:uppercase}#ld-txt b{color:var(--dim);font-weight:600;margin-left:8px}
+.ld.idle{opacity:.3}.ld.idle #ld-txt{display:none}.ld.idle .ld-track{height:4px}.ld.idle:hover{opacity:1}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
 <header><span class="hello" id="hello"></span><select id="view-as" hidden aria-label="View as"></select><span class="sub" id="status">Loading...</span><span class="spacer"></span><button id="refresh">Refresh</button></header>
+<div class="ld" id="ld" hidden><span id="ld-txt"></span><div class="ld-track"><i id="ld-fill"></i></div></div>
 <div class="viewbar" id="viewbar" hidden>VIEWING AS <b id="viewbar-cat"></b><span class="muted">what this category sees; status changes are off</span><span class="spacer"></span><button id="viewbar-back">Back to owner</button></div>
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
 <nav id="tabs">
@@ -149,7 +154,7 @@ var fmtSec = function (s) { s = Math.max(0, Math.round(+s || 0)); var h = Math.f
 var short = function (s) { s = String(s || ""); return /^\d{4}-\d\d-\d\d/.test(s) ? s.slice(5, 16) : s; };
 var day = function (ms) { return new Date(ms).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); };
 var hm = function (ms) { return new Date(ms).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }); };
-var allowed = function (t) { return !!D && D.tabs.indexOf(t) >= 0; };
+var allowed = function (t) { return !!D && !!D.tabs && D.tabs.indexOf(t) >= 0; };
 function table(v) { v = v || []; if (!v.length) return { head: [], rows: [] }; var head = v[0].map(String); return { head: head, rows: v.slice(1).map(function (r) { var o = {}; head.forEach(function (h, i) { o[h] = r[i] == null ? "" : r[i]; }); return o; }) }; }
 function grid(specs, rows, rowAttr) {
   var used = specs.filter(function (s) { return rows.some(function (r) { var v = s[1](r); return v !== "" && v != null; }); });
@@ -183,6 +188,7 @@ function who(code) { return nameTag(nameOf(code)); }
 
 // tabs (the last one picked is remembered in this browser)
 function showTab(t) {
+  if (!D || !D.tabs) return;
   if (!allowed(t)) t = D.tabs[0];
   curTab = t;
   document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
@@ -190,20 +196,66 @@ function showTab(t) {
   try { localStorage.setItem("tab", t); } catch (e) {}
   if (t === "telemetry") drawTimeline();
   if (t === "overview" && D) renderHeatmap();
+  loadLazy(t);
 }
 $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); });
 function showTel(t) { document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); }
 $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) showTel(b.dataset.t); });
 
-// loading
+// loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
+// The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
+var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
+var LAZY = { telemetry: ["feedback"], calendar: ["calendar"], files: ["files"], players: ["players"] };
+var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
+  codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
+  feedback: "Opening the letters", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X" };
+var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
+function ldDraw() {
+  var n = ldParts.length, d = ldParts.filter(function (p) { return got[p]; }).length, next = ldParts.filter(function (p) { return !got[p]; })[0];
+  $("ld").hidden = false; $("ld").classList.toggle("idle", !next);
+  $("ld-fill").style.width = (n ? d * 100 / n : 100) + "%";
+  $("ld-txt").innerHTML = esc(next ? PART_LABEL[next] + "..." : "All aboard") + "<b>" + d + " / " + n + "</b>";
+  $("ld").title = ldParts.filter(function (p) { return partMs[p] != null; }).map(function (p) { return PART_LABEL[p] + "  " + (partMs[p] / 1000).toFixed(1) + " s" + (D && D.errors && D.errors[p] ? "  (did not load)" : ""); }).join("\n");
+}
+function fetchParts(parts) {
+  var gen = loadGen;
+  parts = parts.filter(function (p) { return !asked[p]; });
+  parts.forEach(function (p) { asked[p] = 1; if (ldParts.indexOf(p) < 0) ldParts.push(p); });
+  ldDraw();
+  return Promise.all(parts.map(function (p) {
+    var t0 = Date.now(), q = { api: "data", k: KEY, part: p }; if (VIEW_AS) q.as = VIEW_AS;
+    return apiGet(q).then(function (j) {
+      if (gen !== loadGen) return;
+      var errs = j.errors || {}; delete j.errors;
+      Object.keys(j).forEach(function (x) { D[x] = j[x]; });
+      Object.keys(errs).forEach(function (x) { D.errors[x] = errs[x]; });
+      partMs[p] = Date.now() - t0; got[p] = 1; ldDraw();
+    }, function (e) {
+      if (gen !== loadGen) return;
+      var m = String(e && e.message || e);
+      if (m === "No access") throw e;
+      D.errors[p] = m; partMs[p] = Date.now() - t0; got[p] = 1; ldDraw();
+    });
+  }));
+}
 function load() {
   if (!KEY) { askKey(""); return; }
+  loadGen++; asked = {}; got = {}; partMs = {}; ldParts = [];
+  D = { errors: {} }; evCache = null; _people = null; _unnamed = null; _pl = null;
   $("status").textContent = "Loading...";
-  apiGet(VIEW_AS ? { api: "data", k: KEY, as: VIEW_AS } : { api: "data", k: KEY }).then(function (j) { D = j; evCache = null; _people = null; _unnamed = null; $("key-box").hidden = true; render(); }, function (e) {
+  fetchParts(EAGER).then(function () {
+    if (!D.tabs) throw new Error(Object.keys(D.errors).map(function (x) { return D.errors[x]; })[0] || "no data");
+    $("key-box").hidden = true; render();
+  }).catch(function (e) {
     var m = String(e && e.message || e);
-    if (m === "No access") { saveKey(""); askKey("This key does not open the panel."); return; }
+    if (m === "No access") { $("ld").hidden = true; saveKey(""); askKey("This key does not open the panel."); return; }
     $("status").textContent = "Could not load: " + m;
   });
+}
+function loadLazy(t) {
+  if (!LAZY[t] || !D || !D.tabs || LAZY[t].every(function (p) { return asked[p]; })) return;
+  var gen = loadGen;
+  fetchParts(LAZY[t]).then(function () { if (gen !== loadGen) return; _people = null; _unnamed = null; _pl = null; render(); }).catch(function () {});
 }
 $("refresh").addEventListener("click", load);
 $("view-as").addEventListener("change", function (e) { VIEW_AS = e.target.value === "OWNER" ? "" : e.target.value; pickedBug = ""; load(); });
@@ -228,10 +280,10 @@ function render() {
   if (allowed("tasks")) renderTasks();
   if (allowed("telemetry")) renderTelemetry();
   if (allowed("people")) renderPeople();
-  if (allowed("players")) renderPlayers();
+  if (allowed("players") && got.players) renderPlayers();
   if (allowed("changelog")) renderChangelog();
-  if (allowed("calendar")) { renderCalendar(); renderTimeline(); }
-  if (allowed("files")) renderFiles();
+  if (allowed("calendar") && got.calendar) { renderCalendar(); renderTimeline(); }
+  if (allowed("files") && got.files) renderFiles();
 }
 
 // ── bugs ──
@@ -363,6 +415,7 @@ function sessions(evs) {
 function renderFeedback() {
   var msg = $("fb-msg"), list = D.feedback || [];
   if (D.errors && D.errors.feedback) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "FEEDBACK did not load: " + D.errors.feedback; }
+  else if (!got.feedback) { msg.hidden = false; msg.className = "msg"; msg.textContent = "Opening the letters..."; }
   else if (!list.length) { msg.hidden = false; msg.className = "msg"; msg.textContent = "Nobody has sent feedback from the game yet."; }
   else msg.hidden = true;
   var q = $("fb-q").value.trim().toLowerCase();
