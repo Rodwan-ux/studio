@@ -185,51 +185,6 @@ function personColor(name) { var s = String(name || ""), x = 0; for (var i = 0; 
 function nameTag(name) { return "<span class='nm' style='color:" + personColor(name) + "'>" + esc(name) + "</span>"; }
 function who(code) { return nameTag(nameOf(code)); }
 
-// 1279: the header lettering as its own squares (one per letter pixel, read from its picture); every 30 s a wave runs
-// through them left to right - each column hops up and back in whole-pixel steps, two columns a step apart
-(function () {
-  var img = document.querySelector("img.brand"); if (!img) return;
-  var build = function () {
-    var w = img.naturalWidth, ht = img.naturalHeight, S = 4, cv = document.createElement("canvas"); cv.width = w; cv.height = ht;
-    var cx = cv.getContext("2d"); cx.drawImage(img, 0, 0);
-    var d = cx.getImageData(0, 0, w, ht).data, g = "";
-    // 1281: a column's pattern = which S-tall bands are lit; equal neighbours form a run, a run = squares S wide
-    // (the second word sits off the S grid, so squares start where the pixels do)
-    var pat = function (x) { var s = ""; for (var y = 0; y < ht; y += S) s += d[(y * w + x) * 4 + 3] > 0 ? "1" : "0"; return s; };
-    var col = function (x) { var i = 0; for (var y = 0; y < ht; y += S) if (d[(y * w + x) * 4 + 3] > 0) { i = (y * w + x) * 4; break; } return "rgb(" + d[i] + "," + d[i + 1] + "," + d[i + 2] + ")"; };
-    for (var x = 0; x < w;) {
-      var p = pat(x), e = x + 1;
-      while (e < w && pat(e) === p) e++;
-      if (p.indexOf("1") >= 0) for (var x0 = x; x0 < e; x0 += S) {
-        var r = "", cw = Math.min(S, e - x0);
-        for (var b = 0; b < p.length; b++) if (p[b] === "1") r += "<rect x='" + x0 + "' y='" + b * S + "' width='" + cw + "' height='" + S + "'/>";
-        g += "<g data-c='" + Math.round(x0 / S) + "' data-f='" + col(x0) + "' fill='" + col(x0) + "'>" + r + "</g>";
-      }
-      x = e;
-    }
-    img.outerHTML = "<svg class='brand' width='" + w + "' height='" + ht + "' viewBox='0 0 " + w + " " + ht + "' shape-rendering='crispEdges' overflow='visible' role='img' aria-label='RODWAN PIXELS'>" + g + "</svg>";
-    var groups = document.querySelectorAll("svg.brand g"), HOP = [-2, -4, -2, 0], STEP = 120;
-    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var wave = function () {
-      var t0 = performance.now(), at = [];
-      (function frame(now) {
-        var k = Math.floor((now - t0) / STEP), live = false;
-        groups.forEach(function (gr, i) {
-          var s = k - (+gr.dataset.c >> 1), v = s >= 0 && s < HOP.length ? HOP[s] : 0;
-          if (s < HOP.length) live = true;
-          if (at[i] !== v) {
-            at[i] = v; gr.setAttribute("transform", v ? "translate(0 " + v + ")" : "");
-            gr.setAttribute("fill", v ? "#4dccff" : gr.dataset.f); gr.setAttribute("fill-opacity", v ? "0.7" : "1");   // lit cyan while up
-          }
-        });
-        if (live) requestAnimationFrame(frame);
-      })(t0);
-    };
-    setTimeout(wave, 3000); setInterval(wave, 30000);
-  };
-  if (img.complete && img.naturalWidth) build(); else img.addEventListener("load", build);
-})();
-
 // tabs (the last one picked is remembered in this browser)
 function showTab(t) {
   if (!D || !D.tabs) return;
