@@ -193,13 +193,22 @@ function who(code) { return nameTag(nameOf(code)); }
     var w = img.naturalWidth, ht = img.naturalHeight, S = 4, cv = document.createElement("canvas"); cv.width = w; cv.height = ht;
     var cx = cv.getContext("2d"); cx.drawImage(img, 0, 0);
     var d = cx.getImageData(0, 0, w, ht).data, g = "";
-    for (var x = 0; x < w; x += S) {
-      var r = "";
-      for (var y = 0; y < ht; y += S) { var i = (y * w + x) * 4; if (d[i + 3] > 0) r += "<rect x='" + x + "' y='" + y + "' width='" + Math.min(S, w - x) + "' height='" + S + "' fill='rgb(" + d[i] + "," + d[i + 1] + "," + d[i + 2] + ")'/>"; }
-      if (r) g += "<g data-c='" + x / S + "'>" + r + "</g>";
+    // 1281: a column's pattern = which S-tall bands are lit; equal neighbours form a run, a run = squares S wide
+    // (the second word sits off the S grid, so squares start where the pixels do)
+    var pat = function (x) { var s = ""; for (var y = 0; y < ht; y += S) s += d[(y * w + x) * 4 + 3] > 0 ? "1" : "0"; return s; };
+    var col = function (x) { var i = 0; for (var y = 0; y < ht; y += S) if (d[(y * w + x) * 4 + 3] > 0) { i = (y * w + x) * 4; break; } return "rgb(" + d[i] + "," + d[i + 1] + "," + d[i + 2] + ")"; };
+    for (var x = 0; x < w;) {
+      var p = pat(x), e = x + 1;
+      while (e < w && pat(e) === p) e++;
+      if (p.indexOf("1") >= 0) for (var x0 = x; x0 < e; x0 += S) {
+        var r = "", cw = Math.min(S, e - x0);
+        for (var b = 0; b < p.length; b++) if (p[b] === "1") r += "<rect x='" + x0 + "' y='" + b * S + "' width='" + cw + "' height='" + S + "'/>";
+        g += "<g data-c='" + Math.round(x0 / S) + "' data-f='" + col(x0) + "' fill='" + col(x0) + "'>" + r + "</g>";
+      }
+      x = e;
     }
     img.outerHTML = "<svg class='brand' width='" + w + "' height='" + ht + "' viewBox='0 0 " + w + " " + ht + "' shape-rendering='crispEdges' overflow='visible' role='img' aria-label='RODWAN PIXELS'>" + g + "</svg>";
-    var groups = document.querySelectorAll("svg.brand g"), HOP = [-2, -4, -2, 0], STEP = 50;
+    var groups = document.querySelectorAll("svg.brand g"), HOP = [-2, -4, -2, 0], STEP = 120;
     if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     var wave = function () {
       var t0 = performance.now(), at = [];
@@ -208,7 +217,10 @@ function who(code) { return nameTag(nameOf(code)); }
         groups.forEach(function (gr, i) {
           var s = k - (+gr.dataset.c >> 1), v = s >= 0 && s < HOP.length ? HOP[s] : 0;
           if (s < HOP.length) live = true;
-          if (at[i] !== v) { at[i] = v; gr.setAttribute("transform", v ? "translate(0 " + v + ")" : ""); }
+          if (at[i] !== v) {
+            at[i] = v; gr.setAttribute("transform", v ? "translate(0 " + v + ")" : "");
+            gr.setAttribute("fill", v ? "#4dccff" : gr.dataset.f); gr.setAttribute("fill-opacity", v ? "0.7" : "1");   // lit cyan while up
+          }
         });
         if (live) requestAnimationFrame(frame);
       })(t0);
@@ -262,6 +274,7 @@ function fetchParts(parts) {
       Object.keys(j).forEach(function (x) { D[x] = j[x]; });
       Object.keys(errs).forEach(function (x) { D.errors[x] = errs[x]; });
       partMs[p] = Date.now() - t0; got[p] = 1; ldDraw();
+      if (liveRender && D.tabs) softRender();
     }, function (e) {
       if (gen !== loadGen) return;
       var m = String(e && e.message || e);
@@ -270,24 +283,33 @@ function fetchParts(parts) {
     });
   }));
 }
+// 1282: the last loaded data, kept in this browser per key and VIEW AS; shown at once, then each fresh part replaces its own
+var CACHE_KEY = function () { return "studio_cache:" + (VIEW_AS || "OWN"); };
+var liveRender = false, savedAt = 0;
+function cacheRead() { try { var c = JSON.parse(localStorage.getItem(CACHE_KEY()) || "null"); return c && c.key === KEY && c.d && c.d.tabs ? c : null; } catch (e) { return null; } }
+function cacheWrite() { try { var d = {}; Object.keys(D).forEach(function (x) { if (x !== "errors") d[x] = D[x]; }); localStorage.setItem(CACHE_KEY(), JSON.stringify({ key: KEY, at: Date.now(), d: d })); } catch (e) {} }
+function cacheDrop() { try { Object.keys(localStorage).forEach(function (x) { if (x.indexOf("studio_cache:") === 0) localStorage.removeItem(x); }); } catch (e) {} }
+function softRender() { _people = null; _unnamed = null; _pl = null; render(); }
 function load() {
   if (!KEY) { askKey(""); return; }
   loadGen++; asked = {}; got = {}; partMs = {}; ldParts = [];
   D = { errors: {} }; evCache = null; _people = null; _unnamed = null; _pl = null;
-  $("status").textContent = "Loading...";
+  var c = cacheRead(); liveRender = !!c; savedAt = c ? c.at : 0;
+  if (c) { Object.keys(c.d).forEach(function (x) { D[x] = c.d[x]; }); $("key-box").hidden = true; render(); }
+  else $("status").textContent = "Loading...";
   fetchParts(EAGER).then(function () {
     if (!D.tabs) throw new Error(Object.keys(D.errors).map(function (x) { return D.errors[x]; })[0] || "no data");
-    $("key-box").hidden = true; render();
+    $("key-box").hidden = true; liveRender = true; softRender(); cacheWrite();
   }).catch(function (e) {
     var m = String(e && e.message || e);
-    if (m === "No access") { $("ld").hidden = true; saveKey(""); askKey("This key does not open the panel."); return; }
+    if (m === "No access") { $("ld").hidden = true; cacheDrop(); saveKey(""); askKey("This key does not open the panel."); return; }
     $("status").textContent = "Could not load: " + m;
   });
 }
 function loadLazy(t) {
   if (!LAZY[t] || !D || !D.tabs || LAZY[t].every(function (p) { return asked[p]; })) return;
   var gen = loadGen;
-  fetchParts(LAZY[t]).then(function () { if (gen !== loadGen) return; _people = null; _unnamed = null; _pl = null; render(); }).catch(function () {});
+  fetchParts(LAZY[t]).then(function () { if (gen !== loadGen) return; softRender(); cacheWrite(); }).catch(function () {});
 }
 $("view-as").addEventListener("change", function (e) { VIEW_AS = e.target.value === "OWNER" ? "" : e.target.value; pickedBug = ""; load(); });
 $("viewbar-back").addEventListener("click", function () { VIEW_AS = ""; load(); });
@@ -303,7 +325,8 @@ function render() {
   va.hidden = !D.isOwner;
   if (D.isOwner) { va.innerHTML = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"].map(function (c) { return "<option value='" + c + "'>VIEW AS " + c + "</option>"; }).join(""); va.value = D.viewAs || "OWNER"; }
   $("viewbar").hidden = !D.viewAs; $("viewbar-cat").textContent = D.viewAs || "";
-  $("status").textContent = "loaded " + new Date().toLocaleTimeString() + (errs.length ? ". Did not load: " + errs.join(", ") : "");
+  var fresh = !ldParts.some(function (p) { return !got[p]; });
+  $("status").textContent = (fresh ? "loaded " + new Date().toLocaleTimeString() : "saved view from " + hm(savedAt) + ", updating") + (errs.length ? ". Did not load: " + errs.join(", ") : "");
   var t0 = curTab; if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} }
   showTab(t0 || D.tabs[0]);
   if (allowed("overview")) renderOverview();
@@ -311,10 +334,10 @@ function render() {
   if (allowed("tasks")) renderTasks();
   if (allowed("telemetry")) renderTelemetry();
   if (allowed("people")) renderPeople();
-  if (allowed("players") && got.players) renderPlayers();
+  if (allowed("players") && (got.players || D.players)) renderPlayers();
   if (allowed("changelog")) renderChangelog();
-  if (allowed("calendar") && got.calendar) { renderCalendar(); renderTimeline(); }
-  if (allowed("files") && got.files) renderFiles();
+  if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
+  if (allowed("files") && (got.files || D.files)) renderFiles();
 }
 
 // ── bugs ──
@@ -446,7 +469,7 @@ function sessions(evs) {
 function renderFeedback() {
   var msg = $("fb-msg"), list = D.feedback || [];
   if (D.errors && D.errors.feedback) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "FEEDBACK did not load: " + D.errors.feedback; }
-  else if (!got.feedback) { msg.hidden = false; msg.className = "msg"; msg.textContent = "Opening the letters..."; }
+  else if (!got.feedback && !D.feedback) { msg.hidden = false; msg.className = "msg"; msg.textContent = "Opening the letters..."; }
   else if (!list.length) { msg.hidden = false; msg.className = "msg"; msg.textContent = "Nobody has sent feedback from the game yet."; }
   else msg.hidden = true;
   var q = $("fb-q").value.trim().toLowerCase();
