@@ -16,7 +16,7 @@ nav button[aria-selected=true]{color:var(--gold);background:var(--panel);border-
 h2{margin:0;font:600 18px var(--head);letter-spacing:.1em;color:var(--gold);text-transform:uppercase}
 h3{margin:0;font:600 15px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
-.tile{background:var(--bg);border:1px solid var(--line);padding:8px 10px;display:grid;gap:2px;min-width:0}
+.tile{background:var(--bg);border:1px solid var(--line);padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}.tile b{margin-top:auto}
 .tile b{font:600 22px var(--mono);font-variant-numeric:tabular-nums}.tile span{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
 .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.bar label{font:600 13px var(--head);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
@@ -69,7 +69,7 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
-<div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll"><div id="ov-heat"></div></div></div><div class="cols">
+<div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll tl" id="ov-heat-box"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></div><div class="cols">
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
 <div class="panel"><h2>Latest changes</h2><div id="ov-ch"></div></div></div>
 </section>
@@ -465,24 +465,42 @@ var dayKey = function (d) { return d.getFullYear() + "-" + String(d.getMonth() +
 var HEAT = ["#1f1f24", "#4a3a1c", "#7a5a22", "#b8862f", "#e6ad47"];
 function renderHeatmap() {
   var act = D.activity || {}, now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  var start = new Date(today); start.setDate(start.getDate() - (start.getDay() + 6) % 7 - 52 * 7);
-  var C = 13, L = 30, T = 16, vals = Object.keys(act).filter(function (k) { return k >= dayKey(start); }).map(function (k) { return act[k]; });
+  // 1252: from the week of the first recorded change (at most a year back) — no empty weeks on the left
+  var keys = Object.keys(act).filter(function (k) { return act[k] > 0; }).sort();
+  var first = keys.length ? new Date(keys[0] + "T00:00:00") : new Date(today);
+  var yearAgo = new Date(today); yearAgo.setDate(yearAgo.getDate() - 364);
+  if (first < yearAgo) first = yearAgo;
+  var start = new Date(first); start.setDate(start.getDate() - (start.getDay() + 6) % 7);
+  var weeks = Math.floor((today - start) / (7 * 864e5)) + 1;
+  var C = 13, L = 30, T = 16, vals = Object.keys(act).filter(function (k) { return k >= dayKey(first); }).map(function (k) { return act[k]; });
   var max = Math.max(1, Math.max.apply(null, vals.concat([0]))), total = vals.reduce(function (a, v) { return a + v; }, 0);
   var lvl = function (v) { if (!v) return 0; var q = v / max; return q <= 0.15 ? 1 : q <= 0.35 ? 2 : q <= 0.6 ? 3 : 4; };
-  var svg = "<svg width='" + (L + 53 * C) + "' height='" + (T + 7 * C) + "' role='img' aria-label='Changes per day'>", lastMonth = -1;
+  var svg = "<svg width='" + (L + weeks * C) + "' height='" + (T + 7 * C) + "' role='img' aria-label='Changes per day'>", lastMonth = -1;
   ["MON", "", "WED", "", "FRI", "", ""].forEach(function (t, i) { if (t) svg += "<text x='0' y='" + (T + i * C + 10) + "' fill='#8e8b86' font-size='9' font-family='JetBrains Mono,monospace'>" + t + "</text>"; });
-  for (var w = 0; w < 53; w++) {
+  for (var w = 0; w < weeks; w++) {
     for (var d = 0; d < 7; d++) {
       var x = new Date(start); x.setDate(start.getDate() + w * 7 + d);
       if (x > today) continue;
       if (d === 0 && x.getMonth() !== lastMonth) { lastMonth = x.getMonth(); svg += "<text x='" + (L + w * C) + "' y='10' fill='#8e8b86' font-size='9' font-family='JetBrains Mono,monospace'>" + MONTHS[x.getMonth()] + "</text>"; }
       var k = dayKey(x), v = act[k] || 0;
-      svg += "<rect x='" + (L + w * C) + "' y='" + (T + d * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='" + HEAT[lvl(v)] + "'" + (k === dayKey(today) ? " stroke='#4dccff'" : "") + "><title>" + esc(day(x.getTime())) + ": " + v + (v === 1 ? " change" : " changes") + "</title></rect>";
+      svg += "<rect data-k='" + k + "' data-v='" + v + "' x='" + (L + w * C) + "' y='" + (T + d * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='" + HEAT[lvl(v)] + "'" + (k === dayKey(today) ? " stroke='#4dccff'" : "") + "/>";
     }
   }
   $("ov-heat").innerHTML = svg + "</svg>";
-  $("ov-heat-n").textContent = total + " changes in the last 12 months";
+  // the caption counts itself: the span from the first change to today
+  var days = Math.max(1, Math.round((today - new Date(first.getFullYear(), first.getMonth(), first.getDate())) / 864e5) + 1);
+  var months = Math.max(1, Math.round(days / 30.44));
+  $("ov-heat-n").textContent = total + " changes in the past " + months + (months === 1 ? " month" : " months") + ", " + (total / days).toFixed(1) + " a day on average";
 }
+$("ov-heat-box").addEventListener("mousemove", function (ev) {
+  var r = ev.target.closest("rect[data-k]"), tip = $("ov-heat-tip");
+  if (!r) { tip.hidden = true; return; }
+  var v = +r.dataset.v;
+  tip.textContent = day(new Date(r.dataset.k + "T00:00:00").getTime()) + "  " + v + (v === 1 ? " change" : " changes");
+  var bx = $("ov-heat-box").getBoundingClientRect(); tip.hidden = false;
+  tip.style.left = Math.min(ev.clientX - bx.left + 12, bx.width - 170) + "px"; tip.style.top = (ev.clientY - bx.top + 12) + "px";
+});
+$("ov-heat-box").addEventListener("mouseleave", function () { $("ov-heat-tip").hidden = true; });
 function renderOverview() {
   var evs = D.events ? events() : [], ss = sessions(evs);
   // 1204: this week = the last 7 days, today included
