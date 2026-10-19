@@ -513,8 +513,10 @@ function renderOverview() {
     tiles.push(["Events this week", evs.filter(function (e) { return String(e.time).slice(0, 10) >= from; }).length]);
     tiles.push(["Play this week", fmtSec(ss.filter(function (s) { return s.start.slice(0, 10) >= from; }).reduce(function (a, s) { return a + s.len; }, 0))]);
   }
-  if (D.bugs) tiles.push(["New bugs this week", bugRows().filter(function (r) { return String(r.TIME).slice(0, 10) >= from; }).length]);
-  if (D.tasks) tiles.push(["Open tasks", D.tasks.filter(function (t) { return t.state !== "done"; }).length]);
+  // 1253: STREAK — the days in a row up to today with at least one change (the heatmap's counts)
+  var streak = 0, sd = new Date();
+  while ((act[dayKey(sd)] || 0) > 0) { streak++; sd.setDate(sd.getDate() - 1); }
+  tiles.push(["Streak", streak + (streak === 1 ? " day" : " days")]);
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
   renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
