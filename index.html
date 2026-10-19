@@ -17,7 +17,7 @@ h2{margin:0;font:600 18px var(--head);letter-spacing:.1em;color:var(--gold);text
 h3{margin:0;font:600 15px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
 .tile{background:var(--bg);border:1px solid var(--line);padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}.tile b{margin-top:auto}
-.tile b{font:600 22px var(--mono);font-variant-numeric:tabular-nums}.tile span{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.tile b{font:600 22px var(--mono);font-variant-numeric:tabular-nums}.tile span{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
 .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.bar label{font:600 13px var(--head);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
 .scroll{overflow-x:auto;min-width:0}
@@ -69,7 +69,7 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
-<div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll tl" id="ov-heat-box"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></div><div class="cols">
+<div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></div><div class="cols">
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
 <div class="panel"><h2>Latest changes</h2><div id="ov-ch"></div></div></div>
 </section>
@@ -180,6 +180,7 @@ function showTab(t) {
   document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
   try { localStorage.setItem("tab", t); } catch (e) {}
   if (t === "telemetry") drawTimeline();
+  if (t === "overview" && D) renderHeatmap();
 }
 $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); });
 function showTel(t) { document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); }
@@ -472,16 +473,17 @@ function renderHeatmap() {
   if (first < yearAgo) first = yearAgo;
   var start = new Date(first); start.setDate(start.getDate() - (start.getDay() + 6) % 7);
   var weeks = Math.floor((today - start) / (7 * 864e5)) + 1;
+  var fit = Math.floor(($("ov-heat-box").clientWidth - 30) / 13), all = Math.max(weeks, fit);
   var C = 13, L = 30, T = 16, vals = Object.keys(act).filter(function (k) { return k >= dayKey(first); }).map(function (k) { return act[k]; });
   var max = Math.max(1, Math.max.apply(null, vals.concat([0]))), total = vals.reduce(function (a, v) { return a + v; }, 0);
   var lvl = function (v) { if (!v) return 0; var q = v / max; return q <= 0.15 ? 1 : q <= 0.35 ? 2 : q <= 0.6 ? 3 : 4; };
-  var svg = "<svg width='" + (L + weeks * C) + "' height='" + (T + 7 * C) + "' role='img' aria-label='Changes per day'>", lastMonth = -1;
+  var svg = "<svg width='" + (L + all * C) + "' height='" + (T + 7 * C) + "' role='img' aria-label='Changes per day'>", lastMonth = -1;
   ["MON", "", "WED", "", "FRI", "", ""].forEach(function (t, i) { if (t) svg += "<text x='0' y='" + (T + i * C + 10) + "' fill='#8e8b86' font-size='9' font-family='JetBrains Mono,monospace'>" + t + "</text>"; });
-  for (var w = 0; w < weeks; w++) {
+  for (var w = 0; w < all; w++) {
     for (var d = 0; d < 7; d++) {
       var x = new Date(start); x.setDate(start.getDate() + w * 7 + d);
-      if (x > today) continue;
       if (d === 0 && x.getMonth() !== lastMonth) { lastMonth = x.getMonth(); svg += "<text x='" + (L + w * C) + "' y='10' fill='#8e8b86' font-size='9' font-family='JetBrains Mono,monospace'>" + MONTHS[x.getMonth()] + "</text>"; }
+      if (x > today) { svg += "<rect x='" + (L + w * C) + "' y='" + (T + d * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='#17171b' stroke='#232329'/>"; continue; }
       var k = dayKey(x), v = act[k] || 0;
       svg += "<rect data-k='" + k + "' data-v='" + v + "' x='" + (L + w * C) + "' y='" + (T + d * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='" + HEAT[lvl(v)] + "'" + (k === dayKey(today) ? " stroke='#4dccff'" : "") + "/>";
     }
@@ -489,8 +491,7 @@ function renderHeatmap() {
   $("ov-heat").innerHTML = svg + "</svg>";
   // the caption counts itself: the span from the first change to today
   var days = Math.max(1, Math.round((today - new Date(first.getFullYear(), first.getMonth(), first.getDate())) / 864e5) + 1);
-  var months = Math.max(1, Math.round(days / 30.44));
-  $("ov-heat-n").textContent = total + " changes in the past " + months + (months === 1 ? " month" : " months") + ", " + (total / days).toFixed(1) + " a day on average";
+  $("ov-heat-n").textContent = total + " · " + Math.round(total / days) + "/day";
 }
 $("ov-heat-box").addEventListener("mousemove", function (ev) {
   var r = ev.target.closest("rect[data-k]"), tip = $("ov-heat-tip");
@@ -507,12 +508,12 @@ function renderOverview() {
   var from = dayKey(new Date(Date.now() - 6 * 864e5)), act = D.activity || {};
   var changes = Object.keys(act).filter(function (k) { return k >= from; }).reduce(function (a, k) { return a + act[k]; }, 0);
   var tiles = [["Changes this week", changes]];
-  if (D.tasks) tiles.push(["Tasks done this week", D.tasks.filter(function (t) { return t.state === "done" && String(t.updated || "").slice(0, 10) >= from; }).length]);
+  if (D.tasks) tiles.push(["Tasks this week", D.tasks.filter(function (t) { return t.state === "done" && String(t.updated || "").slice(0, 10) >= from; }).length]);
   if (D.events) {
-    tiles.push(["Game events this week", evs.filter(function (e) { return String(e.time).slice(0, 10) >= from; }).length]);
-    tiles.push(["Play time this week", fmtSec(ss.filter(function (s) { return s.start.slice(0, 10) >= from; }).reduce(function (a, s) { return a + s.len; }, 0))]);
+    tiles.push(["Events this week", evs.filter(function (e) { return String(e.time).slice(0, 10) >= from; }).length]);
+    tiles.push(["Play this week", fmtSec(ss.filter(function (s) { return s.start.slice(0, 10) >= from; }).reduce(function (a, s) { return a + s.len; }, 0))]);
   }
-  if (D.bugs) tiles.push(["Bugs reported this week", bugRows().filter(function (r) { return String(r.TIME).slice(0, 10) >= from; }).length]);
+  if (D.bugs) tiles.push(["New bugs this week", bugRows().filter(function (r) { return String(r.TIME).slice(0, 10) >= from; }).length]);
   if (D.tasks) tiles.push(["Open tasks", D.tasks.filter(function (t) { return t.state !== "done"; }).length]);
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
   renderHeatmap();
