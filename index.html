@@ -646,7 +646,9 @@ function renderOverview() {
     if (cur && /^\s{2,}\S/.test(l)) cur[1] += " " + l.trim(); else cur = null;
   });
   var last = "";
-  $("ov-ch").innerHTML = ch.length ? ch.slice(0, 8).map(function (c) {
+  // 1312: only what is not shipped yet - every NEXT BUILD line
+  ch = ch.filter(function (c) { return c[0] === "NEXT BUILD"; });
+  $("ov-ch").innerHTML = ch.length ? ch.map(function (c) {
     var head = c[0] !== last ? "<h3 style='margin-top:4px'>" + esc(c[0]) + "</h3>" : ""; last = c[0];
     var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/);
     return head + "<div>" + esc(m ? m[1] : c[1]) + "</div>";
