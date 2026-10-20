@@ -56,8 +56,8 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:1px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
 .hello{font:700 30px/1 var(--head);letter-spacing:.06em;color:var(--fg)}
 .brand{width:201px;height:20px;image-rendering:pixelated;align-self:center}.hello b{color:var(--cyan)}
-td.nar{max-width:150px}td.sw-c{padding:3px 2px;text-align:center}
-.sw{padding:0;width:30px;height:17px;border-radius:9px;font-size:9px;letter-spacing:0;color:var(--dim)}.sw[aria-pressed=true]{background:#1c2a18;border-color:var(--green);color:var(--green)}.sw:disabled{opacity:.45;cursor:default}
+table.tight{width:auto}table.tight td.nar{max-width:110px}td.sw-c{padding:3px 2px;text-align:center}th.sw-c{writing-mode:vertical-rl;transform:rotate(180deg);text-align:left;vertical-align:middle;padding:6px 2px}
+.sw{padding:0;width:28px;height:17px;border-radius:9px;font-size:9px;letter-spacing:0;color:var(--dim)}.sw[aria-pressed=true]{background:#1c2a18;border-color:var(--green);color:var(--green)}.sw:disabled{opacity:.45;cursor:default}
 select.lvl{padding:1px 4px;font-size:11px}
 .ld{display:grid;gap:4px;transition:opacity .6s}.ld-track{height:8px;background:repeating-linear-gradient(90deg,#232329 0 6px,#17171b 6px 8px);border:1px solid var(--line);overflow:hidden}
 .ld-track i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--gold) 0 6px,#b98a35 6px 8px);transition:width .3s steps(6)}
@@ -105,10 +105,12 @@ select.lvl{padding:1px 4px;font-size:11px}
 </section>
 
 <section class="panel" data-pane="people" hidden>
-<div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
-<label for="p-cat">Category</label><select id="p-cat"></select><span class="muted" id="p-n"></span></div>
-<div class="panel"><div class="bar"><h2>Roles</h2><span class="muted">The tabs each role opens. OWNER has all of them, PEOPLE only OWNER.</span></div><div class="scroll"><table id="r-t"></table></div></div>
-<div class="scroll"><table id="p-t"></table></div></section>
+<nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="settings" aria-selected="false">SETTINGS</button></nav>
+<div data-ppn="list"><div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
+<label for="p-cat">Role</label><select id="p-cat"></select><span class="muted" id="p-n"></span></div>
+<div class="scroll"><table id="p-t" class="tight"></table></div></div>
+<div data-ppn="settings" hidden><div class="bar"><input id="r-new" maxlength="20" placeholder="NEW ROLE" style="width:160px"><button id="r-add">Add role</button><span class="muted" id="r-msg"></span></div>
+<div class="scroll"><table id="r-t" class="tight"></table></div></div></section>
 
 <section class="panel" data-pane="players" hidden><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
 <div class="cols"><div class="panel"><div class="bar"><h2>Per month</h2><span class="legend"><span><i style="background:var(--cyan)"></i>LIKES</span><span><i style="background:var(--gold)"></i>REPLIES</span></span></div><div class="scroll" id="pl-month"></div></div>
@@ -288,7 +290,7 @@ function render() {
   $("hello").innerHTML = D.name ? "Hello <b style='color:" + personColor(D.name) + "'>" + esc(D.name) + "</b>" : "";
   var va = $("view-as");
   va.hidden = !D.isOwner;
-  if (D.isOwner) { va.innerHTML = ["OWNER", "TEAM", "FRIEND", "GUEST"].map(function (c) { return "<option value='" + c + "'>VIEW AS " + c + "</option>"; }).join(""); va.value = D.viewAs || "OWNER"; }
+  if (D.isOwner) { va.innerHTML = catOrder().map(function (c) { return "<option value='" + c + "'>VIEW AS " + c + "</option>"; }).join(""); va.value = D.viewAs || "OWNER"; }
   $("viewbar").hidden = !D.viewAs; $("viewbar-cat").textContent = D.viewAs || "";
   var fresh = !ldParts.some(function (p) { return !got[p]; });
   $("status").textContent = (fresh ? "loaded " + new Date().toLocaleTimeString() : "saved view from " + hm(savedAt) + ", updating") + (errs.length ? ". Did not load: " + errs.join(", ") : "");
@@ -564,7 +566,7 @@ function renderDashboard() {
     var t = tabs[r.TAB] || (tabs[r.TAB] = { tab: r.TAB, opens: 0, who: {}, last: "" }); t.opens++; t.who[r.NAME] = 1; t.last = r.TIME;
   });
   $("db-p").innerHTML = grid([
-    ["Who", function (p) { return nameTag(p.name); }], ["Category", function (p) { return "<span class='chip' style='color:" + (CAT_COLOR[p.cat] || "var(--dim)") + "'>" + esc(p.cat) + "</span>"; }],
+    ["Who", function (p) { return nameTag(p.name); }], ["Category", function (p) { return "<span class='chip' style='color:" + catColor(p.cat) + "'>" + esc(p.cat) + "</span>"; }],
     ["Visits", function (p) { return n(p.visits); }, "num"], ["Tabs", function (p) { return n(p.opens); }, "num"], ["Top tab", function (p) { return esc(top(p.list)); }],
     ["First", function (p) { return esc(short(p.first)); }], ["Last", function (p) { return esc(short(p.last)); }],
   ], Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return String(b.last).localeCompare(String(a.last)); }));
@@ -654,7 +656,8 @@ function renderOverview() {
   }).join("") : "<div class='muted'>No changes.</div>";
 }
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
-var CAT_ORDER = ["OWNER", "TEAM", "FRIEND", "GUEST"];
+var CAT_DEFAULT = ["OWNER", "TEAM", "FRIEND", "GUEST"];
+var catOrder = function () { return D && D.roles ? Object.keys(D.roles) : CAT_DEFAULT; };
 function peopleRows() {
   var low = function (s) { return String(s || "").trim().toLowerCase(); };
   var codes = table(D.people).rows.filter(function (c) { return c.CODE; }), play = table(D.codes).rows, bugs = D.bugs ? bugRows() : [];
@@ -663,7 +666,7 @@ function peopleRows() {
   var addCode = function (p, c) { if (c && p.codes.indexOf(c) < 0) p.codes.push(c); };
   (D.team || []).forEach(function (t) { var p = get(t.name); p.t = t; p.note = t.note; p.nick = t.nick || ""; t.codes.forEach(function (c) { addCode(p, c); }); });
   codes.forEach(function (c) { if (!c.NAME) return; var p = get(c.NAME); if (!p.mail) p.mail = c["GIVEN TO"]; addCode(p, low(c.CODE)); });
-  var rank = function (p) { var i = p.t ? CAT_ORDER.indexOf(p.t.category) : -1; return i < 0 ? CAT_ORDER.length : i; };
+  var order = catOrder(), rank = function (p) { var i = p.t ? order.indexOf(p.t.category) : -1; return i < 0 ? order.length : i; };
   return order.map(function (k) {
     var p = by[k];
     p.first = ""; p.last = ""; p.min = 0; p.bugs = 0;
@@ -680,19 +683,19 @@ function peopleRows() {
   }).sort(function (a, b) { return rank(a) - rank(b) || b.last.localeCompare(a.last) || a.name.localeCompare(b.name); });
 }
 var CAT_COLOR = { OWNER: "var(--gold)", TEAM: "var(--cyan)", FRIEND: "var(--green)", GUEST: "var(--dim)" };
+var catColor = function (c) { return CAT_COLOR[c] || (c ? personColor(c) : "var(--dim)"); };
 // 1307: no typing here — the role from the list, packages by ON / OFF switches (names, mail, codes, notes are changed in
 // the PEOPLE / Codes sheets); the tabs of each role in the ROLES window above. A change shows at once; the saves of one
 // person (or role) go one after another, a failed one puts it back as last saved.
 var pId = function (r) { return r.t && r.t.key ? r.t.key : "name:" + String(r.name).toLowerCase(); };
 var pPkgs = function (r) { return r.t ? String(r.t.packages || "").split(",").map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean) : []; };
-var TAB_SHORT = { overview: "OVR", bugs: "BUG", tasks: "TSK", telemetry: "TEL", players: "PLR", changelog: "LOG", calendar: "CAL", files: "FIL" };
 var ALL_PKGS = { OWNER: true, TEAM: true };   // these roles take every package
 var pStatus = {};
 function swBtn(attr, on, off, title) { return "<button class='sw' " + attr + " aria-pressed='" + on + "' title='" + esc(title) + "'" + (off ? " disabled" : "") + ">" + (on ? "ON" : "OFF") + "</button>"; }
 function renderPeople() {
   var rows = peopleRows();
   var s = $("p-cat"), v = s.value;
-  s.innerHTML = "<option value=''>ALL</option>" + CAT_ORDER.concat(["NO PANEL"]).map(function (x) { return "<option>" + x + "</option>"; }).join(""); s.value = v;
+  s.innerHTML = "<option value=''>ALL</option>" + catOrder().concat(["NO PANEL"]).map(function (x) { return "<option>" + x + "</option>"; }).join(""); s.value = v;
   var q = $("p-q").value.trim().toLowerCase();
   var list = rows.filter(function (r) {
     return (!s.value || (s.value === "NO PANEL" ? !r.t : r.t && r.t.category === s.value)) &&
@@ -706,7 +709,7 @@ function renderPeople() {
   });
   $("p-t").innerHTML = grid([
     ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return r.nick ? esc(r.name) : ""; }, "muted"],
-    ["Role", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + (CAT_COLOR[c] || "var(--dim)") + "'>" + [""].concat(CAT_ORDER).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
+    ["Role", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + catColor(c) + "'>" + [""].concat(catOrder()).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
   ].concat(pkgSw).concat([
     ["Mail", function (r) { return esc(r.mail); }, "x muted nar"], ["Codes", function (r) { return esc(r.codes.join(", ")); }, "x nar"],
     ["Seen", function (r) { return r.last ? "<span title='first " + esc(short(r.first)) + "'>" + esc(short(r.last)) + "</span>" : ""; }],
@@ -720,14 +723,14 @@ function renderPeople() {
 // ROLES (1307): a row per role, a switch per tab; OWNER fixed
 var rQ = {};
 function renderRoles() {
-  var roles = D.roles || {}, rows = CAT_ORDER.filter(function (r) { return roles[r]; });
+  var roles = D.roles || {}, rows = Object.keys(roles);
   $("r-t").innerHTML = grid([
-    ["Role", function (r) { return "<span class='chip' style='color:" + (CAT_COLOR[r] || "var(--dim)") + "'>" + r + "</span>"; }],
+    ["Role", function (r) { return "<span class='chip' style='color:" + catColor(r) + "'>" + esc(r) + "</span>"; }],
   ].concat((D.roleTabs || []).map(function (t) {
-    return [TAB_SHORT[t] || t, function (r) { return swBtn("data-rt='" + t + "'", roles[r].indexOf(t) >= 0, r === "OWNER", t.toUpperCase()); }, "sw-c"];
+    return [t.toUpperCase(), function (r) { return swBtn("data-rt='" + t + "'", roles[r].indexOf(t) >= 0, r === "OWNER", t.toUpperCase()); }, "sw-c"];
   })).concat([
     ["", function (r) { var st = pStatus["role:" + r]; return st ? "<span style='color:" + st.c + "'>" + esc(st.t) + "</span>" : ""; }],
-  ]), rows, function (r) { return " data-role='" + r + "'"; });
+  ]), rows, function (r) { return " data-role='" + esc(r) + "'"; });
 }
 function rNext(role, q) {
   var id = "role:" + role;
@@ -746,6 +749,18 @@ $("r-t").addEventListener("click", function (e) {
   q.want = D.roles[role]; pStatus["role:" + role] = { t: "SAVING...", c: "var(--dim)" }; renderRoles();
   if (!q.run) rNext(role, q);
 });
+// ADD ROLE: a new role starts with no tabs; it is saved at once and shows in the role lists
+$("r-add").addEventListener("click", function () {
+  var n = $("r-new").value.trim().toUpperCase(), m = $("r-msg");
+  if (!/^[A-Z0-9_ ]{1,20}$/.test(n) || n === "ADMIN") { m.textContent = "LETTERS, DIGITS, SPACE OR _ (UP TO 20)"; m.style.color = "var(--red)"; return; }
+  if (D.roles[n]) { m.textContent = n + " ALREADY EXISTS"; m.style.color = "var(--red)"; return; }
+  D.roles[n] = []; $("r-new").value = ""; m.textContent = "SAVING..."; m.style.color = "var(--dim)"; renderPeople();
+  apiPost({ action: "studio_set_role", k: KEY, role: n, tabs: "" }).then(function () { m.textContent = n + " ADDED"; m.style.color = "var(--green)"; },
+    function (e) { delete D.roles[n]; m.textContent = "NOT SAVED: " + String(e && e.message || e); m.style.color = "var(--red)"; renderPeople(); });
+});
+$("r-new").addEventListener("keydown", function (e) { if (e.key === "Enter") $("r-add").click(); });
+function showPp(t) { document.querySelectorAll("#p-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pp === t)); }); document.querySelectorAll("[data-ppn]").forEach(function (p) { p.hidden = p.dataset.ppn !== t; }); }
+$("p-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-pp]"); if (b) { showPp(b.dataset.pp); logUse("PEOPLE / " + b.textContent); } });
 // the change goes into the loaded data, so the row shows it before the save comes back
 function pApply(r, f, v) {
   if (!r.t) { r.t = { name: r.name, category: "", codes: r.codes.slice(), packages: "", key: "", note: "", nick: "" }; D.team = (D.team || []).concat([r.t]); }
