@@ -72,7 +72,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <nav id="tabs">
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="tasks" aria-selected="false" hidden>TASKS</button>
-<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="players" aria-selected="false" hidden>PLAYERS</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
+<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="players" aria-selected="false" hidden>X FOLLOWING</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
 <button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
@@ -724,7 +724,8 @@ function renderRoles() {
   $("r-t").innerHTML = grid([
     ["Role", function (r) { return "<span class='chip' style='color:" + catColor(r) + "'>" + esc(r) + "</span>"; }],
   ].concat((D.roleTabs || []).map(function (t) {
-    return [t.toUpperCase(), function (r) { return swBtn("data-rt='" + t + "'", roles[r].indexOf(t) >= 0, r === "OWNER", t.toUpperCase()); }, "sw-c"];
+    var name = (document.querySelector("#tabs button[data-tab='" + t + "']") || {}).textContent || t.toUpperCase();   // 1309: the tab's own label
+    return [name, function (r) { return swBtn("data-rt='" + t + "'", roles[r].indexOf(t) >= 0, r === "OWNER", name); }, "sw-c"];
   })).concat([
     ["", function (r) { var st = pStatus["role:" + r]; return st ? "<span style='color:" + st.c + "'>" + esc(st.t) + "</span>" : ""; }],
   ]), rows, function (r) { return " data-role='" + esc(r) + "'"; });
