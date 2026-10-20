@@ -652,11 +652,12 @@ function renderOverview() {
   ch = ch.filter(function (c) { return c[0] === "NEXT BUILD"; });
   var cats = [];
   ch.forEach(function (c) { if (cats.indexOf(c[2]) < 0) cats.push(c[2]); });
+  // 1314.2: the opened category's titles go under the whole tile grid, the tiles keep their places
+  var col = function (k) { return CHG_COLOR[k] || "var(--dim)"; }, opened = ch.filter(function (c) { return c[2] === chgOpen; });
   $("ov-ch").innerHTML = ch.length ? "<div class='chg'>" + cats.map(function (k) {
-    var mine = ch.filter(function (c) { return c[2] === k; }), col = CHG_COLOR[k] || "var(--dim)", open = chgOpen === k;
-    return "<div class='chg-t" + (open ? " on" : "") + "' data-cat='" + esc(k) + "' style='border-left-color:" + col + ";color:" + col + "'>" + esc(k) + "<b>" + mine.length + "</b></div>" +
-      (open ? "<div class='chg-l' style='border-left-color:" + col + "'>" + mine.map(function (c) { var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/); return "<div>" + esc(m ? m[1] : c[1]) + "</div>"; }).join("") + "</div>" : "");
-  }).join("") + "</div>" : "<div class='muted'>No changes.</div>";
+    var n = ch.filter(function (c) { return c[2] === k; }).length;
+    return "<div class='chg-t" + (chgOpen === k ? " on" : "") + "' data-cat='" + esc(k) + "' style='border-left-color:" + col(k) + ";color:" + col(k) + "'>" + esc(k) + "<b>" + n + "</b></div>";
+  }).join("") + "</div>" + (opened.length ? "<div class='chg-l' style='margin-top:6px;border-left-color:" + col(chgOpen) + "'>" + opened.map(function (c) { var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/); return "<div>" + esc(m ? m[1] : c[1]) + "</div>"; }).join("") + "</div>" : "") : "<div class='muted'>No changes.</div>";
 }
 // 1313: the CHANGELOG categories and their colours
 var CHG_COLOR = { SEA: "#4dccff", MAP: "#74b84a", CAMP: "#d1a35c", BATTLE: "#ff8c73", SURVIVAL: "#e6ad47", STORY: "#a796c4", HUD: "#8fb8ff", SOUND: "#5fd3b3", SYSTEM: "#c9d65a", TOOLS: "#e07fb0" };
