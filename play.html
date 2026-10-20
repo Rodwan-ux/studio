@@ -1,0 +1,142 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PLAY PIXEL FORMATION</title>
+<link rel="icon" href="studio.ico">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--bg:#121214;--panel:#1b1b1f;--line:#2c2c33;--fg:#e6e4e0;--dim:#8e8b86;--gold:#e6ad47;--cyan:#4dccff;--red:#ff8c73;--head:"Barlow Condensed","Arial Narrow",sans-serif;--mono:"JetBrains Mono",Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.45 var(--mono)}
+.gate{min-height:100%;display:grid;place-content:center;justify-items:center;gap:26px;padding:24px 16px}
+#lettering svg{display:block;width:min(608px,92vw);height:auto;image-rendering:pixelated}
+form{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+input,button{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 12px}
+input{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase}
+button{cursor:pointer;font:600 18px var(--head);letter-spacing:.14em;padding:6px 22px;color:var(--gold);border-color:var(--gold)}
+button:hover{background:#1f1c16}button:disabled{opacity:.4;cursor:default}
+input:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+#msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}
+#msg.err{color:var(--red)}#msg.ok{color:var(--gold)}
+.track{width:min(608px,92vw);height:8px;background:repeating-linear-gradient(90deg,#232329 0 6px,#17171b 6px 8px);border:1px solid var(--line);overflow:hidden}
+.track i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--gold) 0 6px,#b98a35 6px 8px)}
+#canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000}
+[hidden]{display:none!important}
+</style></head><body>
+<div class="gate" id="gate">
+<div id="lettering"></div>
+<form id="f" autocomplete="off"><input id="code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="go" type="submit">PLAY</button></form>
+<div class="track" id="track" hidden><i id="bar"></i></div>
+<div id="msg"></div>
+</div>
+<canvas id="canvas" hidden>Your browser does not support the canvas tag.</canvas>
+<script>
+// 1325: the PLAY gate — a page of its own in front of the game (no Godot, no game code until the code opens it).
+// The code is the key: PBKDF2-SHA256(code, salt) -> 64 bytes; the first 32 name the code's entry in gate.json, the last 32
+// open it and give the game key (AES-256-GCM). The game's main pack comes as sealed chunks spread over parts under
+// 100 MB; each chunk is opened in memory as it arrives and laid straight into one buffer (no second copy, nothing on
+// disk), which goes to Godot as its main pack. Made by 05_TOOLS/GATE/gate_pack.js. ?b=<folder/> = where the build is.
+var B = new URLSearchParams(location.search).get("b") || "game/";
+var $ = function (id) { return document.getElementById(id); };
+
+// PLAY PIXEL FORMATION in the RODWAN PIXELS font (5 rows; F M T Y drawn to match)
+var G = { P: ["###", "###", "###", "###", "#.."], L: ["#.", "#.", "#.", "##", "##"], A: [".#.", "###", "###", "###", "#.#"],
+  Y: ["#.#", "#.#", "###", ".#.", ".#."], I: ["#", "#", "#", "#", "#"], X: ["#.#", "#.#", "###", "###", "#.#"], E: ["##", "##", "##", "##", "##"],
+  F: ["##", "##", "##", "#.", "#."], O: [".#.", "###", "#.#", "###", ".#."], R: ["##.", "###", "###", "###", "#.#"],
+  M: [".#.#.", "#####", "#.#.#", "#...#", "#...#"], T: ["###", "###", ".#.", ".#.", ".#."], N: ["#..#", "##.#", "####", "#.##", "#..#"] };
+function lettering(text) {
+  var rows = ["", "", "", "", ""];
+  text.split("").forEach(function (ch) {
+    for (var r = 0; r < 5; r++) rows[r] += ch === " " ? "......" : (rows[r] && rows[r].slice(-6) !== "......" ? "." : "") + G[ch][r];
+  });
+  var w = rows[0].length, rects = "";
+  rows.forEach(function (row, y) { for (var x = 0; x < w;) { if (row[x] !== "#") { x++; continue; } var e = x; while (e < w && row[e] === "#") e++; rects += "<rect x='" + x + "' y='" + y + "' width='" + (e - x) + "' height='1'/>"; x = e; } });
+  return "<svg viewBox='0 0 " + w + " 5' width='" + w * 8 + "' height='40' shape-rendering='crispEdges' fill='rgb(239,214,176)' role='img' aria-label='" + text + "'>" + rects + "</svg>";
+}
+$("lettering").innerHTML = lettering("PLAY PIXEL FORMATION");
+
+var b64 = function (s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); };
+var hex = function (buf) { return Array.from(new Uint8Array(buf), function (x) { return x.toString(16).padStart(2, "0"); }).join(""); };
+function say(t, cls) { $("msg").textContent = t; $("msg").className = cls || ""; }
+
+// the game key for a code, or null for a code that is not on the list
+async function gameKey(meta, code) {
+  var enc = new TextEncoder();
+  var pass = await crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveBits"]);
+  var bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: b64(meta.salt), iterations: meta.iter, hash: "SHA-256" }, pass, 512));
+  var idk = await crypto.subtle.importKey("raw", bits.slice(0, 32), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  var e = meta.keys[hex(await crypto.subtle.sign("HMAC", idk, enc.encode("id"))).slice(0, 16)];
+  if (!e) return null;
+  var wk = await crypto.subtle.importKey("raw", bits.slice(32), "AES-GCM", false, ["decrypt"]);
+  var raw = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(e.iv) }, wk, b64(e.key));
+  return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+}
+
+var join = function (list, len) { var j = new Uint8Array(len), at = 0; list.forEach(function (x) { j.set(x, at); at += x.length; }); return j; };
+
+// the parts, opened chunk by chunk as they arrive, laid into one buffer of the game file's size
+async function openParts(meta, key) {
+  var out = new Uint8Array(meta.size), base = b64(meta.iv), sealed = meta.chunk + 16;
+  var bits = [], have = 0, off = 0, n = 0;   // the bytes not opened yet (joined only once a whole chunk is in)
+  var openChunk = async function (bytes) {
+    var iv = new Uint8Array(12); iv.set(base); new DataView(iv.buffer).setUint32(8, n++);
+    var p;
+    try { p = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, bytes)); }
+    catch (e) { throw new Error("the game file is damaged (part " + (n - 1) + ")"); }
+    out.set(p, off); off += p.length;
+    $("bar").style.width = (off * 100 / meta.size) + "%";
+  };
+  for (var i = 0; i < meta.parts.length; i++) {
+    var res = await fetch(B + meta.parts[i]);
+    if (!res.ok) throw new Error("part " + meta.parts[i] + " did not load (" + res.status + ")");
+    var rd = res.body.getReader();
+    for (;;) {
+      var r = await rd.read();
+      if (r.done) break;
+      bits.push(r.value); have += r.value.length;
+      if (have < sealed) continue;
+      var joined = join(bits, have), at = 0;
+      while (joined.length - at >= sealed) { await openChunk(joined.subarray(at, at + sealed)); at += sealed; }
+      bits = [joined.slice(at)]; have = bits[0].length;
+    }
+  }
+  if (have) await openChunk(join(bits, have));   // the last, shorter chunk
+  if (off !== meta.size) throw new Error("the game file came in short");
+  return out;
+}
+
+// the game: Godot's own loader from the build folder, fed the opened file as its main pack
+function startGodot(meta, pack, code) {
+  return new Promise(function (ok, fail) {
+    var s = document.createElement("script"); s.src = B + "index.js"; s.onerror = function () { fail(new Error("the game engine did not load")); };
+    s.onload = function () {
+      var cfg = Object.assign({}, meta.godot, { executable: B + "index", canvas: $("canvas"), args: ["--", "gate_code=" + code] });
+      var engine = new Engine(cfg);
+      $("gate").hidden = true; $("canvas").hidden = false;
+      engine.init(B + "index").then(function () { return engine.preloadFile(pack.buffer, "index.pck"); })
+        .then(function () { return engine.start({ args: ["--main-pack", "index.pck", "--", "gate_code=" + code] }); }).then(ok, fail);
+    };
+    document.body.appendChild(s);
+  });
+}
+
+$("f").addEventListener("submit", async function (ev) {
+  ev.preventDefault();
+  var code = $("code").value.trim().toLowerCase();
+  if (!code) return;
+  $("go").disabled = true; say("CHECKING THE CODE...");
+  try {
+    var meta = await (await fetch(B + "gate.json", { cache: "no-store" })).json();
+    var key = await gameKey(meta, code);
+    if (!key) { say("THIS CODE DOES NOT OPEN THE GAME", "err"); $("go").disabled = false; return; }
+    say("UNPACKING THE GAME...", "ok"); $("track").hidden = false;
+    var pack = await openParts(meta, key);
+    if (!meta.godot) {   // a dry test: no build behind the gate, only the file is checked
+      var same = hex(await crypto.subtle.digest("SHA-256", pack)) === meta.sha256;
+      say(same ? "OPENED " + (pack.length / 1048576).toFixed(1) + " MB, CONTENT MATCHES" : "OPENED, BUT THE CONTENT DIFFERS", same ? "ok" : "err");
+      $("go").disabled = false; return;
+    }
+    say("STARTING...", "ok");
+    await startGodot(meta, pack, code);
+  } catch (e) {
+    say(String(e && e.message || e), "err"); $("go").disabled = false;
+  }
+});
+$("code").focus();
+</script></body></html>
