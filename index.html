@@ -663,7 +663,7 @@ function peopleRows() {
   var addCode = function (p, c) { if (c && p.codes.indexOf(c) < 0) p.codes.push(c); };
   (D.team || []).forEach(function (t) { var p = get(t.name); p.t = t; p.note = t.note; p.nick = t.nick || ""; t.codes.forEach(function (c) { addCode(p, c); }); });
   codes.forEach(function (c) { if (!c.NAME) return; var p = get(c.NAME); if (!p.mail) p.mail = c["GIVEN TO"]; addCode(p, low(c.CODE)); });
-  var order = catOrder(), rank = function (p) { var i = p.t ? order.indexOf(p.t.category) : -1; return i < 0 ? order.length : i; };
+  var roleOrder = catOrder(), rank = function (p) { var i = p.t ? roleOrder.indexOf(p.t.category) : -1; return i < 0 ? roleOrder.length : i; };
   return order.map(function (k) {
     var p = by[k];
     p.first = ""; p.last = ""; p.min = 0; p.bugs = 0;
