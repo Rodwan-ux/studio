@@ -63,6 +63,8 @@ select.lvl{padding:1px 4px;font-size:11px}
 .ld-track i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--gold) 0 6px,#b98a35 6px 8px);transition:width .3s steps(6)}
 #ld-txt{font:600 15px var(--head);letter-spacing:.12em;color:var(--gold);text-transform:uppercase}#ld-txt b{color:var(--dim);font-weight:600;margin-left:8px}
 .ld.idle{opacity:.3}.ld.idle #ld-txt{display:none}.ld.idle .ld-track{height:4px}.ld.idle:hover{opacity:1}
+.chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.chg-t{background:var(--bg);border:1px solid var(--line);border-left:3px solid;padding:6px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 14px var(--head);letter-spacing:.1em}
+.chg-t b{font:600 18px var(--mono);color:var(--fg)}.chg-t:hover{background:#232329}.chg-t.on{background:#232329}.chg-l{grid-column:1/-1;border:1px solid var(--line);border-left:3px solid;padding:4px 10px;display:grid;gap:2px}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
 <header><span class="hello" id="hello"></span><select id="view-as" hidden aria-label="View as"></select><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMkAAAAUCAYAAAAnZhn0AAABv0lEQVR42u2aP0sDQRDF98RGwUIINn4ByQdQO8uANoIWVgbrBGy00E4LA8HWykJMFVBBixNsAlpp7ASD6QRJYZXCIuVa3wvsMMzmrnm/7rI7t39uln1vN8mwd+9dgPnyZuIU4PukeGv72vZi97fo+jGQvsHv9zDzvLS+l2j6HLtcypHYOTHlCCFBuEgI4SIhxMY0/tA8bDuLXsT4r8crH9KzUvvaeC2f3YFKn+7XL1Xzg3peqv9y81F4UuA3WF0uO41nybvcWl/6xtxJCKHcIoSLhJDJehLUb9VaxYX0mUQjbSegZ1Vn8BhfrVW8RX9KHqC0MKvSt8cH2yb9K3m+IjyJlAP99x/T+8/ObzPPDyenPlQucX3xFHX8mONbayvcSQih3CKEi4SQAu9JUO+hBm910qCeQ7159/zmYp5ZS3pXureJrYelOwTJsw1Gfz4033mAnuO12zPFI6jxMSekHEPG5jy1/T8P+8edhBDKLUK4SAjJ15OgxpY0M9LqpJn6izNzPlSuPfOW4sfK6y7Y/u5ow9Q/nJ8jt+M1nkk7f3mAHgTHqI1H0INox6y9F9HWl3wzdxJCKLcI4SIhZKL8A3ZeIsZBLc8IAAAAAElFTkSuQmCC"></header>
@@ -639,21 +641,27 @@ function renderOverview() {
   renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
   // 1218 / 1221: LATEST CHANGES — the titles of the newest CHANGELOG entries, each section heading once (NEXT BUILD first)
-  var ch = [], sec = "", cur = null;
+  var ch = [], sec = "", cat = "", cur = null;
   String(D.changelog ? D.changelog.text : "").split(/\r?\n/).forEach(function (l) {
-    var hd = l.match(/^## (.*)$/); if (hd) { sec = /^NEXT BUILD/i.test(hd[1]) ? "NEXT BUILD" : hd[1].split(/\s+[—-]\s+/)[0]; cur = null; return; }
-    var li = l.match(/^- (.*)$/); if (li && sec) { cur = [sec, li[1]]; ch.push(cur); return; }
+    var hd = l.match(/^## (.*)$/); if (hd) { sec = /^NEXT BUILD/i.test(hd[1]) ? "NEXT BUILD" : hd[1].split(/\s+[—-]\s+/)[0]; cat = ""; cur = null; return; }
+    var ct = l.match(/^### (.*)$/); if (ct) { cat = ct[1].trim().toUpperCase(); cur = null; return; }
+    var li = l.match(/^- (.*)$/); if (li && sec) { cur = [sec, li[1], cat || "OTHER"]; ch.push(cur); return; }
     if (cur && /^\s{2,}\S/.test(l)) cur[1] += " " + l.trim(); else cur = null;
   });
-  var last = "";
-  // 1312: only what is not shipped yet - every NEXT BUILD line
+  // 1312: only what is not shipped yet; 1314: one tile per category, a click opens its changes
   ch = ch.filter(function (c) { return c[0] === "NEXT BUILD"; });
-  $("ov-ch").innerHTML = ch.length ? ch.map(function (c) {
-    var head = c[0] !== last ? "<h3 style='margin-top:4px'>" + esc(c[0]) + "</h3>" : ""; last = c[0];
-    var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/);
-    return head + "<div>" + esc(m ? m[1] : c[1]) + "</div>";
-  }).join("") : "<div class='muted'>No changes.</div>";
+  var cats = [];
+  ch.forEach(function (c) { if (cats.indexOf(c[2]) < 0) cats.push(c[2]); });
+  $("ov-ch").innerHTML = ch.length ? "<div class='chg'>" + cats.map(function (k) {
+    var mine = ch.filter(function (c) { return c[2] === k; }), col = CHG_COLOR[k] || "var(--dim)", open = chgOpen === k;
+    return "<div class='chg-t" + (open ? " on" : "") + "' data-cat='" + esc(k) + "' style='border-left-color:" + col + ";color:" + col + "'>" + esc(k) + "<b>" + mine.length + "</b></div>" +
+      (open ? "<div class='chg-l' style='border-left-color:" + col + "'>" + mine.map(function (c) { var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/); return "<div>" + esc(m ? m[1] : c[1]) + "</div>"; }).join("") + "</div>" : "");
+  }).join("") + "</div>" : "<div class='muted'>No changes.</div>";
 }
+// 1313: the CHANGELOG categories and their colours
+var CHG_COLOR = { SEA: "#4dccff", MAP: "#74b84a", CAMP: "#d1a35c", BATTLE: "#ff8c73", SURVIVAL: "#e6ad47", STORY: "#a796c4", HUD: "#8fb8ff", SOUND: "#5fd3b3", SYSTEM: "#c9d65a", TOOLS: "#e07fb0" };
+var chgOpen = "";
+$("ov-ch").addEventListener("click", function (e) { var t = e.target.closest(".chg-t"); if (!t) return; chgOpen = chgOpen === t.dataset.cat ? "" : t.dataset.cat; renderOverview(); });
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
 var CAT_DEFAULT = ["OWNER", "TEAM", "FRIEND", "GUEST"];
 var catOrder = function () { return D && D.roles ? Object.keys(D.roles) : CAT_DEFAULT; };
@@ -902,11 +910,13 @@ function renderChangelog() {
     if (cur && /^\s{2,}\S/.test(l)) { cur.text += " " + l.trim(); return; }
     cur = null;
     if (/^## NEXT BUILD/i.test(l)) { items.push({ version: "NEXT BUILD", date: "not shipped yet" }); return; }   // 1205
+    var ct = l.match(/^### (.*)$/); if (ct) { items.push({ cat: ct[1].trim().toUpperCase() }); return; }   // 1313
     var v = l.match(/^## (\S+)\s*[—-]?\s*(.*)$/);
     if (v) items.push({ version: v[1], date: v[2] });
   });
   $("cl").innerHTML = items.map(function (it) {
     if (it.version) return "<div class='cl-v'><h2>" + esc(it.version) + "</h2><span class='muted'>" + esc(it.date) + "</span></div>";
+    if (it.cat) return "<h3 style='margin-top:6px;color:" + (CHG_COLOR[it.cat] || "var(--dim)") + "'>" + esc(it.cat) + "</h3>";
     var m = it.text.match(/^([^:]{1,90}):\s*(.*)$/);
     var d = m && m[2] ? m[2] : "";
     return "<div class='cl-row" + (d ? " has" : "") + "'><div class='cl-t'>" + esc(m ? m[1] : it.text) + "</div>" + (d ? "<div class='cl-d'>" + esc(d) + "</div>" : "") + "</div>";
