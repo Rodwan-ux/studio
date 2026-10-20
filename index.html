@@ -107,6 +107,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <section class="panel" data-pane="people" hidden>
 <div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
 <label for="p-cat">Category</label><select id="p-cat"></select><span class="muted" id="p-n"></span></div>
+<div class="panel"><div class="bar"><h2>Roles</h2><span class="muted">The tabs each role opens. OWNER has all of them, PEOPLE only OWNER.</span></div><div class="scroll"><table id="r-t"></table></div></div>
 <div class="scroll"><table id="p-t"></table></div></section>
 
 <section class="panel" data-pane="players" hidden><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
@@ -653,7 +654,7 @@ function renderOverview() {
   }).join("") : "<div class='muted'>No changes.</div>";
 }
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
-var CAT_ORDER = ["OWNER", "TEAM", "FRIEND", "GUEST", "CUSTOM"];
+var CAT_ORDER = ["OWNER", "TEAM", "FRIEND", "GUEST"];
 function peopleRows() {
   var low = function (s) { return String(s || "").trim().toLowerCase(); };
   var codes = table(D.people).rows.filter(function (c) { return c.CODE; }), play = table(D.codes).rows, bugs = D.bugs ? bugRows() : [];
@@ -678,15 +679,14 @@ function peopleRows() {
     return p;
   }).sort(function (a, b) { return rank(a) - rank(b) || b.last.localeCompare(a.last) || a.name.localeCompare(b.name); });
 }
-var CAT_COLOR = { OWNER: "var(--gold)", TEAM: "var(--cyan)", FRIEND: "var(--green)", GUEST: "var(--dim)", CUSTOM: "var(--violet)" };
-// 1307: no typing here — the level from the list, tabs and packages by ON / OFF switches (names, mail, codes, notes are
-// changed in the PEOPLE / Codes sheets). A change shows at once; the saves of one person go one after another, a failed
-// one puts that person back as last saved.
+var CAT_COLOR = { OWNER: "var(--gold)", TEAM: "var(--cyan)", FRIEND: "var(--green)", GUEST: "var(--dim)" };
+// 1307: no typing here — the role from the list, packages by ON / OFF switches (names, mail, codes, notes are changed in
+// the PEOPLE / Codes sheets); the tabs of each role in the ROLES window above. A change shows at once; the saves of one
+// person (or role) go one after another, a failed one puts it back as last saved.
 var pId = function (r) { return r.t && r.t.key ? r.t.key : "name:" + String(r.name).toLowerCase(); };
-var pTabs = function (r) { return r.t && r.t.tabs || []; };
 var pPkgs = function (r) { return r.t ? String(r.t.packages || "").split(",").map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean) : []; };
 var TAB_SHORT = { overview: "OVR", bugs: "BUG", tasks: "TSK", telemetry: "TEL", players: "PLR", changelog: "LOG", calendar: "CAL", files: "FIL" };
-var ALL_PKGS = { OWNER: true, TEAM: true, CUSTOM: true };   // these levels take every package
+var ALL_PKGS = { OWNER: true, TEAM: true };   // these roles take every package
 var pStatus = {};
 function swBtn(attr, on, off, title) { return "<button class='sw' " + attr + " aria-pressed='" + on + "' title='" + esc(title) + "'" + (off ? " disabled" : "") + ">" + (on ? "ON" : "OFF") + "</button>"; }
 function renderPeople() {
@@ -700,17 +700,14 @@ function renderPeople() {
   });
   $("p-n").textContent = list.length + " OF " + rows.length;
   var cat = function (r) { return r.t ? r.t.category : ""; };
-  var tabSw = (D.customTabs || []).map(function (t) {
-    return [TAB_SHORT[t] || t, function (r) { return swBtn("data-sw='" + t + "'", pTabs(r).indexOf(t) >= 0, cat(r) === "OWNER", t.toUpperCase()); }, "sw-c"];
-  });
   var pkgSw = (D.packageNames || []).map(function (n) {
     var low = n.toLowerCase();
-    return [n, function (r) { var all = !!ALL_PKGS[cat(r)]; return swBtn("data-pkg='" + esc(low) + "'", all || pPkgs(r).indexOf(low) >= 0, all, all ? n + " (every package at this level)" : n); }, "sw-c"];
+    return [n, function (r) { var all = !!ALL_PKGS[cat(r)]; return swBtn("data-pkg='" + esc(low) + "'", all || pPkgs(r).indexOf(low) >= 0, all, all ? n + " (every package for this role)" : n); }, "sw-c"];
   });
   $("p-t").innerHTML = grid([
     ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return r.nick ? esc(r.name) : ""; }, "muted"],
-    ["Level", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + (CAT_COLOR[c] || "var(--dim)") + "'>" + [""].concat(CAT_ORDER).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
-  ].concat(tabSw).concat(pkgSw).concat([
+    ["Role", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + (CAT_COLOR[c] || "var(--dim)") + "'>" + [""].concat(CAT_ORDER).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
+  ].concat(pkgSw).concat([
     ["Mail", function (r) { return esc(r.mail); }, "x muted nar"], ["Codes", function (r) { return esc(r.codes.join(", ")); }, "x nar"],
     ["Seen", function (r) { return r.last ? "<span title='first " + esc(short(r.first)) + "'>" + esc(short(r.last)) + "</span>" : ""; }],
     ["Min", function (r) { return r.min ? String(r.min) : ""; }, "num"], ["Bugs", function (r) { return r.bugs ? String(r.bugs) : ""; }, "num"],
@@ -718,15 +715,43 @@ function renderPeople() {
     ["Note", function (r) { return esc(r.note); }, "x muted nar"],
     ["", function (r) { var st = pStatus[pId(r)]; return st ? "<span style='color:" + st.c + "'>" + esc(st.t) + "</span>" : ""; }],
   ]), list, function (r) { return " data-pk='" + esc(pId(r)) + "'"; });
+  renderRoles();
 }
+// ROLES (1307): a row per role, a switch per tab; OWNER fixed
+var rQ = {};
+function renderRoles() {
+  var roles = D.roles || {}, rows = CAT_ORDER.filter(function (r) { return roles[r]; });
+  $("r-t").innerHTML = grid([
+    ["Role", function (r) { return "<span class='chip' style='color:" + (CAT_COLOR[r] || "var(--dim)") + "'>" + r + "</span>"; }],
+  ].concat((D.roleTabs || []).map(function (t) {
+    return [TAB_SHORT[t] || t, function (r) { return swBtn("data-rt='" + t + "'", roles[r].indexOf(t) >= 0, r === "OWNER", t.toUpperCase()); }, "sw-c"];
+  })).concat([
+    ["", function (r) { var st = pStatus["role:" + r]; return st ? "<span style='color:" + st.c + "'>" + esc(st.t) + "</span>" : ""; }],
+  ]), rows, function (r) { return " data-role='" + r + "'"; });
+}
+function rNext(role, q) {
+  var id = "role:" + role;
+  if (q.want === null) { q.run = false; pStatus[id] = { t: "SAVED", c: "var(--green)" }; renderRoles(); return; }
+  var v = q.want; q.want = null; q.run = true;
+  apiPost({ action: "studio_set_role", k: KEY, role: role, tabs: v.join(", ") }).then(function () { rNext(role, q); }, function (e) {
+    q.run = false; q.want = null; D.roles[role] = q.ok;
+    pStatus[id] = { t: "NOT SAVED: " + String(e && e.message || e), c: "var(--red)" }; renderRoles();
+  });
+}
+$("r-t").addEventListener("click", function (e) {
+  var w = e.target.closest("button[data-rt]"); if (!w || w.disabled) return;
+  var role = w.closest("tr").dataset.role, t = w.dataset.rt, cur = D.roles[role], q = rQ[role] || (rQ[role] = { run: false, want: null, ok: null });
+  if (!q.run) q.ok = cur.slice();
+  D.roles[role] = (D.roleTabs || []).filter(function (x) { return x === t ? cur.indexOf(x) < 0 : cur.indexOf(x) >= 0; });
+  q.want = D.roles[role]; pStatus["role:" + role] = { t: "SAVING...", c: "var(--dim)" }; renderRoles();
+  if (!q.run) rNext(role, q);
+});
 // the change goes into the loaded data, so the row shows it before the save comes back
 function pApply(r, f, v) {
-  if (!r.t) { r.t = { name: r.name, category: "", codes: r.codes.slice(), packages: "", key: "", note: "", nick: "", tabs: [] }; D.team = (D.team || []).concat([r.t]); }
-  if (f === "CATEGORY") { r.t.category = v; r.t.tabs = (D.levels || {})[v] || []; }
-  else if (f === "TABS") { r.t.category = "CUSTOM"; r.t.tabs = v.split(",").map(function (x) { return x.trim(); }).filter(Boolean); }
-  else if (f === "PACKAGES") r.t.packages = v;
+  if (!r.t) { r.t = { name: r.name, category: "", codes: r.codes.slice(), packages: "", key: "", note: "", nick: "" }; D.team = (D.team || []).concat([r.t]); }
+  if (f === "CATEGORY") r.t.category = v; else if (f === "PACKAGES") r.t.packages = v;
 }
-var pSnap = function (r) { return r.t ? { category: r.t.category, tabs: r.t.tabs.slice(), packages: r.t.packages } : { category: "", tabs: [], packages: "" }; };
+var pSnap = function (r) { return r.t ? { category: r.t.category, packages: r.t.packages } : { category: "", packages: "" }; };
 var pQ = {};
 function pChange(r, f, v) {
   var id = pId(r), q = pQ[id] || (pQ[id] = { run: false, todo: {}, ok: null });
@@ -740,25 +765,21 @@ function pNext(r, q) {
   if (!f) { q.run = false; pStatus[id] = { t: "SAVED", c: "var(--green)" }; renderPeople(); return; }
   var v = q.todo[f]; delete q.todo[f]; q.run = true;
   apiPost({ action: "studio_set_person", k: KEY, key: r.t.key, name: r.name, field: f, value: v }).then(function () { pNext(r, q); }, function (e) {
-    q.run = false; q.todo = {}; var o = q.ok; r.t.category = o.category; r.t.tabs = o.tabs; r.t.packages = o.packages;
+    q.run = false; q.todo = {}; var o = q.ok; r.t.category = o.category; r.t.packages = o.packages;
     pStatus[id] = { t: "NOT SAVED: " + String(e && e.message || e), c: "var(--red)" }; renderPeople();
   });
 }
 function pRow(tr) { return peopleRows().filter(function (x) { return pId(x) === tr.dataset.pk; })[0]; }
 $("p-t").addEventListener("change", function (e) {
   if (!e.target.matches("select[data-lvl]")) return;
-  var r = pRow(e.target.closest("tr")), v = e.target.value; if (!r) return;
-  // CUSTOM picked from the list keeps the tabs the person has now
-  if (v === "CUSTOM") pChange(r, "TABS", pTabs(r).filter(function (t) { return (D.customTabs || []).indexOf(t) >= 0; }).join(", "));
-  else pChange(r, "CATEGORY", v);
+  var r = pRow(e.target.closest("tr")); if (r) pChange(r, "CATEGORY", e.target.value);
 });
 ["p-q", "p-cat"].forEach(function (id) { $(id).addEventListener("input", renderPeople); });
 $("p-t").addEventListener("click", function (e) {
-  var w = e.target.closest("button[data-sw],button[data-pkg]");
+  var w = e.target.closest("button[data-pkg]");
   if (w && !w.disabled) {
     var r = pRow(w.closest("tr")); if (!r) return;
-    if (w.dataset.sw) { var t = w.dataset.sw, cur = pTabs(r); pChange(r, "TABS", (D.customTabs || []).filter(function (x) { return x === t ? cur.indexOf(x) < 0 : cur.indexOf(x) >= 0; }).join(", ")); }
-    else { var p = w.dataset.pkg, have = pPkgs(r); pChange(r, "PACKAGES", (have.indexOf(p) >= 0 ? have.filter(function (x) { return x !== p; }) : have.concat([p])).join(", ")); }
+    var p = w.dataset.pkg, have = pPkgs(r); pChange(r, "PACKAGES", (have.indexOf(p) >= 0 ? have.filter(function (x) { return x !== p; }) : have.concat([p])).join(", "));
     return;
   }
   var b = e.target.closest("button[data-copy]"); if (!b) return;
