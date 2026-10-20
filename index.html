@@ -71,7 +71,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
 <nav id="tabs">
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
-<button data-tab="tasks" aria-selected="false" hidden>TASKS</button><button data-tab="telemetry" aria-selected="false" hidden>TELEMETRY</button>
+<button data-tab="tasks" aria-selected="false" hidden>TASKS</button>
 <button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="players" aria-selected="false" hidden>PLAYERS</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
 <button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
 
@@ -93,22 +93,21 @@ select.lvl{padding:1px 4px;font-size:11px}
 <label for="t-code">Kind</label><select id="t-code"></select><span class="muted" id="t-n"></span></div>
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></section>
 
-<section class="panel" data-pane="telemetry" hidden>
+<section class="panel" data-pane="people" hidden>
+<nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="telemetry" aria-selected="false">TELEMETRY</button><button data-pp="settings" aria-selected="false">SETTINGS</button></nav>
+<div data-ppn="list"><div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
+<label for="p-cat">Role</label><select id="p-cat"></select><span class="muted" id="p-n"></span></div>
+<div class="scroll"><table id="p-t" class="tight"></table></div></div>
+<div data-ppn="telemetry" hidden>
 <nav id="tel-tabs"><button data-t="feedback" aria-selected="true">FEEDBACK</button><button data-t="sessions" aria-selected="false">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="dashboard" aria-selected="false">DASHBOARD</button></nav>
 <div data-tp="feedback"><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
 <div data-tp="sessions" hidden><div class="bar"><select id="s-mode" aria-label="Sessions view"><option value="person">BY PERSON</option><option value="session">BY SESSION</option></select><label for="s-code">Person</label><select id="s-code"></select><span class="muted" id="s-hint"></span></div><div class="scroll"><table id="sess-t"></table></div></div>
 <div data-tp="timeline" hidden><div class="bar"><label for="tl-sess">Session</label><select id="tl-sess"></select></div><div class="legend" id="tl-legend"></div><div class="tl" id="tl"><div class="tip" id="tip" hidden></div></div></div>
-<div data-tp="dashboard" hidden><div class="bar"><label for="db-who">Person</label><select id="db-who"></select><span class="muted">Who opened which tab of this panel, and when.</span></div><div id="db-msg" class="msg" hidden></div><div class="tiles" id="db-tiles"></div>
+<div data-tp="dashboard" hidden><div class="bar"><label for="db-who">Person</label><select id="db-who"></select></div><div id="db-msg" class="msg" hidden></div><div class="tiles" id="db-tiles"></div>
 <div class="cols"><div class="panel"><h2>By person</h2><div class="scroll"><table id="db-p"></table></div></div><div class="panel"><h2>By tab</h2><div class="scroll"><table id="db-t"></table></div></div></div>
 <div class="panel"><h2>Latest</h2><div class="scroll"><table id="db-l"></table></div></div></div>
 <div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Person</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t"></table></div><button id="ev-more" hidden>Show more</button></div>
-</section>
-
-<section class="panel" data-pane="people" hidden>
-<nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="settings" aria-selected="false">SETTINGS</button></nav>
-<div data-ppn="list"><div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
-<label for="p-cat">Role</label><select id="p-cat"></select><span class="muted" id="p-n"></span></div>
-<div class="scroll"><table id="p-t" class="tight"></table></div></div>
+</div>
 <div data-ppn="settings" hidden><div class="bar"><input id="r-new" maxlength="20" placeholder="NEW ROLE" style="width:160px"><button id="r-add">Add role</button><span class="muted" id="r-msg"></span></div>
 <div class="scroll"><table id="r-t" class="tight"></table></div></div></section>
 
@@ -201,21 +200,20 @@ function showTab(t) {
   document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
   document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
   try { localStorage.setItem("tab", t); } catch (e) {}
-  if (t === "telemetry") drawTimeline();
   if (t === "overview" && D) renderHeatmap();
   loadLazy(t);
 }
-// 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — TELEMETRY DASHBOARD; VIEW AS is not logged
+// 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — PEOPLE / TELEMETRY / DASHBOARD; VIEW AS is not logged
 var logged = false;
 function logUse(tab) { if (VIEW_AS || !KEY) return; apiPost({ action: "studio_log", k: KEY, tab: tab }).catch(function () {}); }
 $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) { showTab(b.dataset.tab); logUse(b.textContent); } });
 function showTel(t) { document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); }
-$("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) { showTel(b.dataset.t); logUse("TELEMETRY / " + b.textContent); } });
+$("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) { showTel(b.dataset.t); logUse("PEOPLE / TELEMETRY / " + b.textContent); } });
 
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
-var LAZY = { telemetry: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"] };
+var LAZY = { people: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
   feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X" };
@@ -299,8 +297,7 @@ function render() {
   if (allowed("overview")) renderOverview();
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
-  if (allowed("telemetry")) renderTelemetry();
-  if (allowed("people")) renderPeople();
+  if (allowed("people")) { renderTelemetry(); renderPeople(); }
   if (allowed("players") && (got.players || D.players)) renderPlayers();
   if (allowed("changelog")) renderChangelog();
   if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
@@ -759,7 +756,7 @@ $("r-add").addEventListener("click", function () {
     function (e) { delete D.roles[n]; m.textContent = "NOT SAVED: " + String(e && e.message || e); m.style.color = "var(--red)"; renderPeople(); });
 });
 $("r-new").addEventListener("keydown", function (e) { if (e.key === "Enter") $("r-add").click(); });
-function showPp(t) { document.querySelectorAll("#p-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pp === t)); }); document.querySelectorAll("[data-ppn]").forEach(function (p) { p.hidden = p.dataset.ppn !== t; }); }
+function showPp(t) { document.querySelectorAll("#p-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pp === t)); }); document.querySelectorAll("[data-ppn]").forEach(function (p) { p.hidden = p.dataset.ppn !== t; }); if (t === "telemetry") drawTimeline(); }
 $("p-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-pp]"); if (b) { showPp(b.dataset.pp); logUse("PEOPLE / " + b.textContent); } });
 // the change goes into the loaded data, so the row shows it before the save comes back
 function pApply(r, f, v) {
