@@ -65,7 +65,6 @@ select.lvl{padding:1px 4px;font-size:11px}
 .ld.idle{opacity:.3}.ld.idle #ld-txt{display:none}.ld.idle .ld-track{height:4px}.ld.idle:hover{opacity:1}
 .chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.chg-t{background:var(--bg);border:1px solid var(--line);border-left:3px solid;padding:6px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 14px var(--head);letter-spacing:.1em}
 .chg-t b{font:600 18px var(--mono);color:var(--fg)}.chg-t:hover{background:#232329}.chg-t.on{background:#232329}.chg-l{grid-column:1/-1;border:1px solid var(--line);border-left:3px solid;padding:4px 10px;display:grid;gap:2px}
-#p-t th{cursor:pointer}#p-t th:hover{color:var(--cyan)}#p-t th.fold,#p-t td.fold{width:14px;padding:3px 4px;text-align:center}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
 <header><span class="hello" id="hello"></span><select id="view-as" hidden aria-label="View as"></select><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMkAAAAUCAYAAAAnZhn0AAABv0lEQVR42u2aP0sDQRDF98RGwUIINn4ByQdQO8uANoIWVgbrBGy00E4LA8HWykJMFVBBixNsAlpp7ASD6QRJYZXCIuVa3wvsMMzmrnm/7rI7t39uln1vN8mwd+9dgPnyZuIU4PukeGv72vZi97fo+jGQvsHv9zDzvLS+l2j6HLtcypHYOTHlCCFBuEgI4SIhxMY0/tA8bDuLXsT4r8crH9KzUvvaeC2f3YFKn+7XL1Xzg3peqv9y81F4UuA3WF0uO41nybvcWl/6xtxJCKHcIoSLhJDJehLUb9VaxYX0mUQjbSegZ1Vn8BhfrVW8RX9KHqC0MKvSt8cH2yb9K3m+IjyJlAP99x/T+8/ObzPPDyenPlQucX3xFHX8mONbayvcSQih3CKEi4SQAu9JUO+hBm910qCeQ7159/zmYp5ZS3pXureJrYelOwTJsw1Gfz4033mAnuO12zPFI6jxMSekHEPG5jy1/T8P+8edhBDKLUK4SAjJ15OgxpY0M9LqpJn6izNzPlSuPfOW4sfK6y7Y/u5ow9Q/nJ8jt+M1nkk7f3mAHgTHqI1H0INox6y9F9HWl3wzdxJCKLcI4SIhZKL8A3ZeIsZBLc8IAAAAAElFTkSuQmCC"></header>
@@ -99,7 +98,8 @@ select.lvl{padding:1px 4px;font-size:11px}
 <section class="panel" data-pane="people" hidden>
 <nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="telemetry" aria-selected="false">TELEMETRY</button><button data-pp="settings" aria-selected="false">SETTINGS</button></nav>
 <div data-ppn="list"><div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
-<label for="p-cat">Role</label><select id="p-cat"></select><span class="muted" id="p-n"></span></div>
+<label for="p-cat">Role</label><select id="p-cat"></select><span class="muted" id="p-n"></span><button id="p-cols-b">Columns</button></div>
+<div class="bar" id="p-cols" hidden></div>
 <div class="scroll"><table id="p-t" class="tight"></table></div></div>
 <div data-ppn="telemetry" hidden>
 <nav id="tel-tabs"><button data-t="feedback" aria-selected="true">FEEDBACK</button><button data-t="sessions" aria-selected="false">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="dashboard" aria-selected="false">DASHBOARD</button></nav>
@@ -167,8 +167,7 @@ var allowed = function (t) { return !!D && !!D.tabs && D.tabs.indexOf(t) >= 0; }
 function table(v) { v = v || []; if (!v.length) return { head: [], rows: [] }; var head = v[0].map(String); return { head: head, rows: v.slice(1).map(function (r) { var o = {}; head.forEach(function (h, i) { o[h] = r[i] == null ? "" : r[i]; }); return o; }) }; }
 function grid(specs, rows, rowAttr) {
   var used = specs.filter(function (s) { return rows.some(function (r) { var v = s[1](r); return v !== "" && v != null; }); });
-  // a spec's 4th item = what its heading shows instead of its name (1319: a folded column)
-  return "<thead><tr>" + used.map(function (s) { return "<th class='" + (typeof s[2] === "string" ? s[2] : "") + "' data-col='" + esc(s[0]) + "'>" + esc(s[3] != null ? s[3] : s[0]) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+  return "<thead><tr>" + used.map(function (s) { return "<th class='" + (typeof s[2] === "string" ? s[2] : "") + "' data-col='" + esc(s[0]) + "'>" + esc(s[0]) + "</th>"; }).join("") + "</tr></thead><tbody>" +
     rows.map(function (r) { return "<tr" + (rowAttr ? rowAttr(r) : "") + ">" + used.map(function (s) { var v = s[1](r), cls = typeof s[2] === "function" ? s[2](r) : s[2] || ""; return "<td class='" + cls + "'>" + (v == null ? "" : v) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
 }
 // people by game code, built once per load; a code with no NAME = UNNAMED TESTER n (codes are shown only in PEOPLE)
@@ -717,27 +716,53 @@ function renderPeople() {
     var low = n.toLowerCase();
     return [n, function (r) { var all = !!ALL_PKGS[cat(r)]; return swBtn("data-pkg='" + esc(low) + "'", all || pPkgs(r).indexOf(low) >= 0, all, all ? n + " (every package for this role)" : n); }, "sw-c"];
   });
-  // 1319: no full name, mail or codes here (the search still finds them); a click on a heading folds that column
-  var fold = function (specs) { return specs.map(function (s) { return s[0] && pFold[s[0]] ? [s[0], function () { return "<span class='muted'>·</span>"; }, "fold", "▸"] : s; }); };
-  $("p-t").innerHTML = grid(fold([
-    ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }],
+  // 1319: which columns show = the COLUMNS switches; each heading's right edge drags its width (both kept in this browser)
+  var specs = [
+    ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return r.nick ? esc(r.name) : ""; }, "muted"],
     ["Role", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + catColor(c) + "'>" + [""].concat(catOrder()).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
   ].concat(pkgSw).concat([
+    ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return esc(r.codes.join(", ")); }, "x"],
     ["Seen", function (r) { return r.last ? "<span title='first " + esc(short(r.first)) + "'>" + esc(short(r.last)) + "</span>" : ""; }],
     ["Min", function (r) { return r.min ? String(r.min) : ""; }, "num"], ["Bugs", function (r) { return r.bugs ? String(r.bugs) : ""; }, "num"],
     ["Link", function (r) { return r.t && r.t.key ? "<button data-copy='" + esc(SITE + "?k=" + r.t.key) + "' title='" + esc(SITE + "?k=" + r.t.key) + "'>Copy</button>" : ""; }],
-    ["Note", function (r) { return esc(r.note); }, "x muted nar"],
+    ["Note", function (r) { return esc(r.note); }, "x muted"],
     ["", function (r) { var st = pStatus[pId(r)]; return st ? "<span style='color:" + st.c + "'>" + esc(st.t) + "</span>" : ""; }],
-  ])), list, function (r) { return " data-pk='" + esc(pId(r)) + "'"; });
+  ]);
+  var on = function (n) { return !n || (n in pCols ? pCols[n] : !P_COLS_OFF[n]); };
+  $("p-cols").innerHTML = "<label>Columns</label>" + specs.filter(function (c) { return c[0]; }).map(function (c) { return "<span class='muted'>" + esc(c[0].toUpperCase()) + "</span>" + swBtn("data-col='" + esc(c[0]) + "'", on(c[0]), false, c[0]); }).join("");
+  $("p-t").innerHTML = grid(specs.filter(function (c) { return on(c[0]); }), list, function (r) { return " data-pk='" + esc(pId(r)) + "'"; });
+  pWidths();
   renderRoles();
 }
-var pFold = {};
-try { pFold = JSON.parse(localStorage.getItem("p_fold") || "{}") || {}; } catch (e) {}
-$("p-t").addEventListener("click", function (e) {
-  var th = e.target.closest("th[data-col]"); if (!th || !th.dataset.col) return;
-  var c = th.dataset.col; if (pFold[c]) delete pFold[c]; else pFold[c] = 1;
-  try { localStorage.setItem("p_fold", JSON.stringify(pFold)); } catch (err) {}
+var P_COLS_OFF = { "Full name": 1, Mail: 1, Codes: 1 };   // OFF until switched on
+var pCols = {}, pW = {};
+try { pCols = JSON.parse(localStorage.getItem("p_cols") || "{}") || {}; pW = JSON.parse(localStorage.getItem("p_w") || "{}") || {}; } catch (e) {}
+function pWidths() {
+  var t = $("p-t"), heads = t.querySelectorAll("th[data-col]");
+  heads.forEach(function (th, i) {
+    var w = pW[th.dataset.col]; if (!w) return;
+    var px = w + "px";
+    th.style.width = th.style.minWidth = th.style.maxWidth = px;
+    t.querySelectorAll("tbody tr").forEach(function (tr) { var td = tr.children[i]; if (td) { td.style.minWidth = td.style.maxWidth = px; td.style.overflow = "hidden"; td.style.textOverflow = "ellipsis"; } });
+  });
+}
+$("p-cols-b").addEventListener("click", function () { $("p-cols").hidden = !$("p-cols").hidden; });
+$("p-cols").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-col]"); if (!b) return;
+  pCols[b.dataset.col] = b.getAttribute("aria-pressed") !== "true";
+  try { localStorage.setItem("p_cols", JSON.stringify(pCols)); } catch (err) {}
   renderPeople();
+});
+// a heading's right edge: the cursor turns to a resize arrow there, a drag sets the column width
+var pEdge = function (e) { var th = e.target.closest && e.target.closest("#p-t th[data-col]"); if (!th || !th.dataset.col) return null; return th.getBoundingClientRect().right - e.clientX <= 6 ? th : null; };
+$("p-t").addEventListener("mousemove", function (e) { var th = e.target.closest("th"); if (th) th.style.cursor = pEdge(e) ? "col-resize" : ""; });
+$("p-t").addEventListener("mousedown", function (e) {
+  var th = pEdge(e); if (!th) return;
+  e.preventDefault();
+  var col = th.dataset.col, x0 = e.clientX, w0 = th.getBoundingClientRect().width;
+  var mv = function (ev) { pW[col] = Math.max(1, Math.round(w0 + ev.clientX - x0)); pWidths(); };
+  var up = function () { document.removeEventListener("mousemove", mv); document.removeEventListener("mouseup", up); try { localStorage.setItem("p_w", JSON.stringify(pW)); } catch (err) {} };
+  document.addEventListener("mousemove", mv); document.addEventListener("mouseup", up);
 });
 // ROLES (1307): a row per role, a switch per tab; OWNER fixed
 var rQ = {};
