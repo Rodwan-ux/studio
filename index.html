@@ -56,7 +56,9 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:1px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
 .hello{font:700 30px/1 var(--head);letter-spacing:.06em;color:var(--fg)}
 .brand{width:201px;height:20px;image-rendering:pixelated;align-self:center}.hello b{color:var(--cyan)}
-input.link{width:100%;min-width:220px;color:var(--dim)}
+td.nar{max-width:150px}td.sw-c{padding:3px 2px;text-align:center}
+.sw{padding:0;width:30px;height:17px;border-radius:9px;font-size:9px;letter-spacing:0;color:var(--dim)}.sw[aria-pressed=true]{background:#1c2a18;border-color:var(--green);color:var(--green)}.sw:disabled{opacity:.45;cursor:default}
+select.lvl{padding:1px 4px;font-size:11px}
 .ld{display:grid;gap:4px;transition:opacity .6s}.ld-track{height:8px;background:repeating-linear-gradient(90deg,#232329 0 6px,#17171b 6px 8px);border:1px solid var(--line);overflow:hidden}
 .ld-track i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--gold) 0 6px,#b98a35 6px 8px);transition:width .3s steps(6)}
 #ld-txt{font:600 15px var(--head);letter-spacing:.12em;color:var(--gold);text-transform:uppercase}#ld-txt b{color:var(--dim);font-weight:600;margin-left:8px}
@@ -92,10 +94,13 @@ input.link{width:100%;min-width:220px;color:var(--dim)}
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></section>
 
 <section class="panel" data-pane="telemetry" hidden>
-<nav id="tel-tabs"><button data-t="feedback" aria-selected="true">FEEDBACK</button><button data-t="sessions" aria-selected="false">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button></nav>
+<nav id="tel-tabs"><button data-t="feedback" aria-selected="true">FEEDBACK</button><button data-t="sessions" aria-selected="false">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="dashboard" aria-selected="false">DASHBOARD</button></nav>
 <div data-tp="feedback"><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
 <div data-tp="sessions" hidden><div class="bar"><select id="s-mode" aria-label="Sessions view"><option value="person">BY PERSON</option><option value="session">BY SESSION</option></select><label for="s-code">Person</label><select id="s-code"></select><span class="muted" id="s-hint"></span></div><div class="scroll"><table id="sess-t"></table></div></div>
 <div data-tp="timeline" hidden><div class="bar"><label for="tl-sess">Session</label><select id="tl-sess"></select></div><div class="legend" id="tl-legend"></div><div class="tl" id="tl"><div class="tip" id="tip" hidden></div></div></div>
+<div data-tp="dashboard" hidden><div class="bar"><label for="db-who">Person</label><select id="db-who"></select><span class="muted">Who opened which tab of this panel, and when.</span></div><div id="db-msg" class="msg" hidden></div><div class="tiles" id="db-tiles"></div>
+<div class="cols"><div class="panel"><h2>By person</h2><div class="scroll"><table id="db-p"></table></div></div><div class="panel"><h2>By tab</h2><div class="scroll"><table id="db-t"></table></div></div></div>
+<div class="panel"><h2>Latest</h2><div class="scroll"><table id="db-l"></table></div></div></div>
 <div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Person</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t"></table></div><button id="ev-more" hidden>Show more</button></div>
 </section>
 
@@ -197,17 +202,20 @@ function showTab(t) {
   if (t === "overview" && D) renderHeatmap();
   loadLazy(t);
 }
-$("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); });
+// 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — TELEMETRY DASHBOARD; VIEW AS is not logged
+var logged = false;
+function logUse(tab) { if (VIEW_AS || !KEY) return; apiPost({ action: "studio_log", k: KEY, tab: tab }).catch(function () {}); }
+$("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) { showTab(b.dataset.tab); logUse(b.textContent); } });
 function showTel(t) { document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); }
-$("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) showTel(b.dataset.t); });
+$("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) { showTel(b.dataset.t); logUse("TELEMETRY / " + b.textContent); } });
 
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
-var LAZY = { telemetry: ["feedback"], calendar: ["calendar"], files: ["files"], players: ["players"] };
+var LAZY = { telemetry: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
-  feedback: "Opening the letters", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X" };
+  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
 function ldDraw() {
   var n = ldParts.length, d = ldParts.filter(function (p) { return got[p]; }).length, next = ldParts.filter(function (p) { return !got[p]; })[0];
@@ -255,6 +263,7 @@ function load() {
   fetchParts(EAGER).then(function () {
     if (!D.tabs) throw new Error(Object.keys(D.errors).map(function (x) { return D.errors[x]; })[0] || "no data");
     $("key-box").hidden = true; liveRender = true; softRender(); cacheWrite();
+    if (!logged) { logged = true; var b = document.querySelector("#tabs button[data-tab='" + curTab + "']"); logUse(b ? b.textContent : curTab); }
   }).catch(function (e) {
     var m = String(e && e.message || e);
     if (m === "No access") { $("ld").hidden = true; cacheDrop(); saveKey(""); askKey("This key does not open the panel."); return; }
@@ -278,7 +287,7 @@ function render() {
   $("hello").innerHTML = D.name ? "Hello <b style='color:" + personColor(D.name) + "'>" + esc(D.name) + "</b>" : "";
   var va = $("view-as");
   va.hidden = !D.isOwner;
-  if (D.isOwner) { va.innerHTML = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"].map(function (c) { return "<option value='" + c + "'>VIEW AS " + c + "</option>"; }).join(""); va.value = D.viewAs || "OWNER"; }
+  if (D.isOwner) { va.innerHTML = ["OWNER", "TEAM", "FRIEND", "GUEST"].map(function (c) { return "<option value='" + c + "'>VIEW AS " + c + "</option>"; }).join(""); va.value = D.viewAs || "OWNER"; }
   $("viewbar").hidden = !D.viewAs; $("viewbar-cat").textContent = D.viewAs || "";
   var fresh = !ldParts.some(function (p) { return !got[p]; });
   $("status").textContent = (fresh ? "loaded " + new Date().toLocaleTimeString() : "saved view from " + hm(savedAt) + ", updating") + (errs.length ? ". Did not load: " + errs.join(", ") : "");
@@ -350,7 +359,7 @@ $("b-detail").addEventListener("click", function (e) {
     renderBugs(); if (allowed("overview")) renderOverview(); },
     function (err) { b.disabled = false; b.textContent = "Not saved: " + (err && err.message || err); });
 });
-// drag a card to the other column (OWNER / ADMIN): into DONE = FIXED, back into TO DO = CONFIRMED
+// drag a card to the other column (OWNER): into DONE = FIXED, back into TO DO = CONFIRMED
 var dragId = "", dragFrom = "";
 var clearDrop = function () { document.querySelectorAll(".col.drop").forEach(function (x) { x.classList.remove("drop"); }); };
 $("b-board").addEventListener("dragstart", function (e) { var c = e.target.closest("[data-bug]"); if (!c || !owner()) return; dragId = c.dataset.bug; dragFrom = (c.closest(".col[data-col]") || {}).dataset ? c.closest(".col[data-col]").dataset.col : ""; e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragId); } catch (err) {} });
@@ -479,7 +488,7 @@ function renderTelemetry() {
   tl.innerHTML = ss.map(function (s) { return "<option value='" + esc(s.id) + "'>" + esc(short(s.start) + "  " + nameOf(s.code) + "  " + fmtSec(s.len) + "  (" + s.n + " events)") + "</option>"; }).join("");
   if (!pickedSession && ss[0]) pickedSession = ss[0].id; tl.value = pickedSession;
   $("tl-legend").innerHTML = KINDS.map(function (k) { return "<span><i style='background:" + k.color + "'></i>" + k.label + "</span>"; }).join("") + "<span><i style='background:#3a5d3a'></i>SANDBOX</span><span><i style='background:#6a3a33'></i>BATTLE</span><span><i style='background:#2d5566'></i>SAIL</span>";
-  renderEvents(evs); drawTimeline();
+  renderEvents(evs); drawTimeline(); renderDashboard();
 }
 $("s-code").addEventListener("change", renderTelemetry);
 $("s-mode").addEventListener("change", renderTelemetry);
@@ -530,6 +539,43 @@ function renderEvents(evs) {
 }
 ["ev-q", "ev-code", "ev-cat"].forEach(function (id) { $(id).addEventListener("input", function () { evLimit = 300; renderEvents(events()); }); });
 $("ev-more").addEventListener("click", function () { evLimit += 300; renderEvents(events()); });
+// DASHBOARD (1306): the panel's own use from the PANEL sheet (TIME, NAME, CATEGORY, TAB); a visit = one person's tab
+// openings with less than 30 minutes between them; this week = the last 7 days, today included
+function renderDashboard() {
+  var msg = $("db-msg");
+  if (!D.panel) { var er = D.errors.panel; msg.hidden = false; msg.className = er ? "msg err" : "msg"; msg.textContent = er ? "DASHBOARD did not load: " + er : "Loading..."; return; }
+  var all = table(D.panel).rows.filter(function (r) { return r.TIME && r.NAME; }).sort(function (a, b) { return String(a.TIME).localeCompare(String(b.TIME)); });
+  msg.hidden = !!all.length; msg.className = "msg"; msg.textContent = "Nobody has opened the panel since the log started.";
+  var sel = $("db-who"), v = sel.value, names = Array.from(new Set(all.map(function (r) { return r.NAME; }))).sort();
+  sel.innerHTML = "<option value=''>ALL</option>" + names.map(function (n) { return "<option value='" + esc(n) + "'>" + esc(n) + "</option>"; }).join(""); sel.value = names.indexOf(v) >= 0 ? v : "";
+  var rows = all.filter(function (r) { return !sel.value || r.NAME === sel.value; });
+  var ms = function (r) { return new Date(String(r.TIME).replace(" ", "T")).getTime() || 0; }, last = {}, visit = 0;
+  rows.forEach(function (r) { var t = ms(r); if (!(r.NAME in last) || t - last[r.NAME] > 30 * 60000) { r._v = ++visit; } else r._v = 0; last[r.NAME] = t; });
+  var from = dayKey(new Date(Date.now() - 6 * 864e5)), week = rows.filter(function (r) { return String(r.TIME).slice(0, 10) >= from; });
+  var top = function (list) { var c = {}; list.forEach(function (r) { c[r.TAB] = (c[r.TAB] || 0) + 1; }); return Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0] || "-"; };
+  $("db-tiles").innerHTML = [["Visits this week", week.filter(function (r) { return r._v; }).length], ["People this week", new Set(week.map(function (r) { return r.NAME; })).size],
+    ["Tabs opened this week", week.length], ["Top tab this week", top(week)], ["Visits in all", rows.filter(function (r) { return r._v; }).length]]
+    .map(function (t) { return "<div class='tile'><span>" + esc(t[0]) + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
+  var n = function (x) { return x ? String(x) : ""; }, by = {}, tabs = {};
+  rows.forEach(function (r) {
+    var p = by[r.NAME] || (by[r.NAME] = { name: r.NAME, cat: r.CATEGORY, visits: 0, opens: 0, first: r.TIME, last: "", list: [] });
+    p.visits += r._v ? 1 : 0; p.opens++; p.last = r.TIME; p.cat = r.CATEGORY; p.list.push(r);
+    var t = tabs[r.TAB] || (tabs[r.TAB] = { tab: r.TAB, opens: 0, who: {}, last: "" }); t.opens++; t.who[r.NAME] = 1; t.last = r.TIME;
+  });
+  $("db-p").innerHTML = grid([
+    ["Who", function (p) { return nameTag(p.name); }], ["Category", function (p) { return "<span class='chip' style='color:" + (CAT_COLOR[p.cat] || "var(--dim)") + "'>" + esc(p.cat) + "</span>"; }],
+    ["Visits", function (p) { return n(p.visits); }, "num"], ["Tabs", function (p) { return n(p.opens); }, "num"], ["Top tab", function (p) { return esc(top(p.list)); }],
+    ["First", function (p) { return esc(short(p.first)); }], ["Last", function (p) { return esc(short(p.last)); }],
+  ], Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return String(b.last).localeCompare(String(a.last)); }));
+  $("db-t").innerHTML = grid([
+    ["Tab", function (t) { return esc(t.tab); }], ["Opened", function (t) { return n(t.opens); }, "num"], ["People", function (t) { return n(Object.keys(t.who).length); }, "num"], ["Last", function (t) { return esc(short(t.last)); }],
+  ], Object.keys(tabs).map(function (k) { return tabs[k]; }).sort(function (a, b) { return b.opens - a.opens; }));
+  $("db-l").innerHTML = grid([
+    ["Time", function (r) { return esc(short(r.TIME)); }], ["Who", function (r) { return nameTag(r.NAME); }], ["Tab", function (r) { return esc(r.TAB); }],
+    ["", function (r) { return r._v ? "<span class='muted'>NEW VISIT</span>" : ""; }],
+  ], rows.slice(-100).reverse());
+}
+$("db-who").addEventListener("change", renderDashboard);
 
 // ── overview ──
 var dayKey = function (d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
@@ -607,7 +653,7 @@ function renderOverview() {
   }).join("") : "<div class='muted'>No changes.</div>";
 }
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
-var CAT_ORDER = ["OWNER", "ADMIN", "TEAM", "FRIEND", "GUEST"];
+var CAT_ORDER = ["OWNER", "TEAM", "FRIEND", "GUEST", "CUSTOM"];
 function peopleRows() {
   var low = function (s) { return String(s || "").trim().toLowerCase(); };
   var codes = table(D.people).rows.filter(function (c) { return c.CODE; }), play = table(D.codes).rows, bugs = D.bugs ? bugRows() : [];
@@ -632,7 +678,7 @@ function peopleRows() {
     return p;
   }).sort(function (a, b) { return rank(a) - rank(b) || b.last.localeCompare(a.last) || a.name.localeCompare(b.name); });
 }
-var CAT_COLOR = { OWNER: "var(--gold)", ADMIN: "var(--red)", TEAM: "var(--cyan)", FRIEND: "var(--green)", GUEST: "var(--dim)" };
+var CAT_COLOR = { OWNER: "var(--gold)", TEAM: "var(--cyan)", FRIEND: "var(--green)", GUEST: "var(--dim)", CUSTOM: "var(--violet)" };
 // 1270: a double-click on a row edits it; each field saves itself on leaving it (Enter too), Esc ends the editing
 var pEdit = "";
 var pId = function (r) { return r.t && r.t.key ? r.t.key : "name:" + String(r.name).toLowerCase(); };
@@ -648,39 +694,54 @@ function renderPeople() {
   });
   $("p-n").textContent = list.length + " OF " + rows.length;
   var ed = function (r) { return pId(r) === pEdit; };
+  // 1306: the level is picked from the list on the row; a switch per tab — flipping one makes the level CUSTOM (OWNER keeps all)
+  var sw = (D.customTabs || []).map(function (t) {
+    return [TAB_SHORT[t] || t, function (r) { var on = pTabs(r).indexOf(t) >= 0; return "<button class='sw' data-sw='" + t + "' aria-pressed='" + on + "' title='" + t.toUpperCase() + "'" + (r.t && r.t.category === "OWNER" ? " disabled" : "") + ">" + (on ? "ON" : "OFF") + "</button>"; }, "sw-c"];
+  });
   $("p-t").innerHTML = grid([
-    ["Name", function (r) { return ed(r) ? pField(r, "NICK", r.nick || "") : "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return ed(r) ? pField(r, "NAME", r.name) : r.nick ? esc(r.name) : ""; }, "muted"],
-    ["Category", function (r) {
-      if (ed(r)) { var c = r.t ? r.t.category : ""; return "<select data-f='CATEGORY' data-o='" + esc(c) + "'>" + [""].concat(CAT_ORDER).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }
-      return r.t && r.t.category ? "<span class='chip' style='color:" + (CAT_COLOR[r.t.category] || "var(--dim)") + "'>" + esc(r.t.category) + "</span>" : "";
-    }],
-    ["Mail", function (r) { return ed(r) ? pField(r, "MAIL", r.mail || "") : esc(r.mail); }, function (r) { return ed(r) ? "" : "x muted"; }],
-    ["Codes", function (r) { return ed(r) ? pField(r, "GAME CODES", r.codes.join(", ")) : esc(r.codes.join(", ")); }, function (r) { return ed(r) ? "" : "x"; }],
-    ["First", function (r) { return esc(short(r.first)); }], ["Last seen", function (r) { return esc(short(r.last)); }],
+    ["Name", function (r) { return ed(r) ? pField(r, "NICK", r.nick || "") + pField(r, "NAME", r.name) : "<b title='" + esc(r.name) + "'>" + nameTag(r.nick || r.name) + "</b>"; }],
+    ["Level", function (r) { var c = r.t ? r.t.category : ""; return "<select class='lvl' data-f='CATEGORY' data-o='" + esc(c) + "' style='color:" + (CAT_COLOR[c] || "var(--dim)") + "'>" + [""].concat(CAT_ORDER).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
+  ].concat(sw).concat([
+    ["Mail", function (r) { return ed(r) ? pField(r, "MAIL", r.mail || "") : esc(r.mail); }, function (r) { return ed(r) ? "" : "x muted nar"; }],
+    ["Codes", function (r) { return ed(r) ? pField(r, "GAME CODES", r.codes.join(", ")) : esc(r.codes.join(", ")); }, function (r) { return ed(r) ? "" : "x nar"; }],
+    ["Seen", function (r) { return r.last ? "<span title='first " + esc(short(r.first)) + "'>" + esc(short(r.last)) + "</span>" : ""; }],
     ["Min", function (r) { return r.min ? String(r.min) : ""; }, "num"], ["Bugs", function (r) { return r.bugs ? String(r.bugs) : ""; }, "num"],
-    ["Packages", function (r) { return ed(r) ? pField(r, "PACKAGES", r.t ? r.t.packages : "") : r.t ? esc(r.t.packages) : ""; }],
-    ["Panel link", function (r) { return r.t && r.t.key ? "<input class='link' readonly value='" + esc(SITE + "?k=" + r.t.key) + "'>" : ""; }], ["", function (r) { return r.t && r.t.key ? "<button data-copy>Copy</button>" : ""; }],
-    ["Note", function (r) { return ed(r) ? pField(r, "NOTE", r.note || "") : esc(r.note); }, function (r) { return ed(r) ? "" : "x muted"; }],
-    ["", function (r) { return ed(r) ? "<span class='muted' data-st>EDITING</span>" : ""; }],
-  ], list, function (r) { return " data-pk='" + esc(pId(r)) + "'" + (ed(r) ? " class='sel'" : ""); });
+    ["Packages", function (r) { return ed(r) ? pField(r, "PACKAGES", r.t ? r.t.packages : "") : r.t ? esc(r.t.packages) : ""; }, function (r) { return ed(r) ? "" : "x nar"; }],
+    ["Link", function (r) { return r.t && r.t.key ? "<button data-copy='" + esc(SITE + "?k=" + r.t.key) + "' title='" + esc(SITE + "?k=" + r.t.key) + "'>Copy</button>" : ""; }],
+    ["Note", function (r) { return ed(r) ? pField(r, "NOTE", r.note || "") : esc(r.note); }, function (r) { return ed(r) ? "" : "x muted nar"; }],
+    ["", function (r) { return "<span class='muted' data-st>" + (ed(r) ? "EDITING" : "") + "</span>"; }],
+  ]), list, function (r) { return " data-pk='" + esc(pId(r)) + "'" + (ed(r) ? " class='sel'" : ""); });
 }
+var TAB_SHORT = { overview: "OVR", bugs: "BUG", tasks: "TSK", telemetry: "TEL", players: "PLR", changelog: "LOG", calendar: "CAL", files: "FIL" };
+var pTabs = function (r) { return r.t && r.t.tabs || []; };
 // the saved value goes into the loaded data too, so the row shows it without a reload
 function pApply(r, f, v) {
   var low = function (s) { return String(s || "").trim().toLowerCase(); }, old = r.name;
   if (f === "MAIL") { (D.people || []).forEach(function (row, i) { var hd = D.people[0]; if (i && (r.codes.indexOf(low(row[hd.indexOf("CODE")])) >= 0 || low(row[hd.indexOf("NAME")]) === low(old))) row[hd.indexOf("GIVEN TO")] = v; }); return; }
-  if (!r.t) { r.t = { name: r.name, category: "", codes: [], packages: "", key: "", note: "", nick: "" }; D.team = (D.team || []).concat([r.t]); }
+  if (!r.t) { r.t = { name: r.name, category: "", codes: [], packages: "", key: "", note: "", nick: "", tabs: [] }; D.team = (D.team || []).concat([r.t]); }
   if (f === "NAME") { (D.people || []).forEach(function (row, i) { var hd = D.people[0]; if (i && low(row[hd.indexOf("NAME")]) === low(old)) row[hd.indexOf("NAME")] = v; }); r.t.name = v; if (!r.t.key) pEdit = "name:" + v.toLowerCase(); }
-  else if (f === "NICK") r.t.nick = v; else if (f === "CATEGORY") r.t.category = v; else if (f === "PACKAGES") r.t.packages = v; else if (f === "NOTE") r.t.note = v;
+  else if (f === "NICK") r.t.nick = v; else if (f === "CATEGORY") { r.t.category = v; r.t.tabs = (D.levels || {})[v] || []; } else if (f === "TABS") { r.t.category = "CUSTOM"; r.t.tabs = v.split(",").map(low).filter(Boolean); } else if (f === "PACKAGES") r.t.packages = v; else if (f === "NOTE") r.t.note = v;
   else if (f === "GAME CODES") r.t.codes = v.split(",").map(low).filter(Boolean);
   _people = null;
 }
+function pRow(tr) { return peopleRows().filter(function (x) { return pId(x) === tr.dataset.pk; })[0]; }
 function pSave(el) {
   var v = el.value.trim(), f = el.dataset.f, tr = el.closest("tr"); if (v === el.dataset.o) return;
-  var r = peopleRows().filter(function (x) { return pId(x) === tr.dataset.pk; })[0], st = tr.querySelector("[data-st]"); if (!r) return;
+  var r = pRow(tr); if (!r || el.dataset.busy) return;
+  el.dataset.busy = "1";
+  // picking CUSTOM from the list keeps the tabs the person has now
+  if (f === "CATEGORY" && v === "CUSTOM") { pPost(r, tr, "TABS", pTabs(r).filter(function (t) { return (D.customTabs || []).indexOf(t) >= 0; }).join(", "), el); return; }
+  pPost(r, tr, f, v, el);
+}
+function pPost(r, tr, f, v, el) {
+  var st = tr.querySelector("[data-st]");
   st.textContent = "SAVING..."; st.style.color = "";
   apiPost({ action: "studio_set_person", k: KEY, key: r.t ? r.t.key : "", name: r.name, codes: r.codes, field: f, value: v }).then(function () {
-    el.dataset.o = v; pApply(r, f, v); tr.dataset.pk = pId(r); st.textContent = "SAVED"; st.style.color = "var(--green)";
-  }, function (e) { st.textContent = String(e && e.message || e); st.style.color = "var(--red)"; });
+    if (el) { el.dataset.o = v; delete el.dataset.busy; } pApply(r, f, v);
+    if (f === "CATEGORY" || f === "TABS") { renderPeople(); tr = Array.from($("p-t").querySelectorAll("tr[data-pk]")).filter(function (x) { return x.dataset.pk === pId(r); })[0]; }
+    else tr.dataset.pk = pId(r);
+    st = tr && tr.querySelector("[data-st]"); if (st) { st.textContent = "SAVED"; st.style.color = "var(--green)"; }
+  }, function (e) { if (el) delete el.dataset.busy; st.textContent = String(e && e.message || e); st.style.color = "var(--red)"; });
 }
 $("p-t").addEventListener("dblclick", function (e) {
   var tr = e.target.closest("tr[data-pk]"); if (!tr || tr.dataset.pk === pEdit || !owner()) return;
@@ -696,11 +757,20 @@ $("p-t").addEventListener("keydown", function (e) {
 });
 ["p-q", "p-cat"].forEach(function (id) { $(id).addEventListener("input", renderPeople); });
 $("p-t").addEventListener("click", function (e) {
+  var w = e.target.closest("button[data-sw]");
+  if (w && !w.disabled) {
+    var tr = w.closest("tr"), r = pRow(tr), t = w.dataset.sw; if (!r) return;
+    var cur = pTabs(r), next = (D.customTabs || []).filter(function (x) { return x === t ? cur.indexOf(x) < 0 : cur.indexOf(x) >= 0; });
+    pPost(r, tr, "TABS", next.join(", "));
+    return;
+  }
   var b = e.target.closest("button[data-copy]"); if (!b) return;
-  var inp = b.closest("tr").querySelector("input.link"); inp.select();
   var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1500); };
-  try { if (document.execCommand("copy")) { done(); return; } } catch (err) {}
-  if (navigator.clipboard) navigator.clipboard.writeText(inp.value).then(done, function () { b.textContent = "Select + Ctrl+C"; });
+  var inp = document.createElement("input"); inp.value = b.dataset.copy; document.body.appendChild(inp); inp.select();
+  var ok = false; try { ok = document.execCommand("copy"); } catch (err) {}
+  inp.remove();
+  if (ok) { done(); return; }
+  if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy).then(done, function () { b.textContent = "Not copied"; });
 });
 // ── players (1268, OWNER only): who reacts to the X posts, from the sheet the X collection fills ──
 // POSTS: DATE, TEXT, URL, LIKES, REPLIES · USERS (1268.3, one row per account, its totals): HANDLE, NAME, LIKES, REPLIES, LAST REPLY
