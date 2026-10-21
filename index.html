@@ -101,7 +101,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <section class="panel" data-pane="people" hidden>
 <nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="telemetry" aria-selected="false">TELEMETRY</button><button data-pp="settings" aria-selected="false">SETTINGS</button></nav>
 <div data-ppn="list"><div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
-<label for="p-cat">Role</label><select id="p-cat"></select><span class="muted" id="p-n"></span><button id="p-cols-b">Columns</button></div>
+<label for="p-cat">Role</label><select id="p-cat"></select><label for="p-tag">Tag</label><select id="p-tag"></select><span class="muted" id="p-n"></span><button id="p-cols-b">Columns</button></div>
 <div class="bar" id="p-cols" hidden></div>
 <div class="scroll"><table id="p-t" class="tight"></table></div></div>
 <div data-ppn="telemetry" hidden>
@@ -723,6 +723,7 @@ var catColor = function (c) { return CAT_COLOR[c] || (c ? personColor(c) : "var(
 // person (or role) go one after another, a failed one puts it back as last saved.
 var pId = function (r) { return r.t && r.t.key ? r.t.key : "name:" + String(r.name).toLowerCase(); };
 var pPkgs = function (r) { return r.t ? String(r.t.packages || "").split(",").map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean) : []; };
+var pTags = function (r) { return r.t ? String(r.t.tags || "").split(",").map(function (x) { return x.trim().toUpperCase(); }).filter(Boolean) : []; };
 var ALL_PKGS = { OWNER: true, TEAM: true };   // these roles take every package
 var pStatus = {};
 function swBtn(attr, on, off, title) { return "<button class='sw' " + attr + " aria-pressed='" + on + "' title='" + esc(title) + "'" + (off ? " disabled" : "") + ">" + (on ? "ON" : "OFF") + "</button>"; }
@@ -730,9 +731,13 @@ function renderPeople() {
   var rows = peopleRows();
   var s = $("p-cat"), v = s.value;
   s.innerHTML = "<option value=''>ALL</option>" + catOrder().concat(["NO PANEL"]).map(function (x) { return "<option>" + x + "</option>"; }).join(""); s.value = v;
+  // 1380: the tags in use (TAGS column of PEOPLE) - a filter and an ON / OFF column each
+  var tags = []; rows.forEach(function (r) { pTags(r).forEach(function (x) { if (tags.indexOf(x) < 0) tags.push(x); }); }); tags.sort();
+  var tg = $("p-tag"), tv = tg.value;
+  tg.innerHTML = "<option value=''>ALL</option>" + tags.map(function (x) { return "<option>" + esc(x) + "</option>"; }).join(""); tg.value = tags.indexOf(tv) >= 0 ? tv : "";
   var q = $("p-q").value.trim().toLowerCase();
   var list = rows.filter(function (r) {
-    return (!s.value || (s.value === "NO PANEL" ? !r.t : r.t && r.t.category === s.value)) &&
+    return (!s.value || (s.value === "NO PANEL" ? !r.t : r.t && r.t.category === s.value)) && (!tg.value || pTags(r).indexOf(tg.value) >= 0) &&
       (!q || [r.name, r.nick, r.mail, r.codes.join(" "), r.note, r.t ? r.t.category : ""].join(" ").toLowerCase().indexOf(q) >= 0);
   });
   $("p-n").textContent = list.length + " OF " + rows.length;
@@ -745,7 +750,7 @@ function renderPeople() {
   var specs = [
     ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return r.nick ? esc(r.name) : ""; }, "muted"],
     ["Role", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + catColor(c) + "'>" + [""].concat(catOrder()).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
-  ].concat(pkgSw).concat([
+  ].concat(tags.map(function (n) { return [n, function (r) { return swBtn("data-tag='" + esc(n) + "'", pTags(r).indexOf(n) >= 0, false, n); }, "sw-c"]; })).concat(pkgSw).concat([
     ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return esc(r.codes.join(", ")); }, "x"],
     ["Seen", function (r) { return r.last ? "<span title='first " + esc(short(r.first)) + "'>" + esc(short(r.last)) + "</span>" : ""; }],
     ["Min", function (r) { return r.min ? String(r.min) : ""; }, "num"], ["Bugs", function (r) { return r.bugs ? String(r.bugs) : ""; }, "num"],
@@ -833,10 +838,10 @@ function showPp(t) { document.querySelectorAll("#p-tabs button").forEach(functio
 $("p-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-pp]"); if (b) { showPp(b.dataset.pp); logUse("PEOPLE / " + b.textContent); } });
 // the change goes into the loaded data, so the row shows it before the save comes back
 function pApply(r, f, v) {
-  if (!r.t) { r.t = { name: r.name, category: "", codes: r.codes.slice(), packages: "", key: "", note: "", nick: "" }; D.team = (D.team || []).concat([r.t]); }
-  if (f === "CATEGORY") r.t.category = v; else if (f === "PACKAGES") r.t.packages = v;
+  if (!r.t) { r.t = { name: r.name, category: "", codes: r.codes.slice(), packages: "", key: "", note: "", nick: "", tags: "" }; D.team = (D.team || []).concat([r.t]); }
+  if (f === "CATEGORY") r.t.category = v; else if (f === "PACKAGES") r.t.packages = v; else if (f === "TAGS") r.t.tags = v;
 }
-var pSnap = function (r) { return r.t ? { category: r.t.category, packages: r.t.packages } : { category: "", packages: "" }; };
+var pSnap = function (r) { return r.t ? { category: r.t.category, packages: r.t.packages, tags: r.t.tags || "" } : { category: "", packages: "", tags: "" }; };
 var pQ = {};
 function pChange(r, f, v) {
   var id = pId(r), q = pQ[id] || (pQ[id] = { run: false, todo: {}, ok: null });
@@ -850,7 +855,7 @@ function pNext(r, q) {
   if (!f) { q.run = false; pStatus[id] = { t: "SAVED", c: "var(--green)" }; renderPeople(); return; }
   var v = q.todo[f]; delete q.todo[f]; q.run = true;
   apiPost({ action: "studio_set_person", k: KEY, key: r.t.key, name: r.name, field: f, value: v }).then(function () { pNext(r, q); }, function (e) {
-    q.run = false; q.todo = {}; var o = q.ok; r.t.category = o.category; r.t.packages = o.packages;
+    q.run = false; q.todo = {}; var o = q.ok; r.t.category = o.category; r.t.packages = o.packages; r.t.tags = o.tags;
     pStatus[id] = { t: "NOT SAVED: " + String(e && e.message || e), c: "var(--red)" }; renderPeople();
   });
 }
@@ -859,8 +864,14 @@ $("p-t").addEventListener("change", function (e) {
   if (!e.target.matches("select[data-lvl]")) return;
   var r = pRow(e.target.closest("tr")); if (r) pChange(r, "CATEGORY", e.target.value);
 });
-["p-q", "p-cat"].forEach(function (id) { $(id).addEventListener("input", renderPeople); });
+["p-q", "p-cat", "p-tag"].forEach(function (id) { $(id).addEventListener("input", renderPeople); });
 $("p-t").addEventListener("click", function (e) {
+  var g = e.target.closest("button[data-tag]");
+  if (g) {
+    var gr = pRow(g.closest("tr")); if (!gr) return;
+    var n = g.dataset.tag, hv = pTags(gr); pChange(gr, "TAGS", (hv.indexOf(n) >= 0 ? hv.filter(function (x) { return x !== n; }) : hv.concat([n])).join(", "));
+    return;
+  }
   var w = e.target.closest("button[data-pkg]");
   if (w && !w.disabled) {
     var r = pRow(w.closest("tr")); if (!r) return;
