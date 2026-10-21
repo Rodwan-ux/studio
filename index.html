@@ -666,18 +666,15 @@ function renderNextBuild() {
   }).join("") + "</div>" + (opened.length ? "<div class='chg-l' style='margin-top:6px;border-left-color:" + col(chgOpen) + "'>" + opened.map(function (c) { var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/); return "<div>" + esc(m ? m[1] : c[1]) + "</div>"; }).join("") + "</div>" : "") : "<div class='muted'>No changes.</div>";
 }
 // 1331: DEMO COMPLETION - one row per area of the PROGRESS tab (AREA, PERCENT, NOTE): the name and 20 cells, one per
-// 5 percent, each filled cell a pixel block (light edge top-left, dark edge bottom-right); the rows take their colours
-// in order down the chart along the game's level ramp; empty cells in the unit card track colour; one scale under all rows
-var LEVEL_RAMP = [[191, 56, 56], [199, 115, 56], [184, 173, 77], [140, 158, 87], [107, 166, 97], [77, 128, 173]];   // Palette.LEVEL_RAMP
-function rampColor(i, n) {
-  var t = n > 1 ? i / (n - 1) * (LEVEL_RAMP.length - 1) : 0, a = Math.floor(t), b = Math.min(a + 1, LEVEL_RAMP.length - 1), f = t - a;
-  return "rgb(" + [0, 1, 2].map(function (k) { return Math.round(LEVEL_RAMP[a][k] + (LEVEL_RAMP[b][k] - LEVEL_RAMP[a][k]) * f); }).join(",") + ")";
-}
+// 5 percent, each filled cell a pixel block (light edge top-left, dark edge bottom-right); an area takes the colour of
+// its CHANGELOG category (CHG_COLOR), so the chart wears the page's colours; empty cells in the unit card track colour
+var AREA_CAT = { STORY: "STORY", WORLD: "SEA", TERRAIN: "MAP", CAMP: "CAMP", BATTLE: "BATTLE", AI: "BATTLE", UNITS: "BATTLE",
+  UI: "HUD", SOUND: "SOUND", SYSTEMS: "SYSTEM" };   // the first word of the AREA -> its CHANGELOG category
 function renderProgress() {
   var rows = table(D.progress).rows.filter(function (r) { return r.AREA; });
   var W = 20 * 14;
   $("ov-prog").innerHTML = rows.length ? rows.map(function (r, i) {
-    var p = Math.max(0, Math.min(100, parseFloat(String(r.PERCENT).replace(",", ".")) || 0)), n = Math.round(p / 5), cells = "", c = rampColor(i, rows.length);
+    var p = Math.max(0, Math.min(100, parseFloat(String(r.PERCENT).replace(",", ".")) || 0)), n = Math.round(p / 5), cells = "", c = CHG_COLOR[AREA_CAT[String(r.AREA).trim().split(/\s+/)[0].toUpperCase()]] || "var(--gold)";
     for (var k = 0; k < 20; k++) cells += k < n ? "<i class='on' style='background:" + c + "'></i>" : "<i></i>";
     return "<span class='pg-n' style='color:" + c + "' title='" + esc(r.NOTE || "") + "'>" + esc(r.AREA) + "</span><div class='pg-b' title='" + esc(r.AREA + "  " + Math.round(p) + "%") + "'>" + cells + "</div>";
   }).join("") + "<div class='pg-s' style='width:" + W + "px'>" + [0, 25, 50, 75, 100].map(function (v) { return "<span style='left:" + (v / 100 * W) + "px'>" + v + "</span>"; }).join("") + "</div>"
