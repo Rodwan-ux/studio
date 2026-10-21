@@ -66,6 +66,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 .chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.chg-t{background:var(--bg);border:1px solid var(--line);border-left:3px solid;padding:6px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 14px var(--head);letter-spacing:.1em}
 .chg-t b{font:600 18px var(--mono);color:var(--fg)}.chg-t:hover{background:#232329}.chg-t.on{background:#232329}.chg-l{grid-column:1/-1;border:1px solid var(--line);border-left:3px solid;padding:4px 10px;display:grid;gap:2px}
 .play-b{display:inline-flex;align-items:center;padding:6px 10px;border:1px solid var(--gold);border-radius:4px;align-self:center}.play-b:hover{background:#1f1c16}.play-b svg{display:block}
+.prog{display:flex;flex-wrap:wrap;gap:16px 12px;align-items:flex-end;justify-content:space-between;padding:8px 4px 2px}.pg{flex:1 1 60px;min-width:60px;display:flex;flex-direction:column;align-items:center;gap:7px}.pg b{font:600 15px var(--mono);font-variant-numeric:tabular-nums;color:var(--fg)}.pg-t{width:14px;height:150px;background:#17171b;border:1px solid var(--line);position:relative;overflow:hidden}.pg-t i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(to top,#b98a35,var(--gold))}.pg span{font:600 12px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase;text-align:center;line-height:1.15;max-width:92px}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
 <header><span class="hello" id="hello"></span><a class="play-b" href="https://rodwan-ux.github.io/studio/play.html" target="_blank" rel="noopener" title="PLAY PIXEL FORMATION"><svg viewBox='0 0 14 5' width='56' height='20' shape-rendering='crispEdges' role='img' aria-label='PLAY'><rect x='0' y='0' width='2' height='1' fill='#efd6b0'/><rect x='2' y='0' width='1' height='1' fill='#d8b69f'/><rect x='4' y='0' width='1' height='1' fill='#efd6b0'/><rect x='8' y='0' width='1' height='1' fill='#efd6b0'/><rect x='11' y='0' width='1' height='1' fill='#efd6b0'/><rect x='13' y='0' width='1' height='1' fill='#efd6b0'/><rect x='0' y='1' width='1' height='1' fill='#efd6b0'/><rect x='1' y='1' width='1' height='1' fill='#794b58'/><rect x='2' y='1' width='1' height='1' fill='#b18182'/><rect x='4' y='1' width='1' height='1' fill='#d8b69f'/><rect x='7' y='1' width='1' height='1' fill='#efd6b0'/><rect x='8' y='1' width='1' height='1' fill='#5e424b'/><rect x='9' y='1' width='1' height='1' fill='#efd6b0'/><rect x='11' y='1' width='1' height='1' fill='#d8b69f'/><rect x='13' y='1' width='1' height='1' fill='#d8b69f'/><rect x='0' y='2' width='2' height='1' fill='#d8b69f'/><rect x='2' y='2' width='1' height='1' fill='#b18182'/><rect x='4' y='2' width='1' height='1' fill='#d8b69f'/><rect x='7' y='2' width='3' height='1' fill='#d8b69f'/><rect x='11' y='2' width='2' height='1' fill='#d8b69f'/><rect x='13' y='2' width='1' height='1' fill='#b18182'/><rect x='0' y='3' width='1' height='1' fill='#b18182'/><rect x='1' y='3' width='2' height='1' fill='#794b58'/><rect x='4' y='3' width='1' height='1' fill='#d8b69f'/><rect x='5' y='3' width='1' height='1' fill='#efd6b0'/><rect x='7' y='3' width='1' height='1' fill='#d8b69f'/><rect x='8' y='3' width='1' height='1' fill='#794b58'/><rect x='9' y='3' width='1' height='1' fill='#b18182'/><rect x='12' y='3' width='1' height='1' fill='#b18182'/><rect x='0' y='4' width='1' height='1' fill='#794b58'/><rect x='4' y='4' width='2' height='1' fill='#794b58'/><rect x='7' y='4' width='1' height='1' fill='#794b58'/><rect x='9' y='4' width='1' height='1' fill='#794b58'/><rect x='12' y='4' width='1' height='1' fill='#794b58'/></svg></a><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMkAAAAUCAYAAAAnZhn0AAABv0lEQVR42u2aP0sDQRDF98RGwUIINn4ByQdQO8uANoIWVgbrBGy00E4LA8HWykJMFVBBixNsAlpp7ASD6QRJYZXCIuVa3wvsMMzmrnm/7rI7t39uln1vN8mwd+9dgPnyZuIU4PukeGv72vZi97fo+jGQvsHv9zDzvLS+l2j6HLtcypHYOTHlCCFBuEgI4SIhxMY0/tA8bDuLXsT4r8crH9KzUvvaeC2f3YFKn+7XL1Xzg3peqv9y81F4UuA3WF0uO41nybvcWl/6xtxJCKHcIoSLhJDJehLUb9VaxYX0mUQjbSegZ1Vn8BhfrVW8RX9KHqC0MKvSt8cH2yb9K3m+IjyJlAP99x/T+8/ObzPPDyenPlQucX3xFHX8mONbayvcSQih3CKEi4SQAu9JUO+hBm910qCeQ7159/zmYp5ZS3pXureJrYelOwTJsw1Gfz4033mAnuO12zPFI6jxMSekHEPG5jy1/T8P+8edhBDKLUK4SAjJ15OgxpY0M9LqpJn6izNzPlSuPfOW4sfK6y7Y/u5ow9Q/nJ8jt+M1nkk7f3mAHgTHqI1H0INox6y9F9HWl3wzdxJCKLcI4SIhZKL8A3ZeIsZBLc8IAAAAAElFTkSuQmCC"></header>
@@ -81,7 +82,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
 <div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></div><div class="cols">
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
-<div class="panel"><h2>Latest changes</h2><div id="ov-ch"></div></div></div>
+<div class="panel"><h2>Game progress</h2><div class="prog" id="ov-prog"></div></div></div>
 </section>
 
 <section class="panel" data-pane="bugs" hidden>
@@ -124,7 +125,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div class="bar"><button id="pl-copy">Copy ticked</button><button id="pl-top">Tick top 10</button><button id="pl-clear">Clear ticks</button><span class="muted" id="pl-msg"></span></div>
 <div class="scroll"><table id="pl-t"></table></div></div>
 <div class="panel"><h2>Best posts</h2><div class="scroll"><table id="pl-best"></table></div></div></section>
-<section class="panel" data-pane="changelog" hidden><div id="cl"></div></section>
+<section class="panel" data-pane="changelog" hidden><nav id="cl-tabs"><button data-cl="next" aria-selected="true">NEXT BUILD</button><button data-cl="all" aria-selected="false">ALL BUILDS</button></nav><div data-clp="next"><div id="cl-next"></div></div><div data-clp="all" hidden><div id="cl"></div></div></section>
 <section class="panel" data-pane="calendar" hidden>
 <nav id="cal-tabs"><button data-c="grid" aria-selected="true">CALENDAR</button><button data-c="timeline" aria-selected="false">TIMELINE</button><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener" style="align-self:center">OPEN GOOGLE CALENDAR</a></nav>
 <div class="cal-day" id="cal-day" hidden></div>
@@ -216,9 +217,9 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
-var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
+var EAGER = ["changelog", "tasks", "activity", "progress", "bugs", "codes", "events", "people", "team"];
 var LAZY = { people: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"] };
-var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
+var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", progress: "Measuring the walls", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
   feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
@@ -642,7 +643,10 @@ function renderOverview() {
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
   renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
-  // 1218 / 1221: LATEST CHANGES — the titles of the newest CHANGELOG entries, each section heading once (NEXT BUILD first)
+  renderProgress();
+}
+// 1331: CHANGELOG / NEXT BUILD - the not shipped changes as category tiles (1314), a click opens a category's titles
+function renderNextBuild() {
   var ch = [], sec = "", cat = "", cur = null;
   String(D.changelog ? D.changelog.text : "").split(/\r?\n/).forEach(function (l) {
     var hd = l.match(/^## (.*)$/); if (hd) { sec = /^NEXT BUILD/i.test(hd[1]) ? "NEXT BUILD" : hd[1].split(/\s+[—-]\s+/)[0]; cat = ""; cur = null; return; }
@@ -656,15 +660,28 @@ function renderOverview() {
   ch.forEach(function (c) { if (cats.indexOf(c[2]) < 0) cats.push(c[2]); });
   // 1314.2: the opened category's titles go under the whole tile grid, the tiles keep their places
   var col = function (k) { return CHG_COLOR[k] || "var(--dim)"; }, opened = ch.filter(function (c) { return c[2] === chgOpen; });
-  $("ov-ch").innerHTML = ch.length ? "<div class='chg'>" + cats.map(function (k) {
+  $("cl-next").innerHTML = ch.length ? "<div class='chg'>" + cats.map(function (k) {
     var n = ch.filter(function (c) { return c[2] === k; }).length;
     return "<div class='chg-t" + (chgOpen === k ? " on" : "") + "' data-cat='" + esc(k) + "' style='border-left-color:" + col(k) + ";color:" + col(k) + "'>" + esc(k) + "<b>" + n + "</b></div>";
   }).join("") + "</div>" + (opened.length ? "<div class='chg-l' style='margin-top:6px;border-left-color:" + col(chgOpen) + "'>" + opened.map(function (c) { var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/); return "<div>" + esc(m ? m[1] : c[1]) + "</div>"; }).join("") + "</div>" : "") : "<div class='muted'>No changes.</div>";
 }
+// 1331: GAME PROGRESS - one bar per area of the PROGRESS tab (AREA, PERCENT, NOTE), filled from the bottom
+function renderProgress() {
+  var rows = table(D.progress).rows.filter(function (r) { return r.AREA; });
+  $("ov-prog").innerHTML = rows.length ? rows.map(function (r) {
+    var p = Math.max(0, Math.min(100, Math.round(parseFloat(String(r.PERCENT).replace(",", ".")) || 0)));
+    return "<div class='pg' title='" + esc(r.NOTE || "") + "'><b>" + p + "%</b><div class='pg-t'><i style='height:" + p + "%'></i></div><span>" + esc(r.AREA) + "</span></div>";
+  }).join("") : "<div class='muted'>No progress set yet (the PROGRESS tab of the tasks sheet).</div>";
+}
 // 1313: the CHANGELOG categories and their colours
 var CHG_COLOR = { SEA: "#4dccff", MAP: "#74b84a", CAMP: "#d1a35c", BATTLE: "#ff8c73", SURVIVAL: "#e6ad47", STORY: "#a796c4", HUD: "#8fb8ff", SOUND: "#5fd3b3", SYSTEM: "#c9d65a", TOOLS: "#e07fb0" };
 var chgOpen = "";
-$("ov-ch").addEventListener("click", function (e) { var t = e.target.closest(".chg-t"); if (!t) return; chgOpen = chgOpen === t.dataset.cat ? "" : t.dataset.cat; renderOverview(); });
+$("cl-next").addEventListener("click", function (e) { var t = e.target.closest(".chg-t"); if (!t) return; chgOpen = chgOpen === t.dataset.cat ? "" : t.dataset.cat; renderNextBuild(); });
+$("cl-tabs").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-cl]"); if (!b) return;
+  document.querySelectorAll("#cl-tabs button").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); });
+  document.querySelectorAll("[data-clp]").forEach(function (p) { p.hidden = p.dataset.clp !== b.dataset.cl; });
+});
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
 var CAT_DEFAULT = ["OWNER", "TEAM", "FRIEND", "GUEST"];
 var catOrder = function () { return D && D.roles ? Object.keys(D.roles) : CAT_DEFAULT; };
@@ -940,6 +957,7 @@ document.addEventListener("click", function (e) { var td = e.target.closest("td.
 // CHANGELOG.md: "## NEXT BUILD" (changes not shipped yet, 1205), "## VERSION — DATE" headings and "- TITLE: what changed" lines (a line may go on, indented). One row each:
 // the title in colour, the rest opens on a click; text outside the entries is not shown.
 function renderChangelog() {
+  renderNextBuild();
   if (!D.changelog) { $("cl").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; return; }
   var items = [], cur = null;
   D.changelog.text.split(/\r?\n/).forEach(function (l) {
