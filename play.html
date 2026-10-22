@@ -36,6 +36,7 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-o
 // plays them (window.pfGate.music, asked by the game's browser player). ?v= on each file = the build, so a new build is
 // never mixed with parts the browser still holds from the last one.
 var B = new URLSearchParams(location.search).get("b") || "../play/";
+var TD = (new URLSearchParams(location.search).get("td") || "").replace(/[^a-z0-9_]/g, "");
 var $ = function (id) { return document.getElementById(id); };
 
 
@@ -112,11 +113,13 @@ function startGodot(meta, pack, code) {
   return new Promise(function (ok, fail) {
     var s = document.createElement("script"); s.src = B + "index.js"; s.onerror = function () { fail(new Error("the game engine did not load")); };
     s.onload = function () {
-      var cfg = Object.assign({}, meta.godot, { executable: B + "index", canvas: $("canvas"), args: ["--", "gate_code=" + code] });
+      // 1419: ?td=<plan> hands a test drive plan to the game (only the WEB TEST build carries the rig)
+      var user = ["gate_code=" + code].concat(TD ? ["testdrive=" + TD] : []);
+      var cfg = Object.assign({}, meta.godot, { executable: B + "index", canvas: $("canvas"), args: ["--"].concat(user) });
       var engine = new Engine(cfg);
       $("gate").hidden = true; $("canvas").hidden = false;
       engine.init(B + "index").then(function () { return engine.preloadFile(pack.buffer, "index.pck"); })
-        .then(function () { return engine.start({ args: ["--main-pack", "index.pck", "--", "gate_code=" + code] }); }).then(ok, fail);
+        .then(function () { return engine.start({ args: ["--main-pack", "index.pck", "--"].concat(user) }); }).then(ok, fail);
     };
     document.body.appendChild(s);
   });
