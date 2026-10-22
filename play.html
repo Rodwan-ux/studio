@@ -58,14 +58,18 @@ async function gameKey(meta, code) {
 
 var join = function (list, len) { var j = new Uint8Array(len), at = 0; list.forEach(function (x) { j.set(x, at); at += x.length; }); return j; };
 
-// the parts, opened chunk by chunk as they arrive, laid into one buffer of the game file's size
+// 1419: a chunk is deflated before it is sealed - inflated here after opening
+var inflate = async function (u8) { return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer()); };
+
+// the parts, opened chunk by chunk as they arrive (each chunk's sealed length in meta.lens), laid into one buffer of
+// the game file's size
 async function openParts(meta, key) {
-  var out = new Uint8Array(meta.size), base = b64(meta.iv), sealed = meta.chunk + 16;
+  var out = new Uint8Array(meta.size), base = b64(meta.iv);
   var bits = [], have = 0, off = 0, n = 0;   // the bytes not opened yet (joined only once a whole chunk is in)
   var openChunk = async function (bytes) {
     var iv = new Uint8Array(12); iv.set(base); new DataView(iv.buffer).setUint32(8, n++);
     var p;
-    try { p = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, bytes)); }
+    try { p = await inflate(new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, bytes))); }
     catch (e) { throw new Error("the game file is damaged (part " + (n - 1) + ")"); }
     out.set(p, off); off += p.length;
     $("bar").style.width = (off * 100 / meta.size) + "%";
@@ -78,14 +82,13 @@ async function openParts(meta, key) {
       var r = await rd.read();
       if (r.done) break;
       bits.push(r.value); have += r.value.length;
-      if (have < sealed) continue;
+      if (n >= meta.lens.length || have < meta.lens[n]) continue;
       var joined = join(bits, have), at = 0;
-      while (joined.length - at >= sealed) { await openChunk(joined.subarray(at, at + sealed)); at += sealed; }
+      while (n < meta.lens.length && joined.length - at >= meta.lens[n]) { var L = meta.lens[n]; await openChunk(joined.subarray(at, at + L)); at += L; }
       bits = [joined.slice(at)]; have = bits[0].length;
     }
   }
-  if (have) await openChunk(join(bits, have));   // the last, shorter chunk
-  if (off !== meta.size) throw new Error("the game file came in short");
+  if (off !== meta.size || n !== meta.lens.length) throw new Error("the game file came in short");
   return out;
 }
 
