@@ -5,7 +5,6 @@
 :root{--bg:#121214;--panel:#1b1b1f;--line:#2c2c33;--fg:#e6e4e0;--dim:#8e8b86;--gold:#e6ad47;--cyan:#4dccff;--red:#ff8c73;--head:"Barlow Condensed","Arial Narrow",sans-serif;--mono:"JetBrains Mono",Consolas,monospace;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.45 var(--mono)}
 .gate{min-height:100%;display:grid;place-content:center;justify-items:center;gap:26px;padding:24px 16px}
-#lettering svg{display:block;max-width:92vw;height:auto}
 form{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 input,button{font:inherit;color:var(--fg);background:var(--panel);border:2px solid var(--line);border-radius:4px;padding:8px 12px}
 input{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase}
@@ -14,24 +13,25 @@ button:hover{background:#1f1c16}button:disabled{opacity:.4;cursor:default}
 input:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 #msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}
 #msg.err{color:var(--red)}#msg.ok{color:var(--gold)}
+#gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
 .track{width:min(608px,92vw);height:8px;background:repeating-linear-gradient(90deg,#232329 0 6px,#17171b 6px 8px);border:2px solid var(--line);overflow:hidden}
 .track i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--gold) 0 6px,#b98a35 6px 8px)}
 #canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000}
 [hidden]{display:none!important}
 </style></head><body>
 <div class="gate" id="gate">
-<div id="lettering"><!-- PLAY PIXEL FORMATION: the letters of the studio's RODWAN PIXELS with their painted shades, Y F M T painted to match --><svg viewBox='0 0 76 5' width='608' height='40' shape-rendering='crispEdges' role='img' aria-label='PLAY PIXEL FORMATION'><rect x='0' y='0' width='2' height='1' fill='#efd6b0'/><rect x='2' y='0' width='1' height='1' fill='#d8b69f'/><rect x='4' y='0' width='1' height='1' fill='#efd6b0'/><rect x='8' y='0' width='1' height='1' fill='#efd6b0'/><rect x='11' y='0' width='1' height='1' fill='#efd6b0'/><rect x='13' y='0' width='1' height='1' fill='#efd6b0'/><rect x='20' y='0' width='2' height='1' fill='#efd6b0'/><rect x='22' y='0' width='1' height='1' fill='#d8b69f'/><rect x='24' y='0' width='1' height='1' fill='#efd6b0'/><rect x='26' y='0' width='1' height='1' fill='#efd6b0'/><rect x='28' y='0' width='1' height='1' fill='#efd6b0'/><rect x='30' y='0' width='2' height='1' fill='#efd6b0'/><rect x='33' y='0' width='1' height='1' fill='#efd6b0'/><rect x='41' y='0' width='2' height='1' fill='#efd6b0'/><rect x='45' y='0' width='1' height='1' fill='#efd6b0'/><rect x='48' y='0' width='2' height='1' fill='#efd6b0'/><rect x='53' y='0' width='1' height='1' fill='#efd6b0'/><rect x='55' y='0' width='1' height='1' fill='#efd6b0'/><rect x='59' y='0' width='1' height='1' fill='#efd6b0'/><rect x='62' y='0' width='3' height='1' fill='#efd6b0'/><rect x='66' y='0' width='1' height='1' fill='#efd6b0'/><rect x='69' y='0' width='1' height='1' fill='#efd6b0'/><rect x='72' y='0' width='1' height='1' fill='#efd6b0'/><rect x='75' y='0' width='1' height='1' fill='#efd6b0'/><rect x='0' y='1' width='1' height='1' fill='#efd6b0'/><rect x='1' y='1' width='1' height='1' fill='#794b58'/><rect x='2' y='1' width='1' height='1' fill='#b18182'/><rect x='4' y='1' width='1' height='1' fill='#d8b69f'/><rect x='7' y='1' width='1' height='1' fill='#efd6b0'/><rect x='8' y='1' width='1' height='1' fill='#5e424b'/><rect x='9' y='1' width='1' height='1' fill='#efd6b0'/><rect x='11' y='1' width='1' height='1' fill='#d8b69f'/><rect x='13' y='1' width='1' height='1' fill='#d8b69f'/><rect x='20' y='1' width='1' height='1' fill='#efd6b0'/><rect x='21' y='1' width='1' height='1' fill='#794b58'/><rect x='22' y='1' width='1' height='1' fill='#b18182'/><rect x='24' y='1' width='1' height='1' fill='#d8b69f'/><rect x='26' y='1' width='1' height='1' fill='#d8b69f'/><rect x='28' y='1' width='1' height='1' fill='#d8b69f'/><rect x='30' y='1' width='2' height='1' fill='#d8b69f'/><rect x='33' y='1' width='1' height='1' fill='#d8b69f'/><rect x='41' y='1' width='2' height='1' fill='#d8b69f'/><rect x='44' y='1' width='1' height='1' fill='#efd6b0'/><rect x='45' y='1' width='1' height='1' fill='#794b58'/><rect x='46' y='1' width='1' height='1' fill='#d8b69f'/><rect x='48' y='1' width='1' height='1' fill='#efd6b0'/><rect x='49' y='1' width='1' height='1' fill='#794b58'/><rect x='50' y='1' width='1' height='1' fill='#efd6b0'/><rect x='52' y='1' width='1' height='1' fill='#d8b69f'/><rect x='53' y='1' width='1' height='1' fill='#efd6b0'/><rect x='54' y='1' width='1' height='1' fill='#794b58'/><rect x='55' y='1' width='1' height='1' fill='#efd6b0'/><rect x='56' y='1' width='1' height='1' fill='#d8b69f'/><rect x='58' y='1' width='1' height='1' fill='#efd6b0'/><rect x='59' y='1' width='1' height='1' fill='#5e424b'/><rect x='60' y='1' width='1' height='1' fill='#efd6b0'/><rect x='62' y='1' width='1' height='1' fill='#d8b69f'/><rect x='63' y='1' width='1' height='1' fill='#794b58'/><rect x='64' y='1' width='1' height='1' fill='#d8b69f'/><rect x='66' y='1' width='1' height='1' fill='#d8b69f'/><rect x='68' y='1' width='1' height='1' fill='#efd6b0'/><rect x='69' y='1' width='1' height='1' fill='#794b58'/><rect x='70' y='1' width='1' height='1' fill='#d8b69f'/><rect x='72' y='1' width='1' height='1' fill='#d8b69f'/><rect x='73' y='1' width='1' height='1' fill='#efd6b0'/><rect x='75' y='1' width='1' height='1' fill='#b18182'/><rect x='0' y='2' width='2' height='1' fill='#d8b69f'/><rect x='2' y='2' width='1' height='1' fill='#b18182'/><rect x='4' y='2' width='1' height='1' fill='#d8b69f'/><rect x='7' y='2' width='3' height='1' fill='#d8b69f'/><rect x='11' y='2' width='2' height='1' fill='#d8b69f'/><rect x='13' y='2' width='1' height='1' fill='#b18182'/><rect x='20' y='2' width='2' height='1' fill='#d8b69f'/><rect x='22' y='2' width='1' height='1' fill='#b18182'/><rect x='24' y='2' width='1' height='1' fill='#d8b69f'/><rect x='26' y='2' width='1' height='1' fill='#5e424b'/><rect x='27' y='2' width='1' height='1' fill='#b18182'/><rect x='28' y='2' width='1' height='1' fill='#5e424b'/><rect x='30' y='2' width='1' height='1' fill='#d8b69f'/><rect x='31' y='2' width='1' height='1' fill='#794b58'/><rect x='33' y='2' width='1' height='1' fill='#d8b69f'/><rect x='41' y='2' width='1' height='1' fill='#d8b69f'/><rect x='42' y='2' width='1' height='1' fill='#794b58'/><rect x='44' y='2' width='1' height='1' fill='#efd6b0'/><rect x='46' y='2' width='1' height='1' fill='#b18182'/><rect x='48' y='2' width='2' height='1' fill='#d8b69f'/><rect x='50' y='2' width='1' height='1' fill='#5e424b'/><rect x='52' y='2' width='1' height='1' fill='#d8b69f'/><rect x='54' y='2' width='1' height='1' fill='#b18182'/><rect x='56' y='2' width='1' height='1' fill='#d8b69f'/><rect x='58' y='2' width='3' height='1' fill='#d8b69f'/><rect x='63' y='2' width='1' height='1' fill='#d8b69f'/><rect x='66' y='2' width='1' height='1' fill='#d8b69f'/><rect x='68' y='2' width='1' height='1' fill='#efd6b0'/><rect x='70' y='2' width='1' height='1' fill='#b18182'/><rect x='72' y='2' width='1' height='1' fill='#d8b69f'/><rect x='73' y='2' width='1' height='1' fill='#794b58'/><rect x='74' y='2' width='1' height='1' fill='#efd6b0'/><rect x='75' y='2' width='1' height='1' fill='#b18182'/><rect x='0' y='3' width='1' height='1' fill='#b18182'/><rect x='1' y='3' width='2' height='1' fill='#794b58'/><rect x='4' y='3' width='1' height='1' fill='#d8b69f'/><rect x='5' y='3' width='1' height='1' fill='#efd6b0'/><rect x='7' y='3' width='1' height='1' fill='#d8b69f'/><rect x='8' y='3' width='1' height='1' fill='#794b58'/><rect x='9' y='3' width='1' height='1' fill='#b18182'/><rect x='12' y='3' width='1' height='1' fill='#b18182'/><rect x='20' y='3' width='1' height='1' fill='#b18182'/><rect x='21' y='3' width='2' height='1' fill='#794b58'/><rect x='24' y='3' width='1' height='1' fill='#b18182'/><rect x='26' y='3' width='1' height='1' fill='#b18182'/><rect x='27' y='3' width='1' height='1' fill='#5e424b'/><rect x='28' y='3' width='1' height='1' fill='#d8b69f'/><rect x='30' y='3' width='1' height='1' fill='#d8b69f'/><rect x='31' y='3' width='1' height='1' fill='#b18182'/><rect x='33' y='3' width='1' height='1' fill='#d8b69f'/><rect x='34' y='3' width='1' height='1' fill='#efd6b0'/><rect x='41' y='3' width='1' height='1' fill='#b18182'/><rect x='44' y='3' width='1' height='1' fill='#5e424b'/><rect x='45' y='3' width='1' height='1' fill='#b18182'/><rect x='46' y='3' width='1' height='1' fill='#5e424b'/><rect x='48' y='3' width='1' height='1' fill='#d8b69f'/><rect x='49' y='3' width='1' height='1' fill='#794b58'/><rect x='50' y='3' width='1' height='1' fill='#d8b69f'/><rect x='52' y='3' width='1' height='1' fill='#b18182'/><rect x='56' y='3' width='1' height='1' fill='#b18182'/><rect x='58' y='3' width='1' height='1' fill='#d8b69f'/><rect x='59' y='3' width='1' height='1' fill='#794b58'/><rect x='60' y='3' width='1' height='1' fill='#b18182'/><rect x='63' y='3' width='1' height='1' fill='#b18182'/><rect x='66' y='3' width='1' height='1' fill='#b18182'/><rect x='68' y='3' width='1' height='1' fill='#5e424b'/><rect x='69' y='3' width='1' height='1' fill='#b18182'/><rect x='70' y='3' width='1' height='1' fill='#5e424b'/><rect x='72' y='3' width='1' height='1' fill='#d8b69f'/><rect x='74' y='3' width='1' height='1' fill='#5e424b'/><rect x='75' y='3' width='1' height='1' fill='#d8b69f'/><rect x='0' y='4' width='1' height='1' fill='#794b58'/><rect x='4' y='4' width='2' height='1' fill='#794b58'/><rect x='7' y='4' width='1' height='1' fill='#794b58'/><rect x='9' y='4' width='1' height='1' fill='#794b58'/><rect x='12' y='4' width='1' height='1' fill='#794b58'/><rect x='20' y='4' width='1' height='1' fill='#794b58'/><rect x='24' y='4' width='1' height='1' fill='#794b58'/><rect x='26' y='4' width='1' height='1' fill='#5e424b'/><rect x='28' y='4' width='1' height='1' fill='#794b58'/><rect x='30' y='4' width='2' height='1' fill='#794b58'/><rect x='33' y='4' width='2' height='1' fill='#794b58'/><rect x='41' y='4' width='1' height='1' fill='#794b58'/><rect x='45' y='4' width='1' height='1' fill='#794b58'/><rect x='48' y='4' width='1' height='1' fill='#794b58'/><rect x='50' y='4' width='1' height='1' fill='#5e424b'/><rect x='52' y='4' width='1' height='1' fill='#794b58'/><rect x='56' y='4' width='1' height='1' fill='#794b58'/><rect x='58' y='4' width='1' height='1' fill='#794b58'/><rect x='60' y='4' width='1' height='1' fill='#794b58'/><rect x='63' y='4' width='1' height='1' fill='#794b58'/><rect x='66' y='4' width='1' height='1' fill='#794b58'/><rect x='69' y='4' width='1' height='1' fill='#794b58'/><rect x='72' y='4' width='1' height='1' fill='#5e424b'/><rect x='75' y='4' width='1' height='1' fill='#794b58'/></svg></div>
 <form id="f" autocomplete="off"><input id="code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="go" type="submit">PLAY</button></form>
 <div class="track" id="track" hidden><i id="bar"></i></div>
 <div id="msg"></div>
+<div id="gpu"></div>
 </div>
 <canvas id="canvas" hidden>Your browser does not support the canvas tag.</canvas>
 <script>
 // 1325: the PLAY gate — a page of its own in front of the game (no Godot, no game code until the code opens it).
 // The code is the key: PBKDF2-SHA256(code, salt) -> 64 bytes; the first 32 name the code's entry in gate.json, the last 32
 // open it and give the game key (AES-256-GCM). The game's main pack comes as sealed chunks spread over parts under
-// 100 MB; each chunk is opened in memory as it arrives and laid straight into one buffer (no second copy, nothing on
-// disk), which goes to Godot as its main pack. Made by 05_TOOLS/GATE/gate_pack.js. ?b=<folder/> = where the build is.
+// 100 MB; each chunk is opened in memory as it arrives and laid straight into one buffer (no second copy, nothing open
+// on disk - only the sealed files are kept, 1422), which goes to Godot as its main pack. Made by 05_TOOLS/GATE/gate_pack.js. ?b=<folder/> = where the build is.
 // 1417: the build lives in its own Pages repo (Rodwan-ux/play); its music tracks are opened one at a time when the game
 // plays them (window.pfGate.music, asked by the game's browser player). ?v= on each file = the build, so a new build is
 // never mixed with parts the browser still holds from the last one.
@@ -57,6 +57,42 @@ async function gameKey(meta, code) {
   return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
 }
 
+// 1422: the sealed files are kept in the browser (IndexedDB "pf-play", the key = the file's build address ?v=), so a
+// later visit reads them from the disk and a new build fetches only its own files; files of other builds are dropped.
+// A file is stored as it streams in (no second download). Only sealed bytes are stored - without a code they open nothing.
+var DB = null;
+function idb() {
+  return DB || (DB = new Promise(function (ok, no) {
+    var q = indexedDB.open("pf-play", 1);
+    q.onupgradeneeded = function () { q.result.createObjectStore("files"); };
+    q.onsuccess = function () { ok(q.result); }; q.onerror = function () { no(q.error); };
+  }));
+}
+async function idbGet(k) {
+  try { var db = await idb(); return await new Promise(function (ok) { var r = db.transaction("files").objectStore("files").get(k); r.onsuccess = function () { ok(r.result || null); }; r.onerror = function () { ok(null); }; }); }
+  catch (e) { return null; }
+}
+function idbPut(k, v) { idb().then(function (db) { db.transaction("files", "readwrite").objectStore("files").put(v, k); }).catch(function () {}); }
+// a sealed file as a Response: from the browser's store, else fetched (and stored once it is all in)
+async function sealed(url) {
+  var b = await idbGet(url);
+  if (b) return new Response(b);
+  var res = await fetch(url);
+  if (!res.ok) return res;
+  var rd = res.body.getReader(), keep = [];
+  return new Response(new ReadableStream({ pull: async function (c) {
+    var r = await rd.read();
+    if (r.done) { idbPut(url, new Blob(keep)); c.close(); return; }
+    keep.push(r.value); c.enqueue(r.value);
+  } }));
+}
+async function dropOldBuilds(tag) {
+  try {
+    var db = await idb(), st = db.transaction("files", "readwrite").objectStore("files"), q = st.getAllKeys();
+    q.onsuccess = function () { q.result.forEach(function (k) { if (String(k).indexOf("v=" + tag) < 0) st.delete(k); }); };
+  } catch (e) {}
+}
+
 var join = function (list, len) { var j = new Uint8Array(len), at = 0; list.forEach(function (x) { j.set(x, at); at += x.length; }); return j; };
 
 // 1419: a chunk is deflated before it is sealed - inflated here after opening
@@ -76,7 +112,7 @@ async function openParts(meta, key) {
     $("bar").style.width = (off * 100 / meta.size) + "%";
   };
   for (var i = 0; i < meta.parts.length; i++) {
-    var res = await fetch(B + meta.parts[i] + "?v=" + meta.sha256.slice(0, 12));
+    var res = await sealed(B + meta.parts[i] + "?v=" + meta.sha256.slice(0, 12));
     if (!res.ok) throw new Error("part " + meta.parts[i] + " did not load (" + res.status + ")");
     var rd = res.body.getReader();
     for (;;) {
@@ -100,7 +136,7 @@ function musicGate(meta, key) {
   window.pfGate = { music: async function (url) {
     var f = String(url).split("/").pop(), iv = meta.music[f];
     if (!iv) throw new Error("no such track " + f);
-    var res = await fetch(B + "music/" + f + ".enc?v=" + meta.sha256.slice(0, 12));
+    var res = await sealed(B + "music/" + f + ".enc?v=" + meta.sha256.slice(0, 12));
     if (!res.ok) throw new Error("track " + f + " did not load (" + res.status + ")");
     var data = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(iv) }, key, await res.arrayBuffer());
     if (last) URL.revokeObjectURL(last);
@@ -116,6 +152,17 @@ function musicGate(meta, key) {
     if (/^(webgl2?|experimental-webgl)$/.test(kind)) attrs = Object.assign({}, attrs || {}, { powerPreference: "high-performance" });
     return get.call(this, kind, attrs);
   };
+})();
+
+// 1423: which GPU the game will get - a test context asking for the high-performance one; an integrated or software
+// renderer means the browser ignored the request, so one line tells how to switch the browser to the main GPU
+(function () {
+  try {
+    var g = document.createElement("canvas").getContext("webgl2"), e = g && g.getExtension("WEBGL_debug_renderer_info");
+    var r = e ? String(g.getParameter(e.UNMASKED_RENDERER_WEBGL)) : "";
+    if (/Intel|UHD|Iris|SwiftShader|Basic Render|llvmpipe/i.test(r))
+      $("gpu").textContent = "THE BROWSER USES THE LOW-POWER GPU - FOR A SMOOTH GAME SET IT TO HIGH PERFORMANCE IN WINDOWS SETTINGS > SYSTEM > DISPLAY > GRAPHICS";
+  } catch (x) {}
 })();
 
 // the game: Godot's own loader from the build folder, fed the opened file as its main pack
@@ -145,6 +192,7 @@ $("f").addEventListener("submit", async function (ev) {
     var key = await gameKey(meta, code);
     if (!key) { say("THIS CODE DOES NOT OPEN THE GAME", "err"); $("go").disabled = false; return; }
     say("UNPACKING THE GAME...", "ok"); $("track").hidden = false;
+    dropOldBuilds(meta.sha256.slice(0, 12));
     var pack = await openParts(meta, key);
     musicGate(meta, key);
     say("STARTING...", "ok");
