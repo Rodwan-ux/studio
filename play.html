@@ -36,7 +36,7 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-o
 // plays them (window.pfGate.music, asked by the game's browser player). ?v= on each file = the build, so a new build is
 // never mixed with parts the browser still holds from the last one.
 var B = new URLSearchParams(location.search).get("b") || "../play/";
-var TD = (new URLSearchParams(location.search).get("td") || "").replace(/[^a-z0-9_]/g, "");
+var TD = (new URLSearchParams(location.search).get("td") || "").replace(/[^a-z0-9_ =,-]/g, "");   // plan + its options ("voyage --off=water")
 var $ = function (id) { return document.getElementById(id); };
 
 
@@ -107,6 +107,16 @@ function musicGate(meta, key) {
     return (last = URL.createObjectURL(new Blob([data], { type: "audio/mpeg" })));
   } };
 }
+
+// 1419: on a computer with two GPUs the browser hands WebGL the low-power one unless asked - every WebGL context the
+// engine makes asks for the high-performance GPU
+(function () {
+  var get = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (kind, attrs) {
+    if (/^(webgl2?|experimental-webgl)$/.test(kind)) attrs = Object.assign({}, attrs || {}, { powerPreference: "high-performance" });
+    return get.call(this, kind, attrs);
+  };
+})();
 
 // the game: Godot's own loader from the build folder, fed the opened file as its main pack
 function startGodot(meta, pack, code) {
