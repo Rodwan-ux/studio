@@ -32,7 +32,10 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-o
 // open it and give the game key (AES-256-GCM). The game's main pack comes as sealed chunks spread over parts under
 // 100 MB; each chunk is opened in memory as it arrives and laid straight into one buffer (no second copy, nothing on
 // disk), which goes to Godot as its main pack. Made by 05_TOOLS/GATE/gate_pack.js. ?b=<folder/> = where the build is.
-var B = new URLSearchParams(location.search).get("b") || "game/";
+// 1417: the build lives in its own Pages repo (Rodwan-ux/play); its music tracks are opened one at a time when the game
+// plays them (window.pfGate.music, asked by the game's browser player). ?v= on each file = the build, so a new build is
+// never mixed with parts the browser still holds from the last one.
+var B = new URLSearchParams(location.search).get("b") || "../play/";
 var $ = function (id) { return document.getElementById(id); };
 
 
@@ -68,7 +71,7 @@ async function openParts(meta, key) {
     $("bar").style.width = (off * 100 / meta.size) + "%";
   };
   for (var i = 0; i < meta.parts.length; i++) {
-    var res = await fetch(B + meta.parts[i]);
+    var res = await fetch(B + meta.parts[i] + "?v=" + meta.sha256.slice(0, 12));
     if (!res.ok) throw new Error("part " + meta.parts[i] + " did not load (" + res.status + ")");
     var rd = res.body.getReader();
     for (;;) {
@@ -84,6 +87,21 @@ async function openParts(meta, key) {
   if (have) await openChunk(join(bits, have));   // the last, shorter chunk
   if (off !== meta.size) throw new Error("the game file came in short");
   return out;
+}
+
+// 1417: a music track for the game's browser player - its sealed file opened in memory, handed back as a blob URL; the
+// track before it is let go, so only the one playing stays in memory
+function musicGate(meta, key) {
+  var last = "";
+  window.pfGate = { music: async function (url) {
+    var f = String(url).split("/").pop(), iv = meta.music[f];
+    if (!iv) throw new Error("no such track " + f);
+    var res = await fetch(B + "music/" + f + ".enc?v=" + meta.sha256.slice(0, 12));
+    if (!res.ok) throw new Error("track " + f + " did not load (" + res.status + ")");
+    var data = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(iv) }, key, await res.arrayBuffer());
+    if (last) URL.revokeObjectURL(last);
+    return (last = URL.createObjectURL(new Blob([data], { type: "audio/mpeg" })));
+  } };
 }
 
 // the game: Godot's own loader from the build folder, fed the opened file as its main pack
@@ -112,11 +130,7 @@ $("f").addEventListener("submit", async function (ev) {
     if (!key) { say("THIS CODE DOES NOT OPEN THE GAME", "err"); $("go").disabled = false; return; }
     say("UNPACKING THE GAME...", "ok"); $("track").hidden = false;
     var pack = await openParts(meta, key);
-    if (!meta.godot) {   // a dry test: no build behind the gate, only the file is checked
-      var same = hex(await crypto.subtle.digest("SHA-256", pack)) === meta.sha256;
-      say(same ? "OPENED " + (pack.length / 1048576).toFixed(1) + " MB, CONTENT MATCHES" : "OPENED, BUT THE CONTENT DIFFERS", same ? "ok" : "err");
-      $("go").disabled = false; return;
-    }
+    musicGate(meta, key);
     say("STARTING...", "ok");
     await startGodot(meta, pack, code);
   } catch (e) {
