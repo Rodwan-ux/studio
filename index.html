@@ -69,10 +69,10 @@ select.lvl{padding:1px 4px;font-size:11px}
 #pf-head{text-align:center;display:grid;gap:6px}#pf-title{margin:0;font:600 46px/1 var(--head);letter-spacing:.2em;color:var(--beige)}
 #pf-sub{margin:0;font:600 15px var(--head);letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
 #pf-stats{width:min(760px,92vw);display:grid;gap:6px;justify-items:center}.pf-lbl{font:600 12px var(--head);letter-spacing:.14em;color:var(--rose)}
-#pf-stats .tiles{grid-template-columns:repeat(auto-fill,84px);justify-content:center;gap:5px;width:100%}
-#pf-stats .tile{width:84px;height:84px;padding:5px 6px;gap:0}#pf-stats .tile span{font-size:10px;line-height:1.15;letter-spacing:.06em;white-space:normal}
-#pf-stats .tile b{font-size:17px}
-.pfp{display:block;height:4px;margin-top:3px;background:var(--sunk);border:1px solid var(--line)}.pfp i{display:block;height:100%;background:var(--rose)}
+#pf-stats .tiles{display:flex;flex-wrap:nowrap;justify-content:center;gap:4px;width:100%}
+#pf-stats .tile{flex:1 1 0;min-width:0;max-width:92px;height:48px;padding:3px 5px;gap:0;opacity:.2;animation:pf-lit .3s steps(3) forwards}
+#pf-stats .tile span{font-size:9px;line-height:1.1;letter-spacing:.05em;white-space:normal}#pf-stats .tile b{font-size:15px}
+@keyframes pf-lit{to{opacity:1;border-color:var(--rose)}}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px}
 #pf-go{font:600 18px var(--head);letter-spacing:.14em;padding:6px 22px;color:var(--beige);border-color:var(--rose)}#pf-go:hover{background:var(--hover);color:var(--fg)}#pf-go:disabled{opacity:.4;cursor:default}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
@@ -1389,18 +1389,21 @@ function pfMusicGate(meta, key) {
 })();
 
 // 1479: the PLAY tab's tiles - the game as every player played it (sums from EVENTS) and the project's counts (DEV.json)
+// 1491: each group one row of small tiles lighting up one after another; a person with a game code in PEOPLE plays with it
 function renderPlayStats() {
-  var ps = D.playstats || {}, g = ps.game || {}, d = ps.dev || {};
-  var tile = function (label, value, done, of) {
-    var bar = of ? "<i class='pfp'><i style='width:" + Math.min(100, Math.round(100 * done / of)) + "%'></i></i>" : "";
-    return "<div class='tile'><span>" + esc(label) + "</span><b>" + esc(value) + "</b>" + bar + "</div>";
+  var ps = D.playstats || {}, g = ps.game || {}, d = ps.dev || {}, n = 0;
+  var tile = function (label, value) {
+    return "<div class='tile' style='animation-delay:" + (n++ * 90) + "ms'><span>" + esc(label) + "</span><b>" + esc(value) + "</b></div>";
   };
   $("pf-game").innerHTML = [tile("Hours played", (g.hours || 0).toFixed(1)), tile("Sessions", g.sessions || 0), tile("Routes sailed", g.sailed || 0),
     tile("Camps made", g.camps || 0), tile("Battles fought", g.battles || 0), tile("Battles won", g.won || 0), tile("Men fallen", g.fallen || 0),
     tile("Enemies slain", g.slain || 0), tile("Quests done", g.quests || 0)].join("");
-  $("pf-dev").innerHTML = d.version ? [tile("Quests written", d.quests), tile("Unit classes", d.classes), tile("Heroes", d.heroes),
-    tile("Cities built", d.cities + " / " + d.cities_planned, d.cities, d.cities_planned), tile("Dialog trees", d.dialogs)].join("") : "";
-  $("pf-sub").textContent = d.version ? "BUILD " + d.version + " · YOUR CODE OPENS THE GAME" : "YOUR CODE OPENS THE GAME";
+  $("pf-dev").innerHTML = d.version ? [tile("Mechanics", d.mechanics), tile("Characters", d.characters), tile("Looks", d.looks),
+    tile("Unit classes", d.classes), tile("Heroes", d.heroes), tile("Quests written", d.quests), tile("Cities built", d.cities),
+    tile("Dialog trees", d.dialogs)].join("") : "";
+  $("pf-sub").textContent = d.version ? "PLAYTEST " + d.version : "PLAYTEST";
+  var own = (D.mine || [])[0];
+  if (own) { $("pf-code").value = own; $("pf-code").hidden = true; }
   $("pf-stats").hidden = false;
 }
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
