@@ -83,7 +83,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <nav id="tabs">
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="tasks" aria-selected="false" hidden>TASKS</button>
-<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="players" aria-selected="false" hidden>X FOLLOWING</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
+<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="performance" aria-selected="false" hidden>PERFORMANCE</button><button data-tab="players" aria-selected="false" hidden>X FOLLOWING</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
 <button data-tab="files" aria-selected="false" hidden>FILES</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
@@ -123,6 +123,15 @@ select.lvl{padding:1px 4px;font-size:11px}
 </div>
 <div data-ppn="settings" hidden><div class="bar"><input id="r-new" maxlength="20" placeholder="NEW ROLE" style="width:160px"><button id="r-add">Add role</button><span class="muted" id="r-msg"></span><span class="spacer"></span><label for="view-as">View as</label><select id="view-as" hidden aria-label="View as"></select></div>
 <div class="scroll"><table id="r-t" class="tight"></table></div></div></section>
+
+<section class="panel" data-pane="performance" hidden>
+<div class="bar"><label for="pr-build">Build</label><select id="pr-build"></select><label for="pr-who">Person</label><select id="pr-who"></select><label for="pr-mode">Mode</label><select id="pr-mode"></select><span class="muted" id="pr-n"></span></div>
+<div id="pr-msg" class="msg" hidden></div><div class="tiles" id="pr-tiles"></div>
+<div class="panel"><div class="bar"><h2>Frames in a session</h2><label for="pr-sess">Session</label><select id="pr-sess"></select></div><div class="legend" id="pr-legend"></div><div class="tl" id="pr-chart"><div class="tip" id="pr-tip" hidden></div></div></div>
+<div class="cols"><div class="panel"><h2>By build</h2><div class="scroll"><table id="pr-b"></table></div></div><div class="panel"><h2>By mode</h2><div class="scroll"><table id="pr-m"></table></div></div></div>
+<div class="panel"><h2>By session</h2><div class="scroll"><table id="pr-s"></table></div></div>
+<div class="cols"><div class="panel"><h2>By person</h2><div class="scroll"><table id="pr-p"></table></div></div>
+<div class="panel"><h2>Telemetry load</h2><div class="tiles" id="pr-lt"></div><div class="scroll"><table id="pr-l"></table></div></div></div></section>
 
 <section class="panel" data-pane="players" hidden><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
 <div class="cols"><div class="panel"><div class="bar"><h2>Per month</h2><span class="legend"><span><i style="background:var(--cyan)"></i>LIKES</span><span><i style="background:var(--rose)"></i>REPLIES</span></span></div><div class="scroll" id="pl-month"></div></div>
@@ -316,6 +325,7 @@ function render() {
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
   if (allowed("people")) { renderTelemetry(); renderPeople(); }
+  if (allowed("performance")) renderPerformance();
   if (allowed("players") && (got.players || D.players)) renderPlayers();
   if (allowed("changelog")) renderChangelog();
   if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
@@ -435,7 +445,7 @@ var evCache = null;
 function events() {
   if (evCache) return evCache;
   var t = table(D.events), seen = {}, out = [];
-  t.rows.forEach(function (r) { var k = r.SESSION + "|" + r.SEQ; if (!r.EVENT || seen[k]) return; seen[k] = 1;
+  t.rows.forEach(function (r) { var k = r.SESSION + "|" + r.SEQ; if (!r.EVENT || r.EVENT === "perf" || seen[k]) return; seen[k] = 1;   // 1457: frame summaries only in PERFORMANCE
     out.push({ code: r.CODE, session: r.SESSION, seq: +r.SEQ || 0, time: r.TIME, sec: +r.SEC || 0, mode: r.MODE, day: r.DAY, event: r.EVENT, values: r.VALUES, count: +r.COUNT || 1, kind: kindOf(r.EVENT) }); });
   return evCache = out;
 }
@@ -594,6 +604,118 @@ function renderDashboard() {
   ], rows.slice(-100).reverse());
 }
 $("db-who").addEventListener("change", renderDashboard);
+
+// ── performance (1457) ──
+// The game's frame summaries: one "perf" row of EVENTS per stretch of one mode (frames, sec, fps, avg_ms, p95_ms,
+// worst_ms, hitches = frames of 25 ms and longer, ram_mb, vram_mb), summed per build, mode, session and person.
+// TELEMETRY LOAD = what the game sends: EVENTS rows per play minute, the codes tab's columns, the events that make most rows.
+var prCache = null, prSession = "";
+function perfRows() {
+  if (prCache) return prCache;
+  var seen = {}, out = [];
+  table(D.events).rows.forEach(function (r) {
+    var k = r.SESSION + "|" + r.SEQ; if (r.EVENT !== "perf" || seen[k]) return; seen[k] = 1;
+    var v = {}; String(r.VALUES).split(" ").forEach(function (p) { var i = p.indexOf("="); if (i > 0) v[p.slice(0, i)] = +p.slice(i + 1) || 0; });
+    out.push({ code: r.CODE, session: r.SESSION, seq: +r.SEQ || 0, time: r.TIME, sec: +r.SEC || 0, mode: r.MODE || "-", build: r.VERSION || "-",
+      frames: v.frames || 0, len: v.sec || 0, avg: v.avg_ms || 0, p95: v.p95_ms || 0, worst: v.worst_ms || 0, hitches: v.hitches || 0, ram: v.ram_mb || 0, vram: v.vram_mb || 0 });
+  });
+  return prCache = out;
+}
+function perfSum(rows) {
+  var s = { frames: 0, len: 0, ms: 0, p95w: 0, worst: 0, hitches: 0, ram: 0, vram: 0, ids: {}, rows: rows };
+  rows.forEach(function (r) { s.frames += r.frames; s.len += r.len; s.ms += r.avg * r.frames; s.p95w += r.p95 * r.frames; s.worst = Math.max(s.worst, r.worst);
+    s.hitches += r.hitches; s.ram = Math.max(s.ram, r.ram); s.vram = Math.max(s.vram, r.vram); s.ids[r.session] = 1; });
+  s.sessions = Object.keys(s.ids).length; s.fps = s.len ? s.frames / s.len : 0; s.avgMs = s.frames ? s.ms / s.frames : 0;
+  s.p95 = s.frames ? s.p95w / s.frames : 0; s.hpm = s.len ? s.hitches * 60 / s.len : 0;
+  return s;
+}
+function perfBy(rows, key) {
+  var m = {}; rows.forEach(function (r) { var k = key(r); (m[k] = m[k] || []).push(r); });
+  return Object.keys(m).map(function (k) { var s = perfSum(m[k]); s.key = k; return s; });
+}
+var PR_COLS = [["Measured", function (s) { return fmtSec(s.len); }, "num"], ["FPS", function (s) { return s.fps.toFixed(0); }, "num"],
+  ["Avg frame", function (s) { return s.avgMs.toFixed(1) + " ms"; }, "num"], ["P95 frame", function (s) { return s.p95.toFixed(0) + " ms"; }, "num"],
+  ["Worst", function (s) { return s.worst.toFixed(0) + " ms"; }, "num"], ["Hitches", function (s) { return String(s.hitches); }, "num"],
+  ["Hitches / min", function (s) { return s.hpm.toFixed(1); }, "num"], ["RAM peak", function (s) { return s.ram ? s.ram + " MB" : ""; }, "num"],
+  ["VRAM peak", function (s) { return s.vram ? s.vram + " MB" : ""; }, "num"]];
+var PR_SESS = ["Sessions", function (s) { return String(s.sessions); }, "num"];
+function renderPerformance() {
+  prCache = null;
+  var all = perfRows(), raw = table(D.events).rows.filter(function (r) { return r.EVENT; });
+  var fill = function (id, list) { var el = $(id), v = el.value; el.innerHTML = "<option value=''>ALL</option>" + list.map(function (x) { return "<option value='" + esc(x) + "'>" + esc(x) + "</option>"; }).join(""); el.value = list.indexOf(v) >= 0 ? v : ""; };
+  var uniq = function (list, f) { return Array.from(new Set(list.map(f))).sort(); };
+  fill("pr-build", uniq(raw, function (r) { return r.VERSION || "-"; }).reverse());
+  fill("pr-who", uniq(raw, function (r) { return nameOf(r.CODE); }));
+  fill("pr-mode", uniq(all, function (r) { return r.mode; }));
+  var b = $("pr-build").value, w = $("pr-who").value, m = $("pr-mode").value;
+  var rows = all.filter(function (r) { return (!b || r.build === b) && (!w || nameOf(r.code) === w) && (!m || r.mode === m); });
+  var msg = $("pr-msg"), er = D.errors && D.errors.events;
+  msg.hidden = !er && !!all.length; msg.className = er ? "msg err" : "msg";
+  msg.textContent = er ? "EVENTS did not load: " + er : "No frame summaries yet. The game sends them from the next build on.";
+  $("pr-n").textContent = all.length ? rows.length + " OF " + all.length + " SUMMARIES" : "";
+  var s = perfSum(rows);
+  $("pr-tiles").innerHTML = [["Sessions measured", s.sessions], ["Time measured", fmtSec(s.len)], ["Average FPS", s.frames ? s.fps.toFixed(0) : "-"],
+    ["Average frame", s.frames ? s.avgMs.toFixed(1) + " ms" : "-"], ["P95 frame", s.frames ? s.p95.toFixed(0) + " ms" : "-"], ["Worst frame", s.frames ? s.worst.toFixed(0) + " ms" : "-"],
+    ["Hitches / min", s.len ? s.hpm.toFixed(1) : "-"], ["VRAM peak", s.vram ? s.vram + " MB" : "-"]]
+    .map(function (t) { return "<div class='tile'><span>" + esc(t[0]) + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
+  var sortLen = function (a, b) { return b.len - a.len; };
+  $("pr-b").innerHTML = grid([["Build", function (x) { return esc(x.key); }]].concat([PR_SESS], PR_COLS), perfBy(rows, function (r) { return r.build; }).sort(function (a, b) { return b.key.localeCompare(a.key, undefined, { numeric: true }); }));
+  $("pr-m").innerHTML = grid([["Mode", function (x) { return esc(x.key); }]].concat([PR_SESS], PR_COLS), perfBy(rows, function (r) { return r.mode; }).sort(sortLen));
+  $("pr-p").innerHTML = grid([["Who", function (x) { return nameTag(x.key); }]].concat([PR_SESS], PR_COLS), perfBy(rows, function (r) { return nameOf(r.code); }).sort(sortLen));
+  var starts = {}; sessions(events()).forEach(function (x) { starts[x.id] = x; });
+  var ss = perfBy(rows, function (r) { return r.session; }).map(function (x) { x.start = (starts[x.key] || {}).start || x.rows[0].time; x.code = x.rows[0].code; x.build = x.rows[0].build; return x; })
+    .sort(function (a, b) { return String(b.start).localeCompare(String(a.start)); });
+  if (!ss.some(function (x) { return x.key === prSession; })) prSession = ss[0] ? ss[0].key : "";
+  $("pr-s").innerHTML = grid([["Start", function (x) { return esc(short(x.start)); }], ["Who", function (x) { return who(x.code); }], ["Build", function (x) { return esc(x.build); }]].concat(PR_COLS), ss,
+    function (x) { return " class='click" + (x.key === prSession ? " sel" : "") + "' data-s='" + esc(x.key) + "'"; });
+  $("pr-sess").innerHTML = ss.map(function (x) { return "<option value='" + esc(x.key) + "'>" + esc(short(x.start) + "  " + nameOf(x.code) + "  " + x.build + "  " + fmtSec(x.len)) + "</option>"; }).join("");
+  $("pr-sess").value = prSession;
+  drawPerf();
+  // telemetry load: the rows the game sent (every EVENTS row of the picked build and person)
+  var lr = raw.filter(function (r) { return (!b || (r.VERSION || "-") === b) && (!w || nameOf(r.CODE) === w); });
+  var play = sessions(events().filter(function (e) { return (!w || nameOf(e.code) === w); })).reduce(function (a, x) { return a + x.len; }, 0);
+  var cols = D.codes && D.codes[0] ? D.codes[0].filter(function (h) { return h; }).length : 0;
+  $("pr-lt").innerHTML = [["EVENTS rows", lr.length], ["Rows / play minute", play ? (lr.length * 60 / play).toFixed(1) : "-"], ["Codes tab columns", cols || "-"]]
+    .map(function (t) { return "<div class='tile'><span>" + esc(t[0]) + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
+  var by = {}; lr.forEach(function (r) { var e = by[r.EVENT] || (by[r.EVENT] = { event: r.EVENT, rows: 0, count: 0 }); e.rows++; e.count += +r.COUNT || 1; });
+  $("pr-l").innerHTML = grid([["Event", function (e) { return esc(e.event); }], ["Rows", function (e) { return String(e.rows); }, "num"],
+    ["Share", function (e) { return (e.rows * 100 / Math.max(1, lr.length)).toFixed(1) + " %"; }, "num"], ["Times", function (e) { return String(e.count); }, "num"]],
+    Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.rows - a.rows; }).slice(0, 20));
+}
+// FRAMES IN A SESSION: each summary as a block over the time it covers - average frame filled, P95 as a line, the worst as
+// a mark (an arrow at the top when it is above the scale); the 60 and 30 FPS frame times as guides, the playtest modes as bands
+function drawPerf() {
+  var box = $("pr-chart"); box.querySelectorAll("svg").forEach(function (x) { x.remove(); });
+  $("pr-legend").innerHTML = "<span><i style='background:var(--cyan)'></i>AVERAGE FRAME</span><span><i style='background:var(--amber)'></i>P95 FRAME</span><span><i style='background:var(--blood)'></i>WORST FRAME</span>";
+  var rs = perfRows().filter(function (r) { return r.session === prSession; }).sort(function (a, b) { return a.seq - b.seq; });
+  if (!rs.length) return;
+  var W = 1000, L = 52, R = 12, top = 10, ph = 170, H = top + ph + 30;
+  var max = Math.max(10, Math.max.apply(null, rs.map(function (r) { return r.sec; })));
+  var ymax = Math.ceil(Math.max(40, Math.max.apply(null, rs.map(function (r) { return r.p95; })) * 1.25) / 10) * 10;
+  var x = function (sec) { return L + (W - L - R) * (Math.max(0, sec) / max); }, y = function (ms) { return top + ph - ph * Math.min(ms, ymax) / ymax; };
+  var svg = "<svg viewBox='0 0 " + W + " " + H + "' role='img' aria-label='Frame times in the session'>";
+  rs.forEach(function (r) { var p = String(r.mode).split(".")[0]; if (BAND[p]) svg += "<rect x='" + x(r.sec - r.len).toFixed(1) + "' y='" + top + "' width='" + Math.max(1, x(r.sec) - x(r.sec - r.len)).toFixed(1) + "' height='" + ph + "' fill='" + BAND[p] + "' fill-opacity='.25'/>"; });
+  for (var g = 0; g <= ymax; g += ymax > 100 ? 50 : 10) svg += "<line x1='" + L + "' x2='" + (W - R) + "' y1='" + y(g) + "' y2='" + y(g) + "' stroke='#2a2027'/><text x='" + (L - 6) + "' y='" + (y(g) + 4) + "' fill='#9a8890' font-size='11' text-anchor='end' font-family='JetBrains Mono,monospace'>" + g + "</text>";
+  [[1000 / 60, "60 FPS"], [1000 / 30, "30 FPS"]].forEach(function (f) { if (f[0] <= ymax) svg += "<line x1='" + L + "' x2='" + (W - R) + "' y1='" + y(f[0]).toFixed(1) + "' y2='" + y(f[0]).toFixed(1) + "' stroke='#9a8890' stroke-dasharray='4 4'/><text x='" + (W - R - 4) + "' y='" + (y(f[0]) - 4).toFixed(1) + "' fill='#9a8890' font-size='11' text-anchor='end' font-family='JetBrains Mono,monospace'>" + f[1] + "</text>"; });
+  var step = max > 3600 ? 600 : max > 900 ? 300 : 60;
+  for (var t = 0; t <= max; t += step) svg += "<text x='" + x(t) + "' y='" + (H - 8) + "' fill='#9a8890' font-size='11' text-anchor='middle' font-family='JetBrains Mono,monospace'>" + fmtSec(t) + "</text>";
+  rs.forEach(function (r, n) {
+    var x0 = x(r.sec - r.len), x1 = Math.max(x0 + 2, x(r.sec)), wd = (x1 - x0).toFixed(1);
+    svg += "<g data-n='" + n + "'><rect x='" + x0.toFixed(1) + "' y='" + top + "' width='" + wd + "' height='" + ph + "' fill='transparent'/>" +
+      "<rect x='" + x0.toFixed(1) + "' y='" + y(r.avg).toFixed(1) + "' width='" + wd + "' height='" + (top + ph - y(r.avg)).toFixed(1) + "' fill='#4dccff' fill-opacity='.45'/>" +
+      "<line x1='" + x0.toFixed(1) + "' x2='" + x1.toFixed(1) + "' y1='" + y(r.p95).toFixed(1) + "' y2='" + y(r.p95).toFixed(1) + "' stroke='#d1a35c' stroke-width='2'/>" +
+      (r.worst > ymax ? "<path d='M" + ((x0 + x1) / 2 - 5).toFixed(1) + " " + (top + 8) + "l5 -8l5 8z' fill='#d93a3a'/>" : "<rect x='" + ((x0 + x1) / 2 - 2).toFixed(1) + "' y='" + (y(r.worst) - 2).toFixed(1) + "' width='4' height='4' fill='#d93a3a'/>") + "</g>";
+  });
+  box.insertAdjacentHTML("beforeend", svg + "</svg>");
+  var tip = $("pr-tip"), el = box.querySelector("svg");
+  el.addEventListener("mousemove", function (ev) { var gr = ev.target.closest("g[data-n]"); if (!gr) { tip.hidden = true; return; } var r = rs[+gr.dataset.n];
+    tip.textContent = fmtSec(r.sec - r.len) + " - " + fmtSec(r.sec) + "  " + r.mode + "\nframes " + r.frames + "  " + (r.len ? (r.frames / r.len).toFixed(0) : "-") + " FPS\naverage " + r.avg + " ms  p95 " + r.p95 + " ms  worst " + r.worst + " ms\nhitches " + r.hitches + "  RAM " + r.ram + " MB  VRAM " + r.vram + " MB";
+    var bx = box.getBoundingClientRect(); tip.hidden = false; tip.style.left = Math.min(ev.clientX - bx.left + 12, bx.width - 240) + "px"; tip.style.top = (ev.clientY - bx.top + 12) + "px"; });
+  el.addEventListener("mouseleave", function () { tip.hidden = true; });
+}
+["pr-build", "pr-who", "pr-mode"].forEach(function (id) { $(id).addEventListener("change", renderPerformance); });
+$("pr-sess").addEventListener("change", function (e) { prSession = e.target.value; renderPerformance(); });
+$("pr-s").addEventListener("click", function (e) { var tr = e.target.closest("tr[data-s]"); if (!tr) return; prSession = tr.dataset.s; renderPerformance(); });
 
 // ── overview ──
 var dayKey = function (d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
