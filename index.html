@@ -1272,9 +1272,10 @@ $("files").addEventListener("click", function (e) {
 // (AES-256-GCM). The main pack comes as sealed chunks (deflated before sealing, 1419) over parts under 90 MB, each opened
 // in memory as it arrives and laid into one buffer that goes to Godot as its main pack; the music tracks are opened one at
 // a time when the game plays them (window.pfGate.music). Made by 05_TOOLS/GATE/gate_pack.js; the build lives in the Pages
-// repo Rodwan-ux/play (?b=<folder/> another one); ?v= on each file = the build. PLAY puts the tab full screen and the game
+// repo Rodwan-ux/play (?b=<its sub-folder/> another one); ?v= on each file = the build. PLAY puts the tab full screen and the game
 // covers it.
-var PF_B = new URLSearchParams(location.search).get("b") || "https://rodwan-ux.github.io/play/";
+var PF_B = (function (b) { var home = "https://rodwan-ux.github.io/play/";   // 1485: another build only under the play repo
+  return b && b.indexOf(home) === 0 && /^([\w.-]+\/)*$/.test(b.slice(home.length)) && b.indexOf("..") < 0 ? b : home; })(new URLSearchParams(location.search).get("b"));
 var PF_TD = (new URLSearchParams(location.search).get("td") || "").replace(/[^a-z0-9_ =,-]/g, "");   // 1419: a test drive plan + its options
 var pfB64 = function (s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); };
 var pfHex = function (buf) { return Array.from(new Uint8Array(buf), function (x) { return x.toString(16).padStart(2, "0"); }).join(""); };
