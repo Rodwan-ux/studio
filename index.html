@@ -1530,8 +1530,9 @@ document.fonts.load(2048 / 300 + "px 'Pixel Gosub'").then(pfTitle, function () {
 // USERDATA/loading_fx.cfg copied in) drawn by the page from the right code until the game draws its first frame,
 // then it gives way the way the game's curtain does (the tiles pop, drop and fade)
 var PF_FX = { cell: 8, amp: 8, wave_len: 648, speed: 8, sharp: 20, wind_dir: 4.46, spread: 0.28, len_spread: 2.7, comps: 18,
-  cells_per_tile: 40, step_px: 1, top: [0.7460232, 0.5300473, 0.5930403, 0.6666667], crest: [0.8055437, 0.5741984, 0.6391375, 0.61960787],
-  side_a: [0.74721146, 0.5314814, 0.5923283, 0.78039217], side_b: [0.45031875, 0.33316463, 0.37343636, 0.654902], bg: [0, 0.3529412, 0.42745098, 1],
+  // 1500.5: the colours of the game menu (UI_SETTINGS/menu.cfg) - surface menu pink, crest hover cyan, stripes shadow teal and plum
+  cells_per_tile: 40, step_px: 1, top: [1, 0.804, 0.859, 0.85], crest: [0.39, 1, 1, 1],
+  side_a: [0, 0.52, 0.444, 1], side_b: [0.474, 0.294, 0.345, 1], bg: [0, 0.2, 0.17, 1],
   under: [0.02, 0.02, 0.03] };
 // the PE spectrum, 1:1 with build_spectrum (loading_transition.gd)
 function pfSpectrum(f, seed) {
