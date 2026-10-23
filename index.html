@@ -65,11 +65,18 @@ select.lvl{padding:1px 4px;font-size:11px}
 .ld.idle{opacity:.3}.ld.idle #ld-txt{display:none}.ld.idle .ld-track{height:4px}.ld.idle:hover{opacity:1}
 .chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.chg-t{background:var(--bg);border:2px solid var(--line);border-left:3px solid;padding:6px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 14px var(--head);letter-spacing:.1em}
 .chg-t b{font:600 18px var(--mono);color:var(--fg)}.chg-t:hover{background:var(--hover)}.chg-t.on{background:var(--hover)}.chg-l{grid-column:1/-1;border:2px solid var(--line);border-left:3px solid;padding:4px 10px;display:grid;gap:2px}
-.play-b{display:inline-flex;align-items:center;padding:6px 10px;border:2px solid var(--rose);border-radius:4px;align-self:center}.play-b:hover{background:#2a1e25}.play-b svg{display:block}
+.pf{min-height:60vh;display:grid;place-content:center;justify-items:center;gap:22px;padding:24px 16px;background:var(--bg)}.pf:fullscreen{min-height:100vh}
+#pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px}
+#pf-go{font:600 18px var(--head);letter-spacing:.14em;padding:6px 22px;color:var(--beige);border-color:var(--rose)}#pf-go:hover{background:var(--hover);color:var(--fg)}#pf-go:disabled{opacity:.4;cursor:default}
+#pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
+#pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
+#pf-track{width:min(608px,92vw);height:8px;background:repeating-linear-gradient(90deg,var(--hover) 0 6px,var(--sunk) 6px 8px);border:2px solid var(--line);overflow:hidden}
+#pf-bar{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--rose) 0 6px,var(--plum) 6px 8px)}
+#pf-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;z-index:10}
 .prog{display:grid;grid-template-columns:auto max-content;gap:2px 10px;align-items:center;justify-content:start}.pg-n{font:11px/11px var(--mono);color:var(--dim);text-transform:uppercase;white-space:nowrap}.pg-b{display:grid;grid-template-columns:repeat(20,11px);grid-auto-rows:11px;gap:2px}.pg-b i{background:var(--hover);border-radius:2px}.pg-s{grid-column:2;position:relative;height:17px;margin-top:5px}.pg-s span{position:absolute;top:0;transform:translateX(-50%);font:13px var(--mono);color:var(--dim)}.cols>.panel{align-content:start}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
-<header><span class="hello" id="hello"></span><a class="play-b" href="https://rodwan-ux.github.io/studio/play.html" target="_blank" rel="noopener" title="PLAY PIXEL FORMATION"><svg viewBox='0 0 14 5' width='56' height='20' shape-rendering='crispEdges' role='img' aria-label='PLAY'><rect x='0' y='0' width='2' height='1' fill='#efd6b0'/><rect x='2' y='0' width='1' height='1' fill='#d8b69f'/><rect x='4' y='0' width='1' height='1' fill='#efd6b0'/><rect x='8' y='0' width='1' height='1' fill='#efd6b0'/><rect x='11' y='0' width='1' height='1' fill='#efd6b0'/><rect x='13' y='0' width='1' height='1' fill='#efd6b0'/><rect x='0' y='1' width='1' height='1' fill='#efd6b0'/><rect x='1' y='1' width='1' height='1' fill='#794b58'/><rect x='2' y='1' width='1' height='1' fill='#b18182'/><rect x='4' y='1' width='1' height='1' fill='#d8b69f'/><rect x='7' y='1' width='1' height='1' fill='#efd6b0'/><rect x='8' y='1' width='1' height='1' fill='#5e424b'/><rect x='9' y='1' width='1' height='1' fill='#efd6b0'/><rect x='11' y='1' width='1' height='1' fill='#d8b69f'/><rect x='13' y='1' width='1' height='1' fill='#d8b69f'/><rect x='0' y='2' width='2' height='1' fill='#d8b69f'/><rect x='2' y='2' width='1' height='1' fill='#b18182'/><rect x='4' y='2' width='1' height='1' fill='#d8b69f'/><rect x='7' y='2' width='3' height='1' fill='#d8b69f'/><rect x='11' y='2' width='2' height='1' fill='#d8b69f'/><rect x='13' y='2' width='1' height='1' fill='#b18182'/><rect x='0' y='3' width='1' height='1' fill='#b18182'/><rect x='1' y='3' width='2' height='1' fill='#794b58'/><rect x='4' y='3' width='1' height='1' fill='#d8b69f'/><rect x='5' y='3' width='1' height='1' fill='#efd6b0'/><rect x='7' y='3' width='1' height='1' fill='#d8b69f'/><rect x='8' y='3' width='1' height='1' fill='#794b58'/><rect x='9' y='3' width='1' height='1' fill='#b18182'/><rect x='12' y='3' width='1' height='1' fill='#b18182'/><rect x='0' y='4' width='1' height='1' fill='#794b58'/><rect x='4' y='4' width='2' height='1' fill='#794b58'/><rect x='7' y='4' width='1' height='1' fill='#794b58'/><rect x='9' y='4' width='1' height='1' fill='#794b58'/><rect x='12' y='4' width='1' height='1' fill='#794b58'/></svg></a><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAM0AAAAUCAYAAAAujbmOAAAByklEQVR42u2aP0tDMRTFE3FRcBDExS8g/QDq5ljQQUEHJ4tzCy466KDooCCuTg5ip4IKOjzBpaCT1k2w6CZIB6cODh3j/E4hl0vS955wflua3Jc/74ac81Lbbd8642G8tGyNAnyeFB/av7a/2OPNu30MpHfw89VNlacXNqxmzLHrpRyJnRPIkCGEqOCmIYSbhpDBMow/nGw3TIjexPiP+wvn08NS/9p4Le+tjkrfbtbOVeuDfkBq/3T1lntS4DuYmykZjefJuj60vfSOedIQQnlGCDcNIcX2NKj/KtWy0eg75DhpWNDDqjsAjK9Uyy5Ev0oeYmJyVKWPd7dWg/Sz5Bnz8DRSDny+fgc9/+j0OlW+Ozh0vnqJy7OHqPPHHF+Zn02Vl/b3LE8aQijPCOGmIeT/3NOgXkQNX28mXj2IevXm8cUM8ps56mHp3ii2npbuMCTP1+n9Ot96ZwF6ludWOygeQY+AOSHlGNK35knY/wtxfAjmDE8aQijPCOGmIaRYngY1uqS5kXozSbWfGhlzvnrtN3cpvq++Zrz9r/cWg8aH67Nj1pzGc2nXLwvQw+ActfEIehjtnLX3Mtr2Wt/Nk4YQyjNCuGkIKRR/dGkmxi2aFWgAAAAASUVORK5CYII="></header>
+<header><span class="hello" id="hello"></span><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAM0AAAAUCAYAAAAujbmOAAAByklEQVR42u2aP0tDMRTFE3FRcBDExS8g/QDq5ljQQUEHJ4tzCy466KDooCCuTg5ip4IKOjzBpaCT1k2w6CZIB6cODh3j/E4hl0vS955wflua3Jc/74ac81Lbbd8642G8tGyNAnyeFB/av7a/2OPNu30MpHfw89VNlacXNqxmzLHrpRyJnRPIkCGEqOCmIYSbhpDBMow/nGw3TIjexPiP+wvn08NS/9p4Le+tjkrfbtbOVeuDfkBq/3T1lntS4DuYmykZjefJuj60vfSOedIQQnlGCDcNIcX2NKj/KtWy0eg75DhpWNDDqjsAjK9Uyy5Ev0oeYmJyVKWPd7dWg/Sz5Bnz8DRSDny+fgc9/+j0OlW+Ozh0vnqJy7OHqPPHHF+Zn02Vl/b3LE8aQijPCOGmIeT/3NOgXkQNX28mXj2IevXm8cUM8ps56mHp3ii2npbuMCTP1+n9Ot96ZwF6ludWOygeQY+AOSHlGNK35knY/wtxfAjmDE8aQijPCOGmIaRYngY1uqS5kXozSbWfGhlzvnrtN3cpvq++Zrz9r/cWg8aH67Nj1pzGc2nXLwvQw+ActfEIehjtnLX3Mtr2Wt/Nk4YQyjNCuGkIKRR/dGkmxi2aFWgAAAAASUVORK5CYII="></header>
 <div class="ld" id="ld" hidden><span id="ld-txt"></span><div class="ld-track"><i id="ld-fill"></i></div></div>
 <div class="viewbar" id="viewbar" hidden>VIEWING AS <b id="viewbar-cat"></b><span class="muted">what this category sees; status changes are off</span><span class="spacer"></span><button id="viewbar-back">Back to owner</button></div>
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
@@ -77,7 +84,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="tasks" aria-selected="false" hidden>TASKS</button>
 <button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="players" aria-selected="false" hidden>X FOLLOWING</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
-<button data-tab="files" aria-selected="false" hidden>FILES</button></nav>
+<button data-tab="files" aria-selected="false" hidden>FILES</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
 <div class="cols">
@@ -134,6 +141,10 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div data-cp="timeline" hidden><div class="bar"><button id="tl2-out">Zoom out</button><button id="tl2-in">Zoom in</button><button id="tl2-today">Today</button><span class="muted" id="tl2-scale"></span></div><div id="tl2"></div></div>
 </section>
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
+<section class="panel" data-pane="play" hidden><div class="pf" id="pf">
+<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-go" type="submit">PLAY</button></form>
+<div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div><div id="pf-gpu"></div>
+<canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
 </div>
 <script>
 // RODWAN PIXELS studio panel (1184.4 / 1184.7, renamed 1263): this page asks the PLAYTEST web app for its data, without cookies (as the
@@ -207,6 +218,7 @@ function showTab(t) {
   document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
   try { localStorage.setItem("tab", t); } catch (e) {}
   if (t === "overview" && D) renderHeatmap();
+  if (t === "play") pfGpuNote();
   loadLazy(t);
 }
 // 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — PEOPLE / TELEMETRY / DASHBOARD; VIEW AS is not logged
@@ -1117,6 +1129,177 @@ $("files").addEventListener("click", function (e) {
     var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([bytes], { type: f.type })); a.download = f.name;
     document.body.appendChild(a); a.click(); a.remove(); b.disabled = false; b.textContent = "Download";
   }, function (err) { b.disabled = false; b.textContent = "Failed: " + (err && err.message || err); });
+});
+
+// 1453: the PLAY tab - the game's gate (1325, before 1453 the page PLAY of its own). The code is the key: PBKDF2-SHA256
+// (code, salt) -> 64 bytes; the first 32 name the code's entry in gate.json, the last 32 open it and give the game key
+// (AES-256-GCM). The main pack comes as sealed chunks (deflated before sealing, 1419) over parts under 90 MB, each opened
+// in memory as it arrives and laid into one buffer that goes to Godot as its main pack; the music tracks are opened one at
+// a time when the game plays them (window.pfGate.music). Made by 05_TOOLS/GATE/gate_pack.js; the build lives in the Pages
+// repo Rodwan-ux/play (?b=<folder/> another one); ?v= on each file = the build. PLAY puts the tab full screen and the game
+// covers it.
+var PF_B = new URLSearchParams(location.search).get("b") || "https://rodwan-ux.github.io/play/";
+var PF_TD = (new URLSearchParams(location.search).get("td") || "").replace(/[^a-z0-9_ =,-]/g, "");   // 1419: a test drive plan + its options
+var pfB64 = function (s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); };
+var pfHex = function (buf) { return Array.from(new Uint8Array(buf), function (x) { return x.toString(16).padStart(2, "0"); }).join(""); };
+function pfSay(t, cls) { $("pf-msg").textContent = t; $("pf-msg").className = cls || ""; }
+
+// the game key for a code, or null for a code that is not on the list
+async function pfGameKey(meta, code) {
+  var enc = new TextEncoder();
+  var pass = await crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveBits"]);
+  var bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: pfB64(meta.salt), iterations: meta.iter, hash: "SHA-256" }, pass, 512));
+  var idk = await crypto.subtle.importKey("raw", bits.slice(0, 32), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  var e = meta.keys[pfHex(await crypto.subtle.sign("HMAC", idk, enc.encode("id"))).slice(0, 16)];
+  if (!e) return null;
+  var wk = await crypto.subtle.importKey("raw", bits.slice(32), "AES-GCM", false, ["decrypt"]);
+  var raw = await crypto.subtle.decrypt({ name: "AES-GCM", iv: pfB64(e.iv) }, wk, pfB64(e.key));
+  return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+}
+
+// 1422: the sealed files are kept in the browser (IndexedDB "pf-play", the key = the file's build address ?v=), so a
+// later visit reads them from the disk and a new build fetches only its own files; files of other builds are dropped.
+// Only sealed bytes are stored - without a code they open nothing.
+var PF_DB = null;
+function pfIdb() {
+  return PF_DB || (PF_DB = new Promise(function (ok, no) {
+    var q = indexedDB.open("pf-play", 1);
+    q.onupgradeneeded = function () { q.result.createObjectStore("files"); };
+    q.onsuccess = function () { ok(q.result); }; q.onerror = function () { no(q.error); };
+  }));
+}
+async function pfIdbGet(k) {
+  try { var db = await pfIdb(); return await new Promise(function (ok) { var r = db.transaction("files").objectStore("files").get(k); r.onsuccess = function () { ok(r.result || null); }; r.onerror = function () { ok(null); }; }); }
+  catch (e) { return null; }
+}
+function pfIdbPut(k, v) { pfIdb().then(function (db) { db.transaction("files", "readwrite").objectStore("files").put(v, k); }).catch(function () {}); }
+// a sealed file as a Response: from the browser's store, else fetched (and stored once it is all in)
+async function pfSealed(url) {
+  var b = await pfIdbGet(url);
+  if (b) return new Response(b);
+  var res = await fetch(url);
+  if (!res.ok) return res;
+  var rd = res.body.getReader(), keep = [];
+  return new Response(new ReadableStream({ pull: async function (c) {
+    var r = await rd.read();
+    if (r.done) { pfIdbPut(url, new Blob(keep)); c.close(); return; }
+    keep.push(r.value); c.enqueue(r.value);
+  } }));
+}
+async function pfDropOldBuilds(tag) {
+  try {
+    var db = await pfIdb(), st = db.transaction("files", "readwrite").objectStore("files"), q = st.getAllKeys();
+    q.onsuccess = function () { q.result.forEach(function (k) { if (String(k).indexOf("v=" + tag) < 0) st.delete(k); }); };
+  } catch (e) {}
+}
+var pfJoin = function (list, len) { var j = new Uint8Array(len), at = 0; list.forEach(function (x) { j.set(x, at); at += x.length; }); return j; };
+var pfInflate = async function (u8) { return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer()); };
+
+// the parts, opened chunk by chunk as they arrive (each chunk's sealed length in meta.lens), laid into one buffer of
+// the game file's size
+async function pfOpenParts(meta, key) {
+  var out = new Uint8Array(meta.size), base = pfB64(meta.iv);
+  var bits = [], have = 0, off = 0, n = 0;   // the bytes not opened yet (joined only once a whole chunk is in)
+  var openChunk = async function (bytes) {
+    var iv = new Uint8Array(12); iv.set(base); new DataView(iv.buffer).setUint32(8, n++);
+    var p;
+    try { p = await pfInflate(new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, bytes))); }
+    catch (e) { throw new Error("the game file is damaged (part " + (n - 1) + ")"); }
+    out.set(p, off); off += p.length;
+    $("pf-bar").style.width = (off * 100 / meta.size) + "%";
+  };
+  for (var i = 0; i < meta.parts.length; i++) {
+    var res = await pfSealed(PF_B + meta.parts[i] + "?v=" + meta.sha256.slice(0, 12));
+    if (!res.ok) throw new Error("part " + meta.parts[i] + " did not load (" + res.status + ")");
+    var rd = res.body.getReader();
+    for (;;) {
+      var r = await rd.read();
+      if (r.done) break;
+      bits.push(r.value); have += r.value.length;
+      if (n >= meta.lens.length || have < meta.lens[n]) continue;
+      var joined = pfJoin(bits, have), at = 0;
+      while (n < meta.lens.length && joined.length - at >= meta.lens[n]) { var L = meta.lens[n]; await openChunk(joined.subarray(at, at + L)); at += L; }
+      bits = [joined.slice(at)]; have = bits[0].length;
+    }
+  }
+  if (off !== meta.size || n !== meta.lens.length) throw new Error("the game file came in short");
+  return out;
+}
+
+// 1417: a music track for the game's browser player - its sealed file opened in memory, handed back as a blob URL; the
+// track before it is let go, so only the one playing stays in memory
+function pfMusicGate(meta, key) {
+  var last = "";
+  window.pfGate = { music: async function (url) {
+    var f = String(url).split("/").pop(), iv = meta.music[f];
+    if (!iv) throw new Error("no such track " + f);
+    var res = await pfSealed(PF_B + "music/" + f + ".enc?v=" + meta.sha256.slice(0, 12));
+    if (!res.ok) throw new Error("track " + f + " did not load (" + res.status + ")");
+    var data = await crypto.subtle.decrypt({ name: "AES-GCM", iv: pfB64(iv) }, key, await res.arrayBuffer());
+    if (last) URL.revokeObjectURL(last);
+    return (last = URL.createObjectURL(new Blob([data], { type: "audio/mpeg" })));
+  } };
+}
+
+// 1419: on a computer with two GPUs the browser hands WebGL the low-power one unless asked - every WebGL context the
+// engine makes asks for the high-performance GPU (the panel's own charts draw in 2D)
+(function () {
+  var get = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (kind, attrs) {
+    if (/^(webgl2?|experimental-webgl)$/.test(kind)) attrs = Object.assign({}, attrs || {}, { powerPreference: "high-performance" });
+    return get.call(this, kind, attrs);
+  };
+})();
+
+// 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
+// ignored the request, so one line tells how to switch the browser to the main GPU
+var pfGpuAsked = false;
+function pfGpuNote() {
+  if (pfGpuAsked) return;
+  pfGpuAsked = true;
+  try {
+    var g = document.createElement("canvas").getContext("webgl2"), e = g && g.getExtension("WEBGL_debug_renderer_info");
+    var r = e ? String(g.getParameter(e.UNMASKED_RENDERER_WEBGL)) : "";
+    if (/Intel|UHD|Iris|SwiftShader|Basic Render|llvmpipe/i.test(r))
+      $("pf-gpu").textContent = "THE BROWSER USES THE LOW-POWER GPU - FOR A SMOOTH GAME SET IT TO HIGH PERFORMANCE IN WINDOWS SETTINGS > SYSTEM > DISPLAY > GRAPHICS";
+  } catch (x) {}
+}
+
+// the game: Godot's own loader from the build folder, fed the opened file as its main pack
+function pfStartGodot(meta, pack, code) {
+  return new Promise(function (ok, fail) {
+    var s = document.createElement("script"); s.src = PF_B + "index.js"; s.onerror = function () { fail(new Error("the game engine did not load")); };
+    s.onload = function () {
+      var user = ["gate_code=" + code].concat(PF_TD ? ["testdrive=" + PF_TD] : []);
+      var cfg = Object.assign({}, meta.godot, { executable: PF_B + "index", canvas: $("pf-canvas"), args: ["--"].concat(user) });
+      var engine = new Engine(cfg);
+      $("pf-canvas").hidden = false;
+      engine.init(PF_B + "index").then(function () { return engine.preloadFile(pack.buffer, "index.pck"); })
+        .then(function () { return engine.start({ args: ["--main-pack", "index.pck", "--"].concat(user) }); }).then(ok, fail);
+    };
+    document.body.appendChild(s);
+  });
+}
+
+$("pf-f").addEventListener("submit", async function (ev) {
+  ev.preventDefault();
+  var code = $("pf-code").value.trim().toLowerCase();
+  if (!code) return;
+  try { if (!document.fullscreenElement) $("pf").requestFullscreen().catch(function () {}); } catch (x) {}   // the tab full screen - only inside the click
+  $("pf-go").disabled = true; pfSay("CHECKING THE CODE...");
+  try {
+    var meta = await (await fetch(PF_B + "gate.json", { cache: "no-store" })).json();
+    var key = await pfGameKey(meta, code);
+    if (!key) { pfSay("THIS CODE DOES NOT OPEN THE GAME", "err"); $("pf-go").disabled = false; return; }
+    pfSay("UNPACKING THE GAME...", "ok"); $("pf-track").hidden = false;
+    pfDropOldBuilds(meta.sha256.slice(0, 12));
+    var pack = await pfOpenParts(meta, key);
+    pfMusicGate(meta, key);
+    pfSay("STARTING...", "ok");
+    await pfStartGodot(meta, pack, code);
+  } catch (e) {
+    pfSay(String(e && e.message || e), "err"); $("pf-go").disabled = false;
+  }
 });
 load();
 </script></body></html>
