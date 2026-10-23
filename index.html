@@ -78,8 +78,6 @@ select.lvl{padding:1px 4px;font-size:11px}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px;border-radius:0}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
 #pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
-#pf-track{width:min(608px,92vw);height:12px;background:rgb(0,60,52);border:2px solid rgb(0,133,113);overflow:hidden}
-#pf-bar{display:block;height:100%;width:0;background:rgb(100,255,255)}
 #pf-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;z-index:10;opacity:0}#pf-canvas.on{opacity:1}
 .prog{display:grid;grid-template-columns:auto max-content;gap:2px 10px;align-items:center;justify-content:start}.pg-n{font:11px/11px var(--mono);color:var(--dim);text-transform:uppercase;white-space:nowrap}.pg-b{display:grid;grid-template-columns:repeat(20,11px);grid-auto-rows:11px;gap:2px}.pg-b i{background:var(--hover);border-radius:2px}.pg-s{grid-column:2;position:relative;height:17px;margin-top:5px}.pg-s span{position:absolute;top:0;transform:translateX(-50%);font:13px var(--mono);color:var(--dim)}.cols>.panel{align-content:start}
 [hidden]{display:none!important}
@@ -162,7 +160,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
 <div id="pf-gpu"></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button" hidden>RUN</button></form>
-<div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div><div id="pf-tip" hidden></div>
+<div id="pf-msg"></div><div id="pf-tip" hidden></div>
 <div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div id="pf-game"></div>
 <div class="pf-lbl">IN DEVELOPMENT</div><div id="pf-dev"></div></div>
 <canvas id="pf-wave" hidden></canvas><canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
@@ -1345,7 +1343,6 @@ async function pfOpenParts(meta, key) {
     try { p = await pfInflate(new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, bytes))); }
     catch (e) { throw new Error("the game file is damaged (part " + (n - 1) + ")"); }
     out.set(p, off); off += p.length;
-    $("pf-bar").style.width = (off * 100 / meta.size) + "%";
   };
   for (var i = 0; i < meta.parts.length; i++) {
     var res = await pfSealed(PF_B + meta.parts[i] + "?v=" + meta.sha256.slice(0, 12));
@@ -1506,16 +1503,26 @@ function pfTitle() {
     x.putImageData(im, 0, 0);
     return c;
   };
-  var lit = Math.min(pfLit, PF_TITLE.replace(/ /g, "").length), n = 0, up = S + 1, sh = 7;
-  cv.width = w * S + up; cv.height = hgt * up + sh;
-  var o = cv.getContext("2d"); o.imageSmoothingEnabled = false; o.clearRect(0, 0, cv.width, cv.height);
-  for (var k = 0; k < PF_TITLE.length; k++) {
-    var ch = PF_TITLE[k];
-    if (ch === " ") continue;
-    var on = n++ < lit, s = on ? up : S, x0 = adv[k] * S - (on ? Math.round((adv[k + 1] - adv[k]) * 0.5) : 0), y0 = cv.height - sh - hgt * s;
-    if (on) o.drawImage(glyph(ch, "rgb(0,133,113)"), 0, 0, 12, hgt, x0, y0 + sh, 12 * s, hgt * s);
-    o.drawImage(glyph(ch, on ? "rgb(100,255,255)" : "rgb(255,205,219)"), 0, 0, 12, hgt, x0, y0, 12 * s, hgt * s);
-  }
+  var up = S + 1, sh = 7, M = 12 * up, H = hgt * up + sh;
+  // 1500.4.2: the letters laid out on a wide sheet (a lit letter grows around its own middle), then cut to the ink of the
+  // title with every letter lit - the widest it gets - so it stays centred and nothing passes the edge while typing
+  var sheet = function (lit) {
+    var c = document.createElement("canvas"); c.width = w * S + 2 * M; c.height = H;
+    var o = c.getContext("2d"); o.imageSmoothingEnabled = false;
+    for (var k = 0, n = 0; k < PF_TITLE.length; k++) {
+      var ch = PF_TITLE[k];
+      if (ch === " ") continue;
+      var on = n++ < lit, s = on ? up : S, cx = M + Math.round((adv[k] + adv[k + 1]) * 0.5 * S), x0 = cx - Math.round((adv[k + 1] - adv[k]) * 0.5 * s), y0 = H - sh - hgt * s;
+      if (on) o.drawImage(glyph(ch, "rgb(0,133,113)"), 0, 0, 12, hgt, x0, y0 + sh, 12 * s, hgt * s);
+      o.drawImage(glyph(ch, on ? "rgb(100,255,255)" : "rgb(255,205,219)"), 0, 0, 12, hgt, x0, y0, 12 * s, hgt * s);
+    }
+    return c;
+  };
+  var full = sheet(99), d = full.getContext("2d").getImageData(0, 0, full.width, H).data, x1 = full.width, x2 = -1;
+  for (var y = 0; y < H; y++) for (var x = 0; x < full.width; x++) if (d[(y * full.width + x) * 4 + 3]) { if (x < x1) x1 = x; if (x > x2) x2 = x; }
+  if (x2 < x1) return;
+  cv.width = x2 - x1 + 1; cv.height = H;
+  var o = cv.getContext("2d"); o.clearRect(0, 0, cv.width, H); o.drawImage(sheet(Math.min(pfLit, 99)), -x1, 0);
 }
 document.fonts.load(2048 / 300 + "px 'Pixel Gosub'").then(pfTitle, function () {});
 
@@ -1608,8 +1615,7 @@ var pfWave = (function () {
   };
   return {
     show: function () { if (!gl && !init()) return; $("pf-wave").hidden = false; t0 = fxT0 = performance.now(); mode = 1; if (!raf) raf = requestAnimationFrame(frame); },
-    reveal: function () { if (!gl || $("pf-wave").hidden) return; fxT0 = performance.now(); mode = 2;
-      ["pf-head", "pf-gpu", "pf-f", "pf-track", "pf-msg", "pf-stats"].forEach(function (id) { $(id).style.visibility = "hidden"; }); }
+    reveal: function () { if (!gl || $("pf-wave").hidden) return; fxT0 = performance.now(); mode = 2; }
   };
 })();
 
@@ -1645,16 +1651,15 @@ async function pfTry(code) {
     }
     try { if (!document.fullscreenElement) $("pf").requestFullscreen().catch(function () {}); } catch (x) {}   // the tab full screen - only soon after a key or a click
     try { localStorage.setItem("pf_code", code); } catch (x) {}
-    // 1500.3.5: on the wave only the lit title and the bar under it, as wide as the title
-    pfLit = 99; pfTitle(); pfWave.show(); pfSay("");
-    ["pf-stats", "pf-gpu", "pf-f", "pf-msg", "pf-sub", "pf-tip"].forEach(function (id) { $(id).hidden = true; });
-    $("pf-track").style.width = $("pf-tc").width + "px"; $("pf-track").hidden = false;
+    // 1500.4.1: the wave alone covers the screen until the game starts, as the game's curtain does
+    pfWave.show(); pfSay("");
+    ["pf-head", "pf-stats", "pf-gpu", "pf-f", "pf-msg", "pf-tip"].forEach(function (id) { $(id).hidden = true; });
     pfDropOldBuilds(meta.sha256.slice(0, 12));
     var pack = await pfOpenParts(meta, key), patch = await pfOpenPatch(meta, key);
     pfMusicGate(meta, key);
     await pfStartGodot(meta, pack, code, patch);
   } catch (e) {
-    pfMeta = null; $("pf-msg").hidden = false; $("pf-f").hidden = false; pfSay(String(e && e.message || e), "err");
+    pfMeta = null; $("pf-head").hidden = false; $("pf-msg").hidden = false; $("pf-f").hidden = false; pfSay(String(e && e.message || e), "err");
     $("pf-code").disabled = false; $("pf-run").disabled = false; pfBusy = false;
   }
 }
