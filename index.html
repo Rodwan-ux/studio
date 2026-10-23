@@ -69,10 +69,8 @@ select.lvl{padding:1px 4px;font-size:11px}
 #pf-head{text-align:center;display:grid;gap:6px}#pf-title{margin:0;font:600 46px/1 var(--head);letter-spacing:.2em;color:var(--beige)}
 #pf-sub{margin:0;font:600 15px var(--head);letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
 #pf-stats{width:min(760px,92vw);display:grid;gap:6px;justify-items:center}.pf-lbl{font:600 12px var(--head);letter-spacing:.14em;color:var(--rose)}
-#pf-stats .tiles{display:flex;flex-wrap:nowrap;justify-content:center;gap:4px;width:100%}
-#pf-stats .tile{flex:1 1 0;min-width:0;max-width:92px;height:48px;padding:3px 5px;gap:0;opacity:.2;animation:pf-lit .3s steps(3) forwards}
-#pf-stats .tile span{font-size:9px;line-height:1.1;letter-spacing:.05em;white-space:normal}#pf-stats .tile b{font-size:15px}
-@keyframes pf-lit{to{opacity:1;border-color:var(--rose)}}
+#pf-stats .pf-row{opacity:.2;animation:pf-lit .3s steps(3) forwards}
+@keyframes pf-lit{to{opacity:1}}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px}
 #pf-go{font:600 18px var(--head);letter-spacing:.14em;padding:6px 22px;color:var(--beige);border-color:var(--rose)}#pf-go:hover{background:var(--hover);color:var(--fg)}#pf-go:disabled{opacity:.4;cursor:default}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
@@ -162,8 +160,8 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div id="pf-gpu"></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-go" type="submit">PLAY</button></form>
 <div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div>
-<div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div class="tiles" id="pf-game"></div>
-<div class="pf-lbl">IN DEVELOPMENT</div><div class="tiles" id="pf-dev"></div></div>
+<div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div id="pf-game"></div>
+<div class="pf-lbl">IN DEVELOPMENT</div><div id="pf-dev"></div></div>
 <canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
 </div>
 <script>
@@ -736,6 +734,7 @@ var dayKey = function (d) { return d.getFullYear() + "-" + String(d.getMonth() +
 // 1204: the changes heatmap — a column per week, a square per day (Monday on top), the last 12 months; colour by the
 // day's file edits in the project's Claude sessions (ACTIVITY.json), hover = the date and the count.
 var HEAT = ["#2a2027", "#5e424b", "#794b58", "#b18182", "#d8b69f"];
+var heatLvl = function (v, max) { if (!v) return 0; var q = v / max; return q <= 0.15 ? 1 : q <= 0.35 ? 2 : q <= 0.6 ? 3 : 4; };   // 1496: also the PLAY matrix
 function renderHeatmap() {
   var act = D.activity || {}, now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   // 1252: from the week of the first recorded change (at most a year back) — no empty weeks on the left
@@ -748,7 +747,7 @@ function renderHeatmap() {
   var fit = Math.floor(($("ov-heat-box").clientWidth - 30) / 13), all = Math.max(weeks, fit);
   var C = 13, L = 30, T = 16, vals = Object.keys(act).filter(function (k) { return k >= dayKey(first); }).map(function (k) { return act[k]; });
   var max = Math.max(1, Math.max.apply(null, vals.concat([0]))), total = vals.reduce(function (a, v) { return a + v; }, 0);
-  var lvl = function (v) { if (!v) return 0; var q = v / max; return q <= 0.15 ? 1 : q <= 0.35 ? 2 : q <= 0.6 ? 3 : 4; };
+  var lvl = function (v) { return heatLvl(v, max); };
   var svg = "<svg width='" + (L + all * C) + "' height='" + (T + 7 * C) + "' role='img' aria-label='Changes per day'>", lastMonth = -1;
   ["MON", "", "WED", "", "FRI", "", ""].forEach(function (t, i) { if (t) svg += "<text x='0' y='" + (T + i * C + 10) + "' fill='#9a8890' font-size='9' font-family='JetBrains Mono,monospace'>" + t + "</text>"; });
   for (var w = 0; w < all; w++) {
@@ -1389,22 +1388,35 @@ function pfMusicGate(meta, key) {
 })();
 
 // 1479: the PLAY tab's tiles - the game as every player played it (sums from EVENTS) and the project's counts (DEV.json)
-// 1491: each group one row of small tiles lighting up one after another; a person with a game code in PEOPLE plays with it
+// 1491: a person with a game code in PEOPLE plays with it
+// 1496: each group one matrix in the CHANGES heatmap's look - a row per number: its name, a row of the heatmap's squares lit
+// by the number's share of the group's largest, the number at the end; the rows light up one after another, hover = both
 function renderPlayStats() {
   var ps = D.playstats || {}, g = ps.game || {}, d = ps.dev || {}, n = 0;
-  var tile = function (label, value) {
-    return "<div class='tile' style='animation-delay:" + (n++ * 90) + "ms'><span>" + esc(label) + "</span><b>" + esc(value) + "</b></div>";
+  $("pf-stats").hidden = false;
+  var C = 13, L = 104, V = 64, cells = Math.max(1, Math.floor(($("pf-stats").clientWidth - L - V) / C));
+  var font = " fill='#9a8890' font-size='9' font-family='JetBrains Mono,monospace'";
+  var matrix = function (rows) {
+    var max = Math.max.apply(null, rows.map(function (r) { return +r[1] || 0; }).concat([1]));
+    var svg = "<svg width='" + (L + cells * C + V) + "' height='" + rows.length * C + "' role='img'>";
+    rows.forEach(function (r, i) {
+      var v = +r[1] || 0, shown = r[2] != null ? r[2] : v, lit = v ? Math.max(1, Math.round(v / max * cells)) : 0, y = i * C;
+      svg += "<g class='pf-row' style='animation-delay:" + (n++ * 90) + "ms'><title>" + esc(r[0] + "  " + shown) + "</title>" +
+        "<text x='0' y='" + (y + 9) + "'" + font + ">" + esc(r[0].toUpperCase()) + "</text>";
+      for (var c = 0; c < cells; c++) svg += "<rect x='" + (L + c * C) + "' y='" + y + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='" + HEAT[c < lit ? heatLvl(v, max) : 0] + "'/>";
+      svg += "<text x='" + (L + cells * C + V) + "' y='" + (y + 9) + "' text-anchor='end' fill='" + HEAT[4] + "' font-size='10' font-family='JetBrains Mono,monospace'>" + esc(shown) + "</text></g>";
+    });
+    return svg + "</svg>";
   };
-  $("pf-game").innerHTML = [tile("Hours played", (g.hours || 0).toFixed(1)), tile("Sessions", g.sessions || 0), tile("Routes sailed", g.sailed || 0),
-    tile("Camps made", g.camps || 0), tile("Battles fought", g.battles || 0), tile("Battles won", g.won || 0), tile("Men fallen", g.fallen || 0),
-    tile("Enemies slain", g.slain || 0), tile("Quests done", g.quests || 0)].join("");
-  $("pf-dev").innerHTML = d.version ? [tile("Mechanics", d.mechanics), tile("Characters", d.characters), tile("Looks", d.looks),
-    tile("Unit classes", d.classes), tile("Heroes", d.heroes), tile("Quests written", d.quests), tile("Cities built", d.cities),
-    tile("Dialog trees", d.dialogs)].join("") : "";
+  $("pf-game").innerHTML = matrix([["Hours played", g.hours || 0, (g.hours || 0).toFixed(1)], ["Sessions", g.sessions], ["Routes sailed", g.sailed],
+    ["Camps made", g.camps], ["Battles fought", g.battles], ["Battles won", g.won], ["Men fallen", g.fallen], ["Enemies slain", g.slain],
+    ["Quests done", g.quests]]);
+  $("pf-dev").innerHTML = d.version ? matrix([["Mechanics", d.mechanics], ["Characters", d.characters], ["Looks", d.looks],
+    ["Unit classes", d.classes], ["Heroes", d.heroes], ["Quests written", d.quests], ["Cities built", d.cities],
+    ["Dialog trees", d.dialogs]]) : "";
   $("pf-sub").textContent = d.version ? "PLAYTEST " + d.version : "PLAYTEST";
   var own = (D.mine || [])[0];
   if (own) { $("pf-code").value = own; $("pf-code").hidden = true; }
-  $("pf-stats").hidden = false;
 }
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
 // ignored the request, so one line tells how to switch the browser to the main GPU
