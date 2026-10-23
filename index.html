@@ -1394,7 +1394,7 @@ function renderPlayStats() {
     tile("Camps made", g.camps || 0), tile("Battles fought", g.battles || 0), tile("Battles won", g.won || 0), tile("Men fallen", g.fallen || 0),
     tile("Enemies slain", g.slain || 0), tile("Quests done", g.quests || 0)].join("");
   $("pf-dev").innerHTML = d.version ? [tile("Quests written", d.quests), tile("Unit classes", d.classes), tile("Heroes", d.heroes),
-    tile("Cities built", d.cities + " / " + d.settlements, d.cities, d.settlements), tile("Dialog trees", d.dialogs)].join("") : "";
+    tile("Cities built", d.cities + " / " + d.cities_planned, d.cities, d.cities_planned), tile("Dialog trees", d.dialogs)].join("") : "";
   $("pf-sub").textContent = d.version ? "BUILD " + d.version + " · YOUR CODE OPENS THE GAME" : "YOUR CODE OPENS THE GAME";
   $("pf-stats").hidden = false;
 }
@@ -1406,9 +1406,11 @@ function pfGpuNote() {
   pfGpuAsked = true;
   try {
     var g = document.createElement("canvas").getContext("webgl2"), e = g && g.getExtension("WEBGL_debug_renderer_info");
-    var r = e ? String(g.getParameter(e.UNMASKED_RENDERER_WEBGL)) : "";
-    if (/Intel|UHD|Iris|SwiftShader|Basic Render|llvmpipe/i.test(r))
-      $("pf-gpu").textContent = "THE BROWSER USES THE LOW-POWER GPU - FOR A SMOOTH GAME SET IT TO HIGH PERFORMANCE IN WINDOWS SETTINGS > SYSTEM > DISPLAY > GRAPHICS";
+    var r = e ? String(g.getParameter(e.UNMASKED_RENDERER_WEBGL)) : (g ? String(g.getParameter(g.RENDERER)) : "");
+    // 1478.2: always the GPU the browser gives the game (ANGLE wraps it: "ANGLE (Vendor, Card Direct3D11...)")
+    var name = r.replace(/^ANGLE \((.*)\)$/, "$1").replace(/\s*(Direct3D|D3D)\S*.*$/i, "").replace(/,\s*$/, "");
+    var low = /Intel|UHD|Iris|SwiftShader|Basic Render|llvmpipe/i.test(r);
+    $("pf-gpu").textContent = (name ? "YOUR GPU: " + name.toUpperCase() : "") + (low ? " - THE BROWSER USES THE LOW-POWER GPU - FOR A SMOOTH GAME SET IT TO HIGH PERFORMANCE IN WINDOWS SETTINGS > SYSTEM > DISPLAY > GRAPHICS" : "");
   } catch (x) {}
 }
 
