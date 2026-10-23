@@ -67,8 +67,9 @@ select.lvl{padding:1px 4px;font-size:11px}
 .chg-t b{font:600 18px var(--mono);color:var(--fg)}.chg-t:hover{background:var(--hover)}.chg-t.on{background:var(--hover)}.chg-l{grid-column:1/-1;border:2px solid var(--line);border-left:3px solid;padding:4px 10px;display:grid;gap:2px}
 .pf{min-height:60vh;display:grid;place-content:center;justify-items:center;gap:22px;padding:24px 16px;background:var(--bg)}.pf:fullscreen{min-height:100vh}
 @font-face{font-family:"Pixel Gosub";src:url(https://rodwan-ux.github.io/studio/pixel_gosub.otf) format("opentype")}
-#pf-head{text-align:center;display:grid;gap:10px}#pf-title{margin:0;font:400 calc(6px * 2048 / 300)/1 "Pixel Gosub",var(--head);color:var(--beige);text-shadow:6px 6px 0 var(--cyan);-webkit-font-smoothing:none;font-smooth:never;white-space:nowrap}
-@media (max-width:560px){#pf-title{font-size:calc(3px * 2048 / 300);text-shadow:3px 3px 0 var(--cyan)}}
+#pf-head{text-align:center;display:grid;gap:10px;justify-items:center}#pf-title{margin:0;line-height:0}#pf-tc{display:block;image-rendering:pixelated}
+#pf>*:not(canvas){position:relative;z-index:12}#pf-wave{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:11;image-rendering:pixelated}
+#pf-run{font:600 18px var(--head);letter-spacing:.14em;padding:6px 26px;color:var(--beige);border-color:var(--rose)}#pf-run:hover{background:var(--hover);color:var(--fg)}
 #pf-sub{margin:0;font:600 12px var(--head);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 #pf-stats{width:min(760px,92vw);display:grid;gap:6px;justify-items:center}.pf-lbl{font:600 12px var(--head);letter-spacing:.14em;color:var(--rose)}
 #pf-stats .pf-on{animation:pf-lit .1s steps(1) forwards}
@@ -78,7 +79,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 #pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
 #pf-track{width:min(608px,92vw);height:8px;background:repeating-linear-gradient(90deg,var(--hover) 0 6px,var(--sunk) 6px 8px);border:2px solid var(--line);overflow:hidden}
 #pf-bar{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--rose) 0 6px,var(--plum) 6px 8px)}
-#pf-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;z-index:10}
+#pf-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;z-index:10;opacity:0}#pf-canvas.on{opacity:1}
 .prog{display:grid;grid-template-columns:auto max-content;gap:2px 10px;align-items:center;justify-content:start}.pg-n{font:11px/11px var(--mono);color:var(--dim);text-transform:uppercase;white-space:nowrap}.pg-b{display:grid;grid-template-columns:repeat(20,11px);grid-auto-rows:11px;gap:2px}.pg-b i{background:var(--hover);border-radius:2px}.pg-s{grid-column:2;position:relative;height:17px;margin-top:5px}.pg-s span{position:absolute;top:0;transform:translateX(-50%);font:13px var(--mono);color:var(--dim)}.cols>.panel{align-content:start}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
@@ -157,13 +158,13 @@ select.lvl{padding:1px 4px;font-size:11px}
 </section>
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
 <section class="panel" data-pane="play" hidden><div class="pf" id="pf">
-<div id="pf-head"><h1 id="pf-title">PIXEL FORMATION</h1><p id="pf-sub"></p></div>
+<div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
 <div id="pf-gpu"></div>
-<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"></form>
+<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button" hidden>RUN</button></form>
 <div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div>
 <div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div id="pf-game"></div>
 <div class="pf-lbl">IN DEVELOPMENT</div><div id="pf-dev"></div></div>
-<canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
+<canvas id="pf-wave" hidden></canvas><canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
 </div>
 <script>
 // RODWAN PIXELS studio panel (1184.4 / 1184.7, renamed 1263): this page asks the PLAYTEST web app for its data, without cookies (as the
@@ -237,7 +238,7 @@ function showTab(t) {
   document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
   try { localStorage.setItem("tab", t); } catch (e) {}
   if (t === "overview" && D) renderHeatmap();
-  if (t === "play") { pfGpuNote(); pfAutoStart(); }
+  if (t === "play") { pfGpuNote(); pfTitle(); }
   loadLazy(t);
 }
 // 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — PEOPLE / TELEMETRY / DASHBOARD; VIEW AS is not logged
@@ -1426,7 +1427,7 @@ function renderPlayStats() {
     ["Dialog trees", 0, null, list(d.dialogs)]]) : "";
   $("pf-sub").textContent = d.version ? "PLAYTEST " + d.version : "PLAYTEST";
   var own = (D.mine || [])[0];
-  if (own) { $("pf-code").value = own; $("pf-code").hidden = true; pfAutoStart(); }
+  pfKnown(own);
 }
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
 // ignored the request, so one line tells how to switch the browser to the main GPU
@@ -1464,15 +1465,152 @@ function pfStartGodot(meta, pack, code, patch) {
       $("pf-canvas").hidden = false;
       engine.init(PF_B + "index").then(function () { return engine.preloadFile(pack.buffer, "index.pck"); })
         .then(function () { return patch && engine.preloadFile(patch.buffer, "patch.pck"); })
-        .then(function () { return engine.start({ args: ["--main-pack", "index.pck", "--"].concat(user) }); }).then(ok, fail);
+        .then(function () { return engine.start({ args: ["--main-pack", "index.pck", "--"].concat(user) }); })
+        .then(function () { $("pf-canvas").classList.add("on"); pfWave.reveal(); ok(); }, fail);   // 1500: the wave gives way to the game's first frame
     };
     document.body.appendChild(s);
   });
 }
 
-// 1500: no PLAY button - the code is tried as it is typed (a short pause after the last key); the right one thanks the
-// player and starts the game; a person with a game code in PEOPLE starts once the PLAY tab is open
+// 1500.2.1: the title as the game menu draws it (menu_1.gd + UI_SETTINGS/menu.cfg): Pixel Gosub at its native size
+// (one font pixel = 300/2048 em) cut to whole pixels, enlarged by a whole number; menu pink, a lit letter = the menu
+// hover cyan, one font pixel bigger, with the teal shadow under it. Each typed letter of the code lights one more letter.
+var PF_TITLE = "PIXEL FORMATION", pfLit = 0;
+function pfTitle() {
+  var cv = $("pf-tc"), em = 2048 / 300, src = document.createElement("canvas"), g = src.getContext("2d");
+  g.font = em + "px 'Pixel Gosub'";
+  var adv = [], w = 0;
+  for (var i = 0; i <= PF_TITLE.length; i++) adv.push(Math.round(g.measureText(PF_TITLE.slice(0, i)).width));
+  w = adv[PF_TITLE.length] + 2;
+  var hgt = 9, base = 7, S = Math.max(1, Math.min(6, Math.floor((Math.min(innerWidth, 1200) - 40) / w)));
+  // one letter as whole pixels (alpha cut at half), in its colour
+  var glyph = function (ch, col) {
+    var c = document.createElement("canvas"); c.width = 12; c.height = hgt;
+    var x = c.getContext("2d"); x.font = g.font; x.fillStyle = col; x.textBaseline = "alphabetic"; x.fillText(ch, 0, base);
+    var im = x.getImageData(0, 0, c.width, c.height), d = im.data;
+    for (var p = 3; p < d.length; p += 4) d[p] = d[p] >= 128 ? 255 : 0;
+    x.putImageData(im, 0, 0);
+    return c;
+  };
+  var lit = Math.min(pfLit, PF_TITLE.replace(/ /g, "").length), n = 0, up = S + 1, sh = 7;
+  cv.width = w * S + up; cv.height = hgt * up + sh;
+  var o = cv.getContext("2d"); o.imageSmoothingEnabled = false; o.clearRect(0, 0, cv.width, cv.height);
+  for (var k = 0; k < PF_TITLE.length; k++) {
+    var ch = PF_TITLE[k];
+    if (ch === " ") continue;
+    var on = n++ < lit, s = on ? up : S, x0 = adv[k] * S - (on ? Math.round((adv[k + 1] - adv[k]) * 0.5) : 0), y0 = cv.height - sh - hgt * s;
+    if (on) o.drawImage(glyph(ch, "rgb(0,133,113)"), 0, 0, 12, hgt, x0, y0 + sh, 12 * s, hgt * s);
+    o.drawImage(glyph(ch, on ? "rgb(100,255,255)" : "rgb(255,205,219)"), 0, 0, 12, hgt, x0, y0, 12 * s, hgt * s);
+  }
+}
+document.fonts.load(2048 / 300 + "px 'Pixel Gosub'").then(pfTitle, function () {});
+
+// 1500.2.3: the game's loading wave (loading_transition.gd + SHADERS/loading_tiles.gdshader, the settings of
+// USERDATA/loading_fx.cfg copied in) drawn by the page from the right code until the game draws its first frame,
+// then it gives way the way the game's curtain does (the tiles pop, drop and fade)
+var PF_FX = { cell: 8, amp: 8, wave_len: 648, speed: 8, sharp: 20, wind_dir: 4.46, spread: 0.28, len_spread: 2.7, comps: 18,
+  cells_per_tile: 40, step_px: 1, top: [0.7460232, 0.5300473, 0.5930403, 0.6666667], crest: [0.8055437, 0.5741984, 0.6391375, 0.61960787],
+  side_a: [0.74721146, 0.5314814, 0.5923283, 0.78039217], side_b: [0.45031875, 0.33316463, 0.37343636, 0.654902], bg: [0, 0.3529412, 0.42745098, 1],
+  under: [0.02, 0.02, 0.03] };
+// the PE spectrum, 1:1 with build_spectrum (loading_transition.gd)
+function pfSpectrum(f, seed) {
+  var h32 = function (x) { x >>>= 0; x ^= x >>> 16; x = Math.imul(x, 0x7feb352d) >>> 0; x ^= x >>> 15; x = Math.imul(x, 0x846ca68b) >>> 0; x ^= x >>> 16; return x >>> 0; };
+  var n = Math.min(32, Math.max(4, f.comps)), wl0 = Math.max(f.wave_len, 4), ls = Math.max(f.len_spread, 1), G = 9.81, TAU = Math.PI * 2;
+  var wp = Math.sqrt(TAU * G / wl0), cv = [], av = [], total = 0;
+  for (var i = 0; i < n; i++) {
+    var h1 = h32(seed * 9781 + i * 6151 + 1), h2 = h32(h1 ^ 0x9e3779b9), h3 = h32(h2 ^ 0x85ebca6b), fr = i / (n - 1);
+    var jit = 1 + (ls - 1) * 0.15 * ((h3 & 0xFFFF) / 65535 - 0.5), wl = wl0 * Math.pow(ls, 1 - 2 * fr) * jit, k = TAU / wl, w = Math.sqrt(G * k);
+    var s = (0.0081 * G * G / Math.pow(w, 5)) * Math.exp(-1.25 * Math.pow(wp / w, 4)), a = Math.sqrt(2 * Math.abs(s) * 0.06);
+    var mu = ((h1 & 0xFFFF) / 65535 * 2 - 1) * f.spread, ang = f.wind_dir + mu;
+    a *= Math.cos(mu) * Math.cos(mu);
+    cv.push(k * Math.cos(ang), k * Math.sin(ang), w * f.speed * 0.1, (h2 & 0xFFFF) / 65535 * TAU); av.push(a); total += a;
+  }
+  var norm = total > 1e-9 ? f.amp / total : 0;
+  for (i = 0; i < n; i++) av[i] *= norm;
+  while (av.length < 32) { cv.push(0, 0, 0, 0); av.push(0); }
+  return { comps: cv, amps: av, n: n };
+}
+var pfWave = (function () {
+  var VS = "#version 300 es\nin vec2 a_o; in vec2 a_uv;\nuniform vec2 rect_size; uniform float cell; uniform vec4 comps[32]; uniform float amps[32]; uniform int comp_n;\n" +
+    "uniform float sharp_k, cells_per_tile, step_px, lift_base, crest_z, wave_time, fx_t; uniform int mode; uniform vec4 col_top, col_crest;\n" +
+    "flat out vec4 v_bg; flat out float v_h; flat out float v_a; flat out float v_back; out vec2 v_uv;\n" +
+    "float sea(float gx, float gy) { float h = 0.0; for (int i = 0; i < 32; i++) { if (i >= comp_n) break; vec4 c = comps[i];\n" +
+    "  float s = sin(c.x * gx + c.y * gy - c.z * wave_time + c.w); h += amps[i] * (s + sharp_k * s * (1.0 - abs(s))); } return h; }\n" +
+    "void main() { float c = cell, hc = c * 0.5; vec2 o = a_o; float tx = floor(o.x / c + 0.5), ty = floor(o.y / c + 0.5), cx = o.x + hc;\n" +
+    "  float z = floor(sea(tx * cells_per_tile, ty * cells_per_tile) + 0.5); float lift = lift_base + z * step_px, drop = 0.0, a = 1.0; vec2 uv = a_uv;\n" +
+    "  v_back = uv.x >= 1.5 ? 1.0 : 0.0; uv.x -= 2.0 * v_back;\n" +
+    "  if (mode != 0) { float sw = max(1.0, rect_size.x), delay = (cx / sw + o.y / sw * 0.3) * 0.7, r = clamp((fx_t - delay) / 0.5, 0.0, 1.0);\n" +
+    "    if (mode == 2) { lift += hc * 1.8 * sin(r * 3.14159265); drop = 2.2 * c * r * r; a = 1.0 - smoothstep(0.35, 1.0, r); }\n" +
+    "    else { a = smoothstep(0.0, 1.0, r); lift += hc * 0.9 * sin(r * 3.14159265); } }\n" +
+    "  lift = floor(lift + 0.5); drop = floor(drop + 0.5); v_h = c + hc + max(lift, -hc); v_bg = z >= crest_z ? col_crest : col_top; v_a = a; v_uv = uv;\n" +
+    "  vec2 p = a <= 0.001 ? o : (v_back > 0.5 ? o + uv * vec2(c) : vec2(o.x, o.y - lift + drop) + uv * vec2(c, v_h));\n" +
+    "  gl_Position = vec4(p / rect_size * 2.0 - 1.0, 0.0, 1.0) * vec4(1.0, -1.0, 1.0, 1.0); }";
+  var FS = "#version 300 es\nprecision highp float;\nuniform float cell, step_px; uniform vec4 col_side_a, col_side_b, col_bg;\n" +
+    "flat in vec4 v_bg; flat in float v_h; flat in float v_a; flat in float v_back; in vec2 v_uv; out vec4 o;\n" +
+    "void main() { float y = v_uv.y * v_h; vec4 col = v_bg; if (v_back > 0.5) col = col_bg;\n" +
+    "  else if (y >= cell) col = mod(floor((y - cell) / max(1.0, step_px)), 2.0) < 0.5 ? col_side_a : col_side_b;\n" +
+    "  float a = col.a * v_a; o = vec4(col.rgb * a, a); }";
+  var gl = null, prog = null, buf = null, verts = 0, size = "", t0 = 0, mode = 0, fxT0 = 0, raf = 0, U = {};
+  var build = function (W, H) {
+    var c = PF_FX.cell, cols = Math.ceil(W / c) + 1, rows = Math.ceil(H / c) + 2, d = [];
+    var corner = [[0, 0], [1, 0], [1, 1], [0, 0], [1, 1], [0, 1]];
+    for (var layer = 0; layer < 2; layer++) for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++)
+      corner.forEach(function (q) { d.push(x * c, y * c, q[0] + (layer ? 0 : 2), q[1]); });
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); verts = d.length / 4;
+  };
+  var init = function () {
+    var cv = $("pf-wave"); gl = cv.getContext("webgl2", { premultipliedAlpha: true, alpha: true });
+    if (!gl) return false;
+    var sh = function (type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { gl = null; return false; }
+    gl.useProgram(prog);
+    ["rect_size", "cell", "comps", "amps", "comp_n", "sharp_k", "cells_per_tile", "step_px", "lift_base", "crest_z", "wave_time", "fx_t", "mode",
+      "col_top", "col_crest", "col_side_a", "col_side_b", "col_bg"].forEach(function (k) { U[k] = gl.getUniformLocation(prog, k); });
+    var sp = pfSpectrum(PF_FX, 1 + Math.floor(Math.random() * 2000));   // a new wave each time, as the game's curtain
+    gl.uniform4fv(U.comps, sp.comps); gl.uniform1fv(U.amps, sp.amps); gl.uniform1i(U.comp_n, sp.n);
+    gl.uniform1f(U.cell, PF_FX.cell); gl.uniform1f(U.sharp_k, Math.max(PF_FX.sharp, 1) - 1); gl.uniform1f(U.cells_per_tile, PF_FX.cells_per_tile);
+    gl.uniform1f(U.step_px, PF_FX.step_px); gl.uniform1f(U.lift_base, PF_FX.amp * PF_FX.step_px); gl.uniform1f(U.crest_z, PF_FX.amp * 0.4);
+    gl.uniform4fv(U.col_top, PF_FX.top); gl.uniform4fv(U.col_crest, PF_FX.crest); gl.uniform4fv(U.col_side_a, PF_FX.side_a);
+    gl.uniform4fv(U.col_side_b, PF_FX.side_b); gl.uniform4fv(U.col_bg, PF_FX.bg);
+    buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    var ao = gl.getAttribLocation(prog, "a_o"), au = gl.getAttribLocation(prog, "a_uv");
+    gl.enableVertexAttribArray(ao); gl.vertexAttribPointer(ao, 2, gl.FLOAT, false, 16, 0);
+    gl.enableVertexAttribArray(au); gl.vertexAttribPointer(au, 2, gl.FLOAT, false, 16, 8);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    return true;
+  };
+  var frame = function (now) {
+    var cv = $("pf-wave"), W = innerWidth, H = innerHeight, t = (now - t0) / 1000, fx = (now - fxT0) / 1000, total = 0.7 * 1.3 + 0.5 + 0.05;
+    if (size !== W + "x" + H) { size = W + "x" + H; cv.width = W; cv.height = H; gl.viewport(0, 0, W, H); build(W, H); }
+    if (mode === 1 && fx > total) mode = 0;
+    if (mode === 2 && fx > total) { cv.hidden = true; raf = 0; return; }
+    var u = mode === 2 ? Math.max(0, 1 - fx / total) : mode === 1 ? Math.min(1, fx / total) : 1;   // the dark under the tiles comes and goes with them
+    gl.clearColor(PF_FX.under[0] * u, PF_FX.under[1] * u, PF_FX.under[2] * u, u); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform2f(U.rect_size, W, H); gl.uniform1f(U.wave_time, t + (mode === 2 ? fx * 1.5 : 0)); gl.uniform1i(U.mode, mode); gl.uniform1f(U.fx_t, fx);
+    gl.drawArrays(gl.TRIANGLES, 0, verts);
+    raf = requestAnimationFrame(frame);
+  };
+  return {
+    show: function () { if (!gl && !init()) return; $("pf-wave").hidden = false; t0 = fxT0 = performance.now(); mode = 1; if (!raf) raf = requestAnimationFrame(frame); },
+    reveal: function () { if (!gl || $("pf-wave").hidden) return; fxT0 = performance.now(); mode = 2;
+      ["pf-head", "pf-gpu", "pf-f", "pf-track", "pf-msg", "pf-stats"].forEach(function (id) { $(id).style.visibility = "hidden"; }); }
+  };
+})();
+
+// 1500.2.2: the code is tried as it is typed (a short pause after the last key); the right one thanks the player and
+// starts the game and is kept in this browser; a kept code or the person's own code (PEOPLE) shows RUN in place of the
+// field - opening the tab starts nothing
 var pfMeta = null, pfBusy = false, pfWait = 0;
+function pfKnown(own) {
+  var kept = ""; try { kept = localStorage.getItem("pf_code") || ""; } catch (e) {}
+  var code = own || kept;
+  if (!code || pfBusy) return;
+  $("pf-code").value = code; $("pf-code").hidden = true; $("pf-run").hidden = false;
+}
+$("pf-run").addEventListener("click", function () { pfTry($("pf-code").value); });
+$("pf-run").addEventListener("mouseenter", function () { pfLit = 99; pfTitle(); });
+$("pf-run").addEventListener("mouseleave", function () { if (!pfBusy) { pfLit = 0; pfTitle(); } });
 async function pfTry(code) {
   code = code.trim().toLowerCase();
   if (!code || pfBusy) return;
@@ -1482,22 +1620,30 @@ async function pfTry(code) {
     var key = await pfGameKey(meta, code);
     if (!key) {
       pfBusy = false;
+      if ($("pf-code").hidden) {   // a kept code the new build does not know - the field back
+        try { localStorage.removeItem("pf_code"); } catch (x) {}
+        $("pf-code").hidden = false; $("pf-run").hidden = true; $("pf-code").value = ""; pfLit = 0; pfTitle();
+      }
       var now = $("pf-code").value.trim().toLowerCase();   // typed on while this one was checked
       if (now !== code) pfTry(now); else pfSay("THIS CODE DOES NOT OPEN THE GAME", "err");
       return;
     }
     try { if (!document.fullscreenElement) $("pf").requestFullscreen().catch(function () {}); } catch (x) {}   // the tab full screen - only soon after a key or a click
-    $("pf-code").disabled = true; pfSay("THANKS FOR YOUR SUPPORT", "ok"); $("pf-track").hidden = false;
+    try { localStorage.setItem("pf_code", code); } catch (x) {}
+    pfLit = 99; pfTitle(); pfWave.show(); $("pf-stats").style.visibility = "hidden"; $("pf-gpu").style.visibility = "hidden";
+    $("pf-code").disabled = true; $("pf-run").disabled = true; pfSay("THANKS FOR YOUR SUPPORT", "ok"); $("pf-track").hidden = false;
     pfDropOldBuilds(meta.sha256.slice(0, 12));
     var pack = await pfOpenParts(meta, key), patch = await pfOpenPatch(meta, key);
     pfMusicGate(meta, key);
     await pfStartGodot(meta, pack, code, patch);
   } catch (e) {
-    pfMeta = null; pfSay(String(e && e.message || e), "err"); $("pf-code").disabled = false; pfBusy = false;
+    pfMeta = null; pfSay(String(e && e.message || e), "err"); $("pf-code").disabled = false; $("pf-run").disabled = false; pfBusy = false;
   }
 }
-function pfAutoStart() { if ($("pf-code").hidden && curTab === "play") pfTry($("pf-code").value); }
-$("pf-code").addEventListener("input", function () { pfSay(""); clearTimeout(pfWait); pfWait = setTimeout(function () { pfTry($("pf-code").value); }, 400); });
+$("pf-code").addEventListener("input", function () {
+  pfSay(""); pfLit = $("pf-code").value.trim().length; pfTitle();
+  clearTimeout(pfWait); pfWait = setTimeout(function () { pfTry($("pf-code").value); }, 400);
+});
 $("pf-f").addEventListener("submit", function (ev) { ev.preventDefault(); clearTimeout(pfWait); pfTry($("pf-code").value); });
 load();
 </script></body></html>
