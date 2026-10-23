@@ -66,13 +66,14 @@ select.lvl{padding:1px 4px;font-size:11px}
 .chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.chg-t{background:var(--bg);border:2px solid var(--line);border-left:3px solid;padding:6px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 14px var(--head);letter-spacing:.1em}
 .chg-t b{font:600 18px var(--mono);color:var(--fg)}.chg-t:hover{background:var(--hover)}.chg-t.on{background:var(--hover)}.chg-l{grid-column:1/-1;border:2px solid var(--line);border-left:3px solid;padding:4px 10px;display:grid;gap:2px}
 .pf{min-height:60vh;display:grid;place-content:center;justify-items:center;gap:22px;padding:24px 16px;background:var(--bg)}.pf:fullscreen{min-height:100vh}
-#pf-head{text-align:center;display:grid;gap:6px}#pf-title{margin:0;font:600 46px/1 var(--head);letter-spacing:.2em;color:var(--beige)}
-#pf-sub{margin:0;font:600 15px var(--head);letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+@font-face{font-family:"Pixel Gosub";src:url(https://rodwan-ux.github.io/studio/pixel_gosub.otf) format("opentype")}
+#pf-head{text-align:center;display:grid;gap:10px}#pf-title{margin:0;font:400 calc(6px * 2048 / 300)/1 "Pixel Gosub",var(--head);color:var(--beige);text-shadow:6px 6px 0 var(--cyan);-webkit-font-smoothing:none;font-smooth:never;white-space:nowrap}
+@media (max-width:560px){#pf-title{font-size:calc(3px * 2048 / 300);text-shadow:3px 3px 0 var(--cyan)}}
+#pf-sub{margin:0;font:600 12px var(--head);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 #pf-stats{width:min(760px,92vw);display:grid;gap:6px;justify-items:center}.pf-lbl{font:600 12px var(--head);letter-spacing:.14em;color:var(--rose)}
-#pf-stats .pf-row{opacity:.2;animation:pf-lit .3s steps(3) forwards}
-@keyframes pf-lit{to{opacity:1}}
+#pf-stats .pf-on{animation:pf-lit .1s steps(1) forwards}
+@keyframes pf-lit{to{fill:var(--c)}}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px}
-#pf-go{font:600 18px var(--head);letter-spacing:.14em;padding:6px 22px;color:var(--beige);border-color:var(--rose)}#pf-go:hover{background:var(--hover);color:var(--fg)}#pf-go:disabled{opacity:.4;cursor:default}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
 #pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
 #pf-track{width:min(608px,92vw);height:8px;background:repeating-linear-gradient(90deg,var(--hover) 0 6px,var(--sunk) 6px 8px);border:2px solid var(--line);overflow:hidden}
@@ -156,9 +157,9 @@ select.lvl{padding:1px 4px;font-size:11px}
 </section>
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
 <section class="panel" data-pane="play" hidden><div class="pf" id="pf">
-<div id="pf-head"><h1 id="pf-title">PLAY PIXEL FORMATION</h1><p id="pf-sub"></p></div>
+<div id="pf-head"><h1 id="pf-title">PIXEL FORMATION</h1><p id="pf-sub"></p></div>
 <div id="pf-gpu"></div>
-<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-go" type="submit">PLAY</button></form>
+<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"></form>
 <div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div>
 <div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div id="pf-game"></div>
 <div class="pf-lbl">IN DEVELOPMENT</div><div id="pf-dev"></div></div>
@@ -236,7 +237,7 @@ function showTab(t) {
   document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
   try { localStorage.setItem("tab", t); } catch (e) {}
   if (t === "overview" && D) renderHeatmap();
-  if (t === "play") pfGpuNote();
+  if (t === "play") { pfGpuNote(); pfAutoStart(); }
   loadLazy(t);
 }
 // 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — PEOPLE / TELEMETRY / DASHBOARD; VIEW AS is not logged
@@ -1390,33 +1391,42 @@ function pfMusicGate(meta, key) {
 // 1479: the PLAY tab's tiles - the game as every player played it (sums from EVENTS) and the project's counts (DEV.json)
 // 1491: a person with a game code in PEOPLE plays with it
 // 1496: each group one matrix in the CHANGES heatmap's look - a row per number: its name, a row of the heatmap's squares lit
-// by the number's share of the group's largest, the number at the end; the rows light up one after another, hover = both
+// by the number's share of the group's largest, the number at the end; hover = both
+// 1500: the matrices start empty and the squares light one by one from the left; IN DEVELOPMENT = one square per thing
+// in the build (its rows run on to more lines), hover a square = its name and what it is
 function renderPlayStats() {
   var ps = D.playstats || {}, g = ps.game || {}, d = ps.dev || {}, n = 0;
   $("pf-stats").hidden = false;
   var C = 13, L = 104, V = 64, cells = Math.max(1, Math.floor(($("pf-stats").clientWidth - L - V) / C));
   var font = " fill='#9a8890' font-size='9' font-family='JetBrains Mono,monospace'";
+  var list = function (x) { return Array.isArray(x) ? x : Array.from({ length: +x || 0 }, function () { return ["", ""]; }); };
   var matrix = function (rows) {
-    var max = Math.max.apply(null, rows.map(function (r) { return +r[1] || 0; }).concat([1]));
-    var svg = "<svg width='" + (L + cells * C + V) + "' height='" + rows.length * C + "' role='img'>";
-    rows.forEach(function (r, i) {
-      var v = +r[1] || 0, shown = r[2] != null ? r[2] : v, lit = v ? Math.max(1, Math.round(v / max * cells)) : 0, y = i * C;
-      svg += "<g class='pf-row' style='animation-delay:" + (n++ * 90) + "ms'><title>" + esc(r[0] + "  " + shown) + "</title>" +
-        "<text x='0' y='" + (y + 9) + "'" + font + ">" + esc(r[0].toUpperCase()) + "</text>";
-      for (var c = 0; c < cells; c++) svg += "<rect x='" + (L + c * C) + "' y='" + y + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='" + HEAT[c < lit ? heatLvl(v, max) : 0] + "'/>";
+    var max = Math.max.apply(null, rows.map(function (r) { return r[3] ? r[3].length : +r[1] || 0; }).concat([1]));
+    var svg = "", y = 0;
+    rows.forEach(function (r) {
+      var items = r[3], v = items ? items.length : +r[1] || 0, shown = r[2] != null ? r[2] : v, t0 = n++ * 90;
+      var lit = items ? v : v ? Math.max(1, Math.round(v / max * cells)) : 0, lines = items ? Math.max(1, Math.ceil(v / cells)) : 1;
+      svg += "<g><title>" + esc(r[0] + "  " + shown) + "</title><text x='0' y='" + (y + 9) + "'" + font + ">" + esc(r[0].toUpperCase()) + "</text>";
+      for (var c = 0; c < cells * lines; c++) {
+        var it = items && items[c];
+        svg += "<rect x='" + (L + c % cells * C) + "' y='" + (y + Math.floor(c / cells) * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='" + HEAT[0] + "'" +
+          (c < lit ? " class='pf-on' style='--c:" + HEAT[heatLvl(v, max)] + ";animation-delay:" + (t0 + c * 15) + "ms'" : "") + ">" +
+          (it && it[0] ? "<title>" + esc(it[0] + "  " + it[1]) + "</title>" : "") + "</rect>";
+      }
       svg += "<text x='" + (L + cells * C + V) + "' y='" + (y + 9) + "' text-anchor='end' fill='" + HEAT[4] + "' font-size='10' font-family='JetBrains Mono,monospace'>" + esc(shown) + "</text></g>";
+      y += lines * C;
     });
-    return svg + "</svg>";
+    return "<svg width='" + (L + cells * C + V) + "' height='" + y + "' role='img'>" + svg + "</svg>";
   };
   $("pf-game").innerHTML = matrix([["Hours played", g.hours || 0, (g.hours || 0).toFixed(1)], ["Sessions", g.sessions], ["Routes sailed", g.sailed],
     ["Camps made", g.camps], ["Battles fought", g.battles], ["Battles won", g.won], ["Men fallen", g.fallen], ["Enemies slain", g.slain],
     ["Quests done", g.quests]]);
-  $("pf-dev").innerHTML = d.version ? matrix([["Mechanics", d.mechanics], ["Characters", d.characters], ["Looks", d.looks],
-    ["Unit classes", d.classes], ["Heroes", d.heroes], ["Quests written", d.quests], ["Cities built", d.cities],
-    ["Dialog trees", d.dialogs]]) : "";
+  $("pf-dev").innerHTML = d.version ? matrix([["Mechanics", 0, null, list(d.mechanics)], ["Characters", 0, null, list(d.characters)], ["Looks", 0, null, list(d.looks)],
+    ["Unit classes", 0, null, list(d.classes)], ["Heroes", 0, null, list(d.heroes)], ["Quests written", 0, null, list(d.quests)], ["Cities built", 0, null, list(d.cities)],
+    ["Dialog trees", 0, null, list(d.dialogs)]]) : "";
   $("pf-sub").textContent = d.version ? "PLAYTEST " + d.version : "PLAYTEST";
   var own = (D.mine || [])[0];
-  if (own) { $("pf-code").value = own; $("pf-code").hidden = true; }
+  if (own) { $("pf-code").value = own; $("pf-code").hidden = true; pfAutoStart(); }
 }
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
 // ignored the request, so one line tells how to switch the browser to the main GPU
@@ -1460,25 +1470,34 @@ function pfStartGodot(meta, pack, code, patch) {
   });
 }
 
-$("pf-f").addEventListener("submit", async function (ev) {
-  ev.preventDefault();
-  var code = $("pf-code").value.trim().toLowerCase();
-  if (!code) return;
-  try { if (!document.fullscreenElement) $("pf").requestFullscreen().catch(function () {}); } catch (x) {}   // the tab full screen - only inside the click
-  $("pf-go").disabled = true; pfSay("CHECKING THE CODE...");
+// 1500: no PLAY button - the code is tried as it is typed (a short pause after the last key); the right one thanks the
+// player and starts the game; a person with a game code in PEOPLE starts once the PLAY tab is open
+var pfMeta = null, pfBusy = false, pfWait = 0;
+async function pfTry(code) {
+  code = code.trim().toLowerCase();
+  if (!code || pfBusy) return;
+  pfBusy = true;
   try {
-    var meta = await (await fetch(PF_B + "gate.json", { cache: "no-store" })).json();
+    var meta = await (pfMeta || (pfMeta = fetch(PF_B + "gate.json", { cache: "no-store" }).then(function (r) { return r.json(); })));
     var key = await pfGameKey(meta, code);
-    if (!key) { pfSay("THIS CODE DOES NOT OPEN THE GAME", "err"); $("pf-go").disabled = false; return; }
-    pfSay("UNPACKING THE GAME...", "ok"); $("pf-track").hidden = false;
+    if (!key) {
+      pfBusy = false;
+      var now = $("pf-code").value.trim().toLowerCase();   // typed on while this one was checked
+      if (now !== code) pfTry(now); else pfSay("THIS CODE DOES NOT OPEN THE GAME", "err");
+      return;
+    }
+    try { if (!document.fullscreenElement) $("pf").requestFullscreen().catch(function () {}); } catch (x) {}   // the tab full screen - only soon after a key or a click
+    $("pf-code").disabled = true; pfSay("THANKS FOR YOUR SUPPORT", "ok"); $("pf-track").hidden = false;
     pfDropOldBuilds(meta.sha256.slice(0, 12));
     var pack = await pfOpenParts(meta, key), patch = await pfOpenPatch(meta, key);
     pfMusicGate(meta, key);
-    pfSay("STARTING...", "ok");
     await pfStartGodot(meta, pack, code, patch);
   } catch (e) {
-    pfSay(String(e && e.message || e), "err"); $("pf-go").disabled = false;
+    pfMeta = null; pfSay(String(e && e.message || e), "err"); $("pf-code").disabled = false; pfBusy = false;
   }
-});
+}
+function pfAutoStart() { if ($("pf-code").hidden && curTab === "play") pfTry($("pf-code").value); }
+$("pf-code").addEventListener("input", function () { pfSay(""); clearTimeout(pfWait); pfWait = setTimeout(function () { pfTry($("pf-code").value); }, 400); });
+$("pf-f").addEventListener("submit", function (ev) { ev.preventDefault(); clearTimeout(pfWait); pfTry($("pf-code").value); });
 load();
 </script></body></html>
