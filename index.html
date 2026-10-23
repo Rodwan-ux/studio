@@ -66,6 +66,10 @@ select.lvl{padding:1px 4px;font-size:11px}
 .chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.chg-t{background:var(--bg);border:2px solid var(--line);border-left:3px solid;padding:6px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 14px var(--head);letter-spacing:.1em}
 .chg-t b{font:600 18px var(--mono);color:var(--fg)}.chg-t:hover{background:var(--hover)}.chg-t.on{background:var(--hover)}.chg-l{grid-column:1/-1;border:2px solid var(--line);border-left:3px solid;padding:4px 10px;display:grid;gap:2px}
 .pf{min-height:60vh;display:grid;place-content:center;justify-items:center;gap:22px;padding:24px 16px;background:var(--bg)}.pf:fullscreen{min-height:100vh}
+#pf-head{text-align:center;display:grid;gap:6px}#pf-title{margin:0;font:600 46px/1 var(--head);letter-spacing:.2em;color:var(--beige)}
+#pf-sub{margin:0;font:600 15px var(--head);letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+#pf-stats{width:min(760px,92vw);display:grid;gap:8px}.pf-lbl{font:600 13px var(--head);letter-spacing:.14em;color:var(--rose)}
+.pfp{display:block;height:6px;margin-top:4px;background:var(--sunk);border:1px solid var(--line)}.pfp i{display:block;height:100%;background:var(--rose)}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px}
 #pf-go{font:600 18px var(--head);letter-spacing:.14em;padding:6px 22px;color:var(--beige);border-color:var(--rose)}#pf-go:hover{background:var(--hover);color:var(--fg)}#pf-go:disabled{opacity:.4;cursor:default}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
@@ -151,6 +155,9 @@ select.lvl{padding:1px 4px;font-size:11px}
 </section>
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
 <section class="panel" data-pane="play" hidden><div class="pf" id="pf">
+<div id="pf-head"><h1 id="pf-title">PLAY PIXEL FORMATION</h1><p id="pf-sub"></p></div>
+<div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div class="tiles" id="pf-game"></div>
+<div class="pf-lbl">IN DEVELOPMENT</div><div class="tiles" id="pf-dev"></div></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-go" type="submit">PLAY</button></form>
 <div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div><div id="pf-gpu"></div>
 <canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
@@ -240,7 +247,7 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "progress", "bugs", "codes", "events", "people", "team"];
-var LAZY = { people: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"] };
+var LAZY = { people: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"], play: ["playstats"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", progress: "Measuring the walls", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
   feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X" };
@@ -328,6 +335,7 @@ function render() {
   if (allowed("performance")) renderPerformance();
   if (allowed("players") && (got.players || D.players)) renderPlayers();
   if (allowed("changelog")) renderChangelog();
+  if (D.playstats) renderPlayStats();
   if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
   if (allowed("files") && (got.files || D.files)) renderFiles();
 }
@@ -663,10 +671,12 @@ function renderPerformance() {
   $("pr-m").innerHTML = grid([["Mode", function (x) { return esc(x.key); }]].concat([PR_SESS], PR_COLS), perfBy(rows, function (r) { return r.mode; }).sort(sortLen));
   $("pr-p").innerHTML = grid([["Who", function (x) { return nameTag(x.key); }]].concat([PR_SESS], PR_COLS), perfBy(rows, function (r) { return nameOf(r.code); }).sort(sortLen));
   var starts = {}; sessions(events()).forEach(function (x) { starts[x.id] = x; });
+  var gpus = {}; raw.forEach(function (r) { var g = r.EVENT === "session_start" && /(?:^| )gpu=(\S+)/.exec(String(r.VALUES)); if (g) gpus[r.SESSION] = g[1].replace(/_/g, " "); });   // 1478
   var ss = perfBy(rows, function (r) { return r.session; }).map(function (x) { x.start = (starts[x.key] || {}).start || x.rows[0].time; x.code = x.rows[0].code; x.build = x.rows[0].build; return x; })
     .sort(function (a, b) { return String(b.start).localeCompare(String(a.start)); });
   if (!ss.some(function (x) { return x.key === prSession; })) prSession = ss[0] ? ss[0].key : "";
-  $("pr-s").innerHTML = grid([["Start", function (x) { return esc(short(x.start)); }], ["Who", function (x) { return who(x.code); }], ["Build", function (x) { return esc(x.build); }]].concat(PR_COLS), ss,
+  $("pr-s").innerHTML = grid([["Start", function (x) { return esc(short(x.start)); }], ["Who", function (x) { return who(x.code); }], ["Build", function (x) { return esc(x.build); }],
+    ["GPU", function (x) { return esc(gpus[x.key] || ""); }]].concat(PR_COLS), ss,
     function (x) { return " class='click" + (x.key === prSession ? " sel" : "") + "' data-s='" + esc(x.key) + "'"; });
   $("pr-sess").innerHTML = ss.map(function (x) { return "<option value='" + esc(x.key) + "'>" + esc(short(x.start) + "  " + nameOf(x.code) + "  " + x.build + "  " + fmtSec(x.len)) + "</option>"; }).join("");
   $("pr-sess").value = prSession;
@@ -1373,6 +1383,21 @@ function pfMusicGate(meta, key) {
   };
 })();
 
+// 1479: the PLAY tab's tiles - the game as every player played it (sums from EVENTS) and the project's counts (DEV.json)
+function renderPlayStats() {
+  var ps = D.playstats || {}, g = ps.game || {}, d = ps.dev || {};
+  var tile = function (label, value, done, of) {
+    var bar = of ? "<i class='pfp'><i style='width:" + Math.min(100, Math.round(100 * done / of)) + "%'></i></i>" : "";
+    return "<div class='tile'><span>" + esc(label) + "</span><b>" + esc(value) + "</b>" + bar + "</div>";
+  };
+  $("pf-game").innerHTML = [tile("Hours played", (g.hours || 0).toFixed(1)), tile("Sessions", g.sessions || 0), tile("Routes sailed", g.sailed || 0),
+    tile("Camps made", g.camps || 0), tile("Battles fought", g.battles || 0), tile("Battles won", g.won || 0), tile("Men fallen", g.fallen || 0),
+    tile("Enemies slain", g.slain || 0), tile("Quests done", g.quests || 0)].join("");
+  $("pf-dev").innerHTML = d.version ? [tile("Quests written", d.quests), tile("Unit classes", d.classes), tile("Heroes", d.heroes),
+    tile("Cities built", d.cities + " / " + d.settlements, d.cities, d.settlements), tile("Dialog trees", d.dialogs)].join("") : "";
+  $("pf-sub").textContent = d.version ? "BUILD " + d.version + " · YOUR CODE OPENS THE GAME" : "YOUR CODE OPENS THE GAME";
+  $("pf-stats").hidden = false;
+}
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
 // ignored the request, so one line tells how to switch the browser to the main GPU
 var pfGpuAsked = false;
