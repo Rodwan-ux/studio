@@ -1265,16 +1265,26 @@ function pfGpuNote() {
   } catch (x) {}
 }
 
-// the game: Godot's own loader from the build folder, fed the opened file as its main pack
-function pfStartGodot(meta, pack, code) {
+// 1455: the build's patch (the files changed since it, BUILD EXPORTER PATCH), opened whole - null when it has none
+async function pfOpenPatch(meta, key) {
+  if (!meta.patch) return null;
+  var res = await pfSealed(PF_B + "patch.enc?v=" + meta.patch.sha256.slice(0, 12));
+  if (!res.ok) throw new Error("the patch did not load (" + res.status + ")");
+  return pfInflate(new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: pfB64(meta.patch.iv) }, key, await res.arrayBuffer())));
+}
+
+// the game: Godot's own loader from the build folder, fed the opened file as its main pack (1455: and the patch beside it,
+// which the game loads over the pack at its first step)
+function pfStartGodot(meta, pack, code, patch) {
   return new Promise(function (ok, fail) {
     var s = document.createElement("script"); s.src = PF_B + "index.js"; s.onerror = function () { fail(new Error("the game engine did not load")); };
     s.onload = function () {
-      var user = ["gate_code=" + code].concat(PF_TD ? ["testdrive=" + PF_TD] : []);
+      var user = ["gate_code=" + code].concat(PF_TD ? ["testdrive=" + PF_TD] : [], patch ? ["patch_pack=patch.pck"] : []);
       var cfg = Object.assign({}, meta.godot, { executable: PF_B + "index", canvas: $("pf-canvas"), args: ["--"].concat(user) });
       var engine = new Engine(cfg);
       $("pf-canvas").hidden = false;
       engine.init(PF_B + "index").then(function () { return engine.preloadFile(pack.buffer, "index.pck"); })
+        .then(function () { return patch && engine.preloadFile(patch.buffer, "patch.pck"); })
         .then(function () { return engine.start({ args: ["--main-pack", "index.pck", "--"].concat(user) }); }).then(ok, fail);
     };
     document.body.appendChild(s);
@@ -1293,10 +1303,10 @@ $("pf-f").addEventListener("submit", async function (ev) {
     if (!key) { pfSay("THIS CODE DOES NOT OPEN THE GAME", "err"); $("pf-go").disabled = false; return; }
     pfSay("UNPACKING THE GAME...", "ok"); $("pf-track").hidden = false;
     pfDropOldBuilds(meta.sha256.slice(0, 12));
-    var pack = await pfOpenParts(meta, key);
+    var pack = await pfOpenParts(meta, key), patch = await pfOpenPatch(meta, key);
     pfMusicGate(meta, key);
     pfSay("STARTING...", "ok");
-    await pfStartGodot(meta, pack, code);
+    await pfStartGodot(meta, pack, code, patch);
   } catch (e) {
     pfSay(String(e && e.message || e), "err"); $("pf-go").disabled = false;
   }
