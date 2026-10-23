@@ -68,8 +68,11 @@ select.lvl{padding:1px 4px;font-size:11px}
 .pf{min-height:60vh;display:grid;place-content:center;justify-items:center;gap:22px;padding:24px 16px;background:var(--bg)}.pf:fullscreen{min-height:100vh}
 #pf-head{text-align:center;display:grid;gap:6px}#pf-title{margin:0;font:600 46px/1 var(--head);letter-spacing:.2em;color:var(--beige)}
 #pf-sub{margin:0;font:600 15px var(--head);letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
-#pf-stats{width:min(760px,92vw);display:grid;gap:8px}.pf-lbl{font:600 13px var(--head);letter-spacing:.14em;color:var(--rose)}
-.pfp{display:block;height:6px;margin-top:4px;background:var(--sunk);border:1px solid var(--line)}.pfp i{display:block;height:100%;background:var(--rose)}
+#pf-stats{width:min(760px,92vw);display:grid;gap:6px;justify-items:center}.pf-lbl{font:600 12px var(--head);letter-spacing:.14em;color:var(--rose)}
+#pf-stats .tiles{grid-template-columns:repeat(auto-fill,84px);justify-content:center;gap:5px;width:100%}
+#pf-stats .tile{width:84px;height:84px;padding:5px 6px;gap:0}#pf-stats .tile span{font-size:10px;line-height:1.15;letter-spacing:.06em;white-space:normal}
+#pf-stats .tile b{font-size:17px}
+.pfp{display:block;height:4px;margin-top:3px;background:var(--sunk);border:1px solid var(--line)}.pfp i{display:block;height:100%;background:var(--rose)}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px}
 #pf-go{font:600 18px var(--head);letter-spacing:.14em;padding:6px 22px;color:var(--beige);border-color:var(--rose)}#pf-go:hover{background:var(--hover);color:var(--fg)}#pf-go:disabled{opacity:.4;cursor:default}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
@@ -156,10 +159,11 @@ select.lvl{padding:1px 4px;font-size:11px}
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
 <section class="panel" data-pane="play" hidden><div class="pf" id="pf">
 <div id="pf-head"><h1 id="pf-title">PLAY PIXEL FORMATION</h1><p id="pf-sub"></p></div>
+<div id="pf-gpu"></div>
+<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-go" type="submit">PLAY</button></form>
+<div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div>
 <div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div class="tiles" id="pf-game"></div>
 <div class="pf-lbl">IN DEVELOPMENT</div><div class="tiles" id="pf-dev"></div></div>
-<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-go" type="submit">PLAY</button></form>
-<div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div><div id="pf-gpu"></div>
 <canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
 </div>
 <script>
