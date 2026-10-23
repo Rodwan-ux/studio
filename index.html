@@ -69,16 +69,17 @@ select.lvl{padding:1px 4px;font-size:11px}
 @font-face{font-family:"Pixel Gosub";src:url(https://rodwan-ux.github.io/studio/pixel_gosub.otf) format("opentype")}
 #pf-head{text-align:center;display:grid;gap:10px;justify-items:center}#pf-title{margin:0;line-height:0}#pf-tc{display:block;image-rendering:pixelated}
 #pf>*:not(canvas){position:relative;z-index:12}#pf-wave{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:11;image-rendering:pixelated}
-#pf-run{font:600 18px var(--head);letter-spacing:.14em;padding:6px 26px;color:var(--beige);border-color:var(--rose)}#pf-run:hover{background:var(--hover);color:var(--fg)}
+#pf-run{font:600 18px var(--head);letter-spacing:.14em;padding:6px 26px;color:var(--beige);border-color:var(--rose);border-radius:0}#pf-run:hover{background:var(--hover);color:var(--fg)}
 #pf-sub{margin:0;font:600 12px var(--head);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 #pf-stats{width:min(760px,92vw);display:grid;gap:6px;justify-items:center}.pf-lbl{font:600 12px var(--head);letter-spacing:.14em;color:var(--rose)}
-#pf-stats .pf-on{animation:pf-lit .1s steps(1) forwards}
+#pf-stats .pf-on{animation:pf-lit .1s steps(1) forwards}#pf-stats rect:hover{fill:rgb(100,255,255)!important}
+#pf>#pf-tip{position:fixed;z-index:20;pointer-events:none;max-width:320px;padding:5px 8px;background:var(--panel);border:2px solid rgb(100,255,255);font:11px/1.4 var(--mono);color:var(--fg)}#pf-tip b{display:block;color:rgb(100,255,255);font-weight:600;text-transform:uppercase}
 @keyframes pf-lit{to{fill:var(--c)}}
-#pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px}
+#pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px;border-radius:0}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
 #pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
-#pf-track{width:min(608px,92vw);height:8px;background:repeating-linear-gradient(90deg,var(--hover) 0 6px,var(--sunk) 6px 8px);border:2px solid var(--line);overflow:hidden}
-#pf-bar{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--rose) 0 6px,var(--plum) 6px 8px)}
+#pf-track{width:min(608px,92vw);height:12px;background:rgb(0,60,52);border:2px solid rgb(0,133,113);overflow:hidden}
+#pf-bar{display:block;height:100%;width:0;background:rgb(100,255,255)}
 #pf-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;z-index:10;opacity:0}#pf-canvas.on{opacity:1}
 .prog{display:grid;grid-template-columns:auto max-content;gap:2px 10px;align-items:center;justify-content:start}.pg-n{font:11px/11px var(--mono);color:var(--dim);text-transform:uppercase;white-space:nowrap}.pg-b{display:grid;grid-template-columns:repeat(20,11px);grid-auto-rows:11px;gap:2px}.pg-b i{background:var(--hover);border-radius:2px}.pg-s{grid-column:2;position:relative;height:17px;margin-top:5px}.pg-s span{position:absolute;top:0;transform:translateX(-50%);font:13px var(--mono);color:var(--dim)}.cols>.panel{align-content:start}
 [hidden]{display:none!important}
@@ -161,7 +162,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
 <div id="pf-gpu"></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button" hidden>RUN</button></form>
-<div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div>
+<div id="pf-track" hidden><i id="pf-bar"></i></div><div id="pf-msg"></div><div id="pf-tip" hidden></div>
 <div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div id="pf-game"></div>
 <div class="pf-lbl">IN DEVELOPMENT</div><div id="pf-dev"></div></div>
 <canvas id="pf-wave" hidden></canvas><canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
@@ -1407,12 +1408,12 @@ function renderPlayStats() {
     rows.forEach(function (r) {
       var items = r[3], v = items ? items.length : +r[1] || 0, shown = r[2] != null ? r[2] : v, t0 = n++ * 90;
       var lit = items ? v : v ? Math.max(1, Math.round(v / max * cells)) : 0, lines = items ? Math.max(1, Math.ceil(v / cells)) : 1;
-      svg += "<g><title>" + esc(r[0] + "  " + shown) + "</title><text x='0' y='" + (y + 9) + "'" + font + ">" + esc(r[0].toUpperCase()) + "</text>";
+      var row = esc(r[0]) + "' data-w='" + esc(String(shown));
+      svg += "<g><text x='0' y='" + (y + 9) + "'" + font + " data-t='" + row + "'>" + esc(r[0].toUpperCase()) + "</text>";
       for (var c = 0; c < cells * lines; c++) {
-        var it = items && items[c];
-        svg += "<rect x='" + (L + c % cells * C) + "' y='" + (y + Math.floor(c / cells) * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' rx='2' fill='" + HEAT[0] + "'" +
-          (c < lit ? " class='pf-on' style='--c:" + HEAT[heatLvl(v, max)] + ";animation-delay:" + (t0 + c * 15) + "ms'" : "") + ">" +
-          (it && it[0] ? "<title>" + esc(it[0] + "  " + it[1]) + "</title>" : "") + "</rect>";
+        var it = items && items[c], tip = items ? (it && it[0] ? esc(it[0]) + "' data-w='" + esc(it[1]) : "") : row;
+        svg += "<rect x='" + (L + c % cells * C) + "' y='" + (y + Math.floor(c / cells) * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' fill='" + HEAT[0] + "'" +
+          (tip ? " data-t='" + tip + "'" : "") + (c < lit ? " class='pf-on' style='--c:" + HEAT[heatLvl(v, max)] + ";animation-delay:" + (t0 + c * 15) + "ms'" : "") + "/>";
       }
       svg += "<text x='" + (L + cells * C + V) + "' y='" + (y + 9) + "' text-anchor='end' fill='" + HEAT[4] + "' font-size='10' font-family='JetBrains Mono,monospace'>" + esc(shown) + "</text></g>";
       y += lines * C;
@@ -1422,13 +1423,26 @@ function renderPlayStats() {
   $("pf-game").innerHTML = matrix([["Hours played", g.hours || 0, (g.hours || 0).toFixed(1)], ["Sessions", g.sessions], ["Routes sailed", g.sailed],
     ["Camps made", g.camps], ["Battles fought", g.battles], ["Battles won", g.won], ["Men fallen", g.fallen], ["Enemies slain", g.slain],
     ["Quests done", g.quests]]);
-  $("pf-dev").innerHTML = d.version ? matrix([["Mechanics", 0, null, list(d.mechanics)], ["Characters", 0, null, list(d.characters)], ["Looks", 0, null, list(d.looks)],
+  // 1500.3.3: one row per big category of the game, a square per named mechanic (game_mechanics.txt via the sync)
+  $("pf-dev").innerHTML = d.version ? matrix((d.categories || []).map(function (k) { return [k[0], 0, null, list(k[1])]; }).concat([["Characters", 0, null, list(d.characters)], ["Looks", 0, null, list(d.looks)],
     ["Unit classes", 0, null, list(d.classes)], ["Heroes", 0, null, list(d.heroes)], ["Quests written", 0, null, list(d.quests)], ["Cities built", 0, null, list(d.cities)],
-    ["Dialog trees", 0, null, list(d.dialogs)]]) : "";
+    ["Dialog trees", 0, null, list(d.dialogs)]])) : "";
   $("pf-sub").textContent = d.version ? "PLAYTEST " + d.version : "PLAYTEST";
   var own = (D.mine || [])[0];
   pfKnown(own);
 }
+// 1500.3.4: a tile's name in a box right beside the cursor, at once (no browser tooltip)
+$("pf-stats").addEventListener("mousemove", function (e) {
+  var t = e.target.closest("[data-t]"), tip = $("pf-tip");
+  if (!t) { tip.hidden = true; return; }
+  tip.innerHTML = "<b>" + esc(t.dataset.t) + "</b>" + esc(t.dataset.w || "");
+  tip.hidden = false;
+  var x = e.clientX + 14, y = e.clientY + 16;
+  if (x + tip.offsetWidth > innerWidth - 8) x = e.clientX - 14 - tip.offsetWidth;
+  if (y + tip.offsetHeight > innerHeight - 8) y = e.clientY - 12 - tip.offsetHeight;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+});
+$("pf-stats").addEventListener("mouseleave", function () { $("pf-tip").hidden = true; });
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
 // ignored the request, so one line tells how to switch the browser to the main GPU
 var pfGpuAsked = false;
@@ -1482,7 +1496,7 @@ function pfTitle() {
   var adv = [], w = 0;
   for (var i = 0; i <= PF_TITLE.length; i++) adv.push(Math.round(g.measureText(PF_TITLE.slice(0, i)).width));
   w = adv[PF_TITLE.length] + 2;
-  var hgt = 9, base = 7, S = Math.max(1, Math.min(6, Math.floor((Math.min(innerWidth, 1200) - 40) / w)));
+  var hgt = 9, base = 7, S = Math.max(1, Math.min(10, Math.floor((Math.min(innerWidth, 1400) - 40) / w)));
   // one letter as whole pixels (alpha cut at half), in its colour
   var glyph = function (ch, col) {
     var c = document.createElement("canvas"); c.width = 12; c.height = hgt;
@@ -1582,6 +1596,7 @@ var pfWave = (function () {
   };
   var frame = function (now) {
     var cv = $("pf-wave"), W = innerWidth, H = innerHeight, t = (now - t0) / 1000, fx = (now - fxT0) / 1000, total = 0.7 * 1.3 + 0.5 + 0.05;
+    W = Math.round(W * (devicePixelRatio || 1)); H = Math.round(H * (devicePixelRatio || 1));   // 1500.3.6: screen pixels, as the game draws it
     if (size !== W + "x" + H) { size = W + "x" + H; cv.width = W; cv.height = H; gl.viewport(0, 0, W, H); build(W, H); }
     if (mode === 1 && fx > total) mode = 0;
     if (mode === 2 && fx > total) { cv.hidden = true; raf = 0; return; }
@@ -1630,14 +1645,17 @@ async function pfTry(code) {
     }
     try { if (!document.fullscreenElement) $("pf").requestFullscreen().catch(function () {}); } catch (x) {}   // the tab full screen - only soon after a key or a click
     try { localStorage.setItem("pf_code", code); } catch (x) {}
-    pfLit = 99; pfTitle(); pfWave.show(); $("pf-stats").style.visibility = "hidden"; $("pf-gpu").style.visibility = "hidden";
-    $("pf-code").disabled = true; $("pf-run").disabled = true; pfSay("THANKS FOR YOUR SUPPORT", "ok"); $("pf-track").hidden = false;
+    // 1500.3.5: on the wave only the lit title and the bar under it, as wide as the title
+    pfLit = 99; pfTitle(); pfWave.show(); pfSay("");
+    ["pf-stats", "pf-gpu", "pf-f", "pf-msg", "pf-sub", "pf-tip"].forEach(function (id) { $(id).hidden = true; });
+    $("pf-track").style.width = $("pf-tc").width + "px"; $("pf-track").hidden = false;
     pfDropOldBuilds(meta.sha256.slice(0, 12));
     var pack = await pfOpenParts(meta, key), patch = await pfOpenPatch(meta, key);
     pfMusicGate(meta, key);
     await pfStartGodot(meta, pack, code, patch);
   } catch (e) {
-    pfMeta = null; pfSay(String(e && e.message || e), "err"); $("pf-code").disabled = false; $("pf-run").disabled = false; pfBusy = false;
+    pfMeta = null; $("pf-msg").hidden = false; $("pf-f").hidden = false; pfSay(String(e && e.message || e), "err");
+    $("pf-code").disabled = false; $("pf-run").disabled = false; pfBusy = false;
   }
 }
 $("pf-code").addEventListener("input", function () {
