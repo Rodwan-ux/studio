@@ -90,7 +90,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="tasks" aria-selected="false" hidden>TASKS</button>
 <button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="performance" aria-selected="false" hidden>PERFORMANCE</button><button data-tab="players" aria-selected="false" hidden>X FOLLOWING</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
-<button data-tab="files" aria-selected="false" hidden>FILES</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
+<button data-tab="files" aria-selected="false" hidden>FILES</button><button data-tab="backup" aria-selected="false" hidden>BACKUP</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
 <div class="cols">
@@ -156,6 +156,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div data-cp="timeline" hidden><div class="bar"><button id="tl2-out">Zoom out</button><button id="tl2-in">Zoom in</button><button id="tl2-today">Today</button><span class="muted" id="tl2-scale"></span></div><div id="tl2"></div></div>
 </section>
 <section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
+<section class="panel" data-pane="backup" hidden><div class="bar"><span class="muted" id="bk-upd"></span></div><div id="bk-disks"></div><div class="panel"><h2>Copies</h2><div class="scroll"><table id="bk-t"></table></div></div></section>
 <section class="panel" data-pane="play" hidden><div class="pf" id="pf">
 <div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
 <div id="pf-gpu"></div>
@@ -250,10 +251,10 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "progress", "bugs", "codes", "events", "people", "team"];
-var LAZY = { people: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"], play: ["playstats"] };
+var LAZY = { people: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"], play: ["playstats"], backup: ["backups"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", progress: "Measuring the walls", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
-  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X" };
+  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", backups: "Counting the copies in the vaults" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
 function ldDraw() {
   var n = ldParts.length, d = ldParts.filter(function (p) { return got[p]; }).length, next = ldParts.filter(function (p) { return !got[p]; })[0];
@@ -341,6 +342,7 @@ function render() {
   if (D.playstats) renderPlayStats();
   if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
   if (allowed("files") && (got.files || D.files)) renderFiles();
+  if (allowed("backup") && (got.backups || D.backups)) renderBackups();
 }
 
 // ── bugs ──
@@ -1256,6 +1258,24 @@ function renderFiles() {
   if (!D.files.packages.length) { $("files").innerHTML = "<div class='msg'>" + (D.category === "OWNER" ? "No packages yet. Make a sub-folder in SHARES (e.g. DIALOGS_PL), put the files in, write its name in someone's PACKAGES." : "Nothing here for you yet.") + "</div>"; return; }
   $("files").innerHTML = D.files.packages.map(function (p) { return "<div class='panel'><div class='bar'><h2>" + esc(p.name) + "</h2>" + (p.url ? "<a href='" + esc(p.url) + "' target='_blank' rel='noopener'>OPEN</a>" : "") + (p.people ? "<span class='muted'>" + (p.people.length ? "for " + esc(p.people.join(", ")) : "nobody has it yet") + "</span>" : "") + "</div>" +
     (p.files.length ? "<table>" + p.files.map(function (f) { return "<tr><td>" + esc(f.name) + "</td><td class='num muted'>" + (f.size / 1048576).toFixed(2) + " MB</td><td class='muted'>" + esc(new Date(f.updated).toLocaleDateString()) + "</td><td><button data-f='" + esc(f.id) + "'>Download</button></td></tr>"; }).join("") + "</table>" : "<div class='muted'>Empty.</div>") + "</div>"; }).join("");
+}
+// 1516: BACKUP (owner only) - every copy the studio sync finds (BACKUPS.json): the backup folders on any plugged-in
+// disk, the daily studio folders, the bug files and the Supabase base; a disk not plugged in shows its last seen copies.
+function gb(b) { return b >= 1073741824 ? (b / 1073741824).toFixed(1) + " GB" : (b / 1048576).toFixed(1) + " MB"; }
+function renderBackups() {
+  var B = D.backups;
+  if (!B) { $("bk-t").innerHTML = ""; $("bk-disks").innerHTML = "<div class='msg'>" + esc(D.errors.backups || "No backup list sent yet.") + "</div>"; return; }
+  $("bk-upd").textContent = "Listed " + B.updated + " by the studio sync on the owner's computer";
+  var per = {};
+  B.items.forEach(function (x) { var p = per[x.where] || (per[x.where] = { n: 0, size: 0, last: "" }); p.n++; p.size += x.size; if (x.date > p.last) p.last = x.date; });
+  $("bk-disks").innerHTML = "<div class='panel'><h2>Places</h2><table>" + Object.keys(per).map(function (w) {
+    var d = B.disks.filter(function (k) { return w.indexOf(k.name.slice(0, 2)) === 0; })[0], p = per[w];
+    return "<tr><td><b>" + esc(w) + "</b></td><td class='num'>" + p.n + " copies</td><td class='num'>" + gb(p.size) + "</td><td class='muted'>last " + esc(p.last) + "</td><td class='muted'>" +
+      (d ? (d.connected ? d.kind + ", " + gb(d.free) + " free of " + gb(d.total) : "<span style='color:var(--bad,#e55)'>NOT CONNECTED</span>, seen " + esc(d.seen)) : "") + "</td></tr>";
+  }).join("") + "</table></div>";
+  $("bk-t").innerHTML = grid([["Date", function (x) { return esc(x.date); }], ["What", function (x) { return esc(x.what); }], ["Where", function (x) { return esc(x.where); }],
+    ["Size", function (x) { return gb(x.size); }, "num"], ["Files", function (x) { return x.files == null ? "" : String(x.files); }, "num"],
+    ["Path", function (x) { return esc(x.path); }, "x muted"], ["", function (x) { return x.status ? "<span style='color:var(--bad,#e55)'>" + esc(x.status) + "</span>" : ""; }]], B.items);
 }
 $("files").addEventListener("click", function (e) {
   var b = e.target.closest("button[data-f]"); if (!b) return;
