@@ -71,10 +71,10 @@ select.lvl{padding:1px 4px;font-size:11px}
 #pf>*:not(canvas){position:relative;z-index:12}#pf-wave{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:11;image-rendering:pixelated}
 #pf-run{font:600 18px var(--head);letter-spacing:.14em;padding:6px 26px;color:var(--beige);border-color:var(--rose);border-radius:0}#pf-run:hover{background:var(--hover);color:var(--fg)}
 #pf-sub{margin:0;font:600 12px var(--head);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
-#pf-stats{width:min(760px,92vw);display:grid;gap:6px;justify-items:center}.pf-lbl{font:600 12px var(--head);letter-spacing:.14em;color:var(--rose)}
-#pf-stats .pf-on{animation:pf-lit .1s steps(1) forwards}#pf-stats rect:hover{fill:rgb(100,255,255)!important}
-#pf-tip{position:fixed;z-index:20;pointer-events:none;max-width:320px;padding:5px 8px;background:var(--panel);border:2px solid rgb(100,255,255);font:11px/1.4 var(--mono);color:var(--fg)}#pf-tip b{display:block;color:rgb(100,255,255);font-weight:600;text-transform:uppercase}
-@keyframes pf-lit{to{fill:var(--c)}}
+details.fold{background:var(--panel);border:2px solid var(--line);padding:6px 10px;margin-top:8px}details.fold>summary{cursor:pointer;font:600 14px var(--head);letter-spacing:.12em;color:var(--rose);list-style:none;display:flex;gap:10px;align-items:baseline}
+details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fold[open]>summary::before{content:"-"}details.fold>summary .muted{font:12px var(--mono);letter-spacing:0}details.fold>:not(summary){margin-top:8px}
+.bld{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.bld-t{background:var(--bg);border:2px solid var(--line);padding:6px 8px;cursor:pointer;display:grid;gap:4px}.bld-t:hover,.bld-t.on{background:var(--hover)}
+.bld-t h3{margin:0;display:flex;justify-content:space-between;align-items:baseline;font:600 16px var(--head)}.bld-t h3 b{font:600 18px var(--mono);color:var(--fg)}.bld-chips{display:flex;flex-wrap:wrap;gap:3px}.bld-chips i{font:600 11px var(--mono);font-style:normal;border-left:3px solid;padding:0 4px;background:var(--panel)}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px;border-radius:0}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
 #pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
@@ -87,26 +87,22 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div class="viewbar" id="viewbar" hidden>VIEWING AS <b id="viewbar-cat"></b><span class="muted">what this category sees; status changes are off</span><span class="spacer"></span><button id="viewbar-back">Back to owner</button></div>
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
 <nav id="tabs">
-<button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
-<button data-tab="tasks" aria-selected="false" hidden>TASKS</button><button data-tab="players" aria-selected="false" hidden>PLAYERS</button>
-<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="community" aria-selected="false" hidden>COMMUNITY</button>
-<button data-tab="studio" aria-selected="false" hidden>STUDIO</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
-
-<section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
-<div class="panel"><h2>Demo completion</h2><div class="prog" id="ov-prog"></div></div>
-</section>
+<button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
+<button data-tab="players" aria-selected="false" hidden>PLAYERS</button><button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="community" aria-selected="false" hidden>COMMUNITY</button>
+<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
 
 <section class="panel" data-pane="bugs" hidden>
+<nav id="bt-tabs" hidden><button data-bt="bugs" aria-selected="true">BUGS</button><button data-bt="tasks" aria-selected="false">TASKS</button></nav>
+<div data-btp="bugs">
 <div class="bar"><input id="b-q" type="search" placeholder="SEARCH ID, TEXT OR TESTER..." style="flex:1;min-width:200px">
 <label for="b-sev">Severity</label><select id="b-sev"></select><label for="b-type">Type</label><select id="b-type"></select>
 <label for="b-who">Tester</label><select id="b-who"></select><label id="b-mine-l" hidden><input type="checkbox" id="b-mine"> my reports</label><label><input type="checkbox" id="b-closed"> rejected / duplicate</label></div>
-<div id="b-msg" class="msg" hidden></div><div class="detail" id="b-detail" hidden></div><div class="board" id="b-board"></div></section>
-
-<section class="panel" data-pane="tasks" hidden>
+<div id="b-msg" class="msg" hidden></div><div class="detail" id="b-detail" hidden></div><div class="board" id="b-board"></div></div>
+<div data-btp="tasks" hidden>
 <div class="bar"><input id="t-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px">
 <label for="t-st">State</label><select id="t-st"><option value="active">OPEN + DOING</option><option value="doing">DOING</option><option value="open">OPEN</option><option value="bug">WITH A BUG</option><option value="done">DONE</option></select>
 <label for="t-code">Kind</label><select id="t-code"></select><span class="muted" id="t-n"></span></div>
-<div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></section>
+<div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></div></section>
 
 <section class="panel" data-pane="players" hidden>
 <div class="cols"><div class="panel"><h2>The game so far</h2><div class="scroll"><table id="pl-game" class="tight"></table></div></div>
@@ -148,11 +144,17 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div class="scroll"><table id="pl-t"></table></div></div>
 <div class="panel"><h2>Best posts</h2><div class="scroll"><table id="pl-best"></table></div></div></section>
 <section class="panel" data-pane="changelog" hidden>
-<div class="panel"><h2>In development</h2><div id="pf-stats" hidden><div id="pf-dev"></div></div><div id="pf-tip" hidden></div></div>
-<div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></div>
-<div class="panel"><h2>Next build</h2><div id="cl-next"></div></div>
-<div class="panel"><h2>Every build</h2><div id="cl"></div></div></section>
-<section class="panel" data-pane="studio" hidden>
+<nav id="clv-tabs"><button data-clv="summary" aria-selected="true">SUMMARY</button><button data-clv="full" aria-selected="false">FULL</button></nav>
+<div data-clvp="summary">
+<details class="fold" open><summary>PACE</summary><div class="tiles" id="ov-tiles"></div></details>
+<details class="fold" open><summary>DEMO COMPLETION</summary><div class="prog" id="ov-prog"></div></details>
+<details class="fold" open><summary>MECHANICS <span class="muted" id="cl-mech-n"></span></summary><div class="chg" id="cl-mech"></div></details>
+<details class="fold" id="ov-heat-fold"><summary>CHANGES <span class="muted" id="ov-heat-n"></span></summary><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></details>
+<details class="fold" open><summary>NEXT BUILD</summary><div id="cl-next"></div></details>
+<details class="fold" open><summary>BUILDS <span class="muted" id="cl-bld-n"></span></summary><div class="bld" id="cl-bld"></div></details>
+</div>
+<div data-clvp="full" hidden><div id="cl"></div></div></section>
+<section class="panel" data-pane="collaborate" hidden>
 <nav id="st-tabs"><button data-st="calendar" aria-selected="true">CALENDAR</button><button data-st="files" aria-selected="false">FILES</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
 <div data-stp="calendar">
 <nav id="cal-tabs"><button data-c="grid" aria-selected="true">CALENDAR</button><button data-c="timeline" aria-selected="false">TIMELINE</button><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener" style="align-self:center">OPEN GOOGLE CALENDAR</a></nav>
@@ -235,19 +237,22 @@ function who(code) { return nameTag(nameOf(code)); }
 // tabs (the last one picked is remembered in this browser)
 // 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files and backup (one view each)
 var STUDIO_SUB = ["calendar", "files", "backup"];
-var topAllowed = function (t) { return t === "studio" ? STUDIO_SUB.some(allowed) : allowed(t); };
+var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : allowed(t); };
 function showTab(t) {
   if (!D || !D.tabs) return;
-  if (STUDIO_SUB.indexOf(t) >= 0) { stCur = t; t = "studio"; }   // a tab kept from before 1520
+  if (STUDIO_SUB.indexOf(t) >= 0) { stCur = t; t = "collaborate"; }   // a tab kept from before 1520
   if (t === "performance") t = "players";
-  if (!topAllowed(t)) t = STUDIO_SUB.indexOf(D.tabs[0]) >= 0 ? "studio" : D.tabs[0];
+  if (t === "overview") t = "changelog";
+  if (t === "tasks") { btCur = "tasks"; t = "bugs"; }
+  if (!topAllowed(t)) t = STUDIO_SUB.indexOf(D.tabs[0]) >= 0 ? "collaborate" : D.tabs[0];
   curTab = t;
   document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
   document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
   try { localStorage.setItem("tab", t); } catch (e) {}
-  if (t === "changelog" && D) { renderHeatmap(); if (D.playstats) renderPlayStats(); }
+  if (t === "changelog" && D) renderHeatmap();
+  if (t === "bugs") showBt(btCur);
   if (t === "play") { pfGpuNote(); pfTitle(); if (D.playstats) renderPlayStats(); }
-  if (t === "studio") { showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
+  if (t === "collaborate") { showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
   else loadLazy(t);
 }
 var stCur = "calendar";
@@ -258,7 +263,24 @@ function showSt(t) {
   document.querySelectorAll("[data-stp]").forEach(function (p) { p.hidden = p.dataset.stp !== t; });
   if (t === "calendar" && D && D.calendar) renderTimeline();
 }
-$("st-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-st]"); if (b) { showSt(b.dataset.st); logUse("STUDIO / " + b.textContent); } });
+$("st-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-st]"); if (b) { showSt(b.dataset.st); logUse("COLLABORATE / " + b.textContent); } });
+// 1520: BUGS / TASKS - the task list is the OWNER's working view inside BUGS
+var btCur = "bugs";
+function showBt(t) {
+  if (t === "tasks" && !allowed("tasks")) t = "bugs";
+  btCur = t; $("bt-tabs").hidden = !allowed("tasks");
+  document.querySelectorAll("#bt-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.bt === t)); });
+  document.querySelectorAll("[data-btp]").forEach(function (p) { p.hidden = p.dataset.btp !== t; });
+}
+$("bt-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-bt]"); if (b) { showBt(b.dataset.bt); logUse("BUGS / " + b.textContent); } });
+// 1520: CHANGELOG / SUMMARY (tiles, every block folds) and FULL (the whole text, a build per fold)
+$("clv-tabs").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-clv]"); if (!b) return;
+  document.querySelectorAll("#clv-tabs button").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); });
+  document.querySelectorAll("[data-clvp]").forEach(function (p) { p.hidden = p.dataset.clvp !== b.dataset.clv; });
+  logUse("CHANGELOG / " + b.textContent);
+});
+$("ov-heat-fold").addEventListener("toggle", function () { if (this.open) renderHeatmap(); });
 // 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — PEOPLE / TELEMETRY / DASHBOARD; VIEW AS is not logged
 var logged = false;
 function logUse(tab) { if (VIEW_AS || !KEY) return; apiPost({ action: "studio_log", k: KEY, tab: tab }).catch(function () {}); }
@@ -350,7 +372,7 @@ function render() {
   $("status").textContent = (fresh ? "loaded " + new Date().toLocaleTimeString() : "saved view from " + hm(savedAt) + ", updating") + (errs.length ? ". Did not load: " + errs.join(", ") : "");
   var t0 = curTab; if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} }
   showTab(t0 || D.tabs[0]);
-  if (allowed("overview")) renderOverview();
+  if (allowed("changelog")) renderOverview();
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
   if (allowed("players")) { renderTelemetry(); renderPerformance(); renderGameStats(); }
@@ -415,7 +437,7 @@ $("b-detail").addEventListener("click", function (e) {
   apiPost({ action: "studio_set_bug", k: KEY, id: id, status: st, note: note }).then(function () {
     var head = D.bugs.values[0], r = D.bugs.values.findIndex(function (x) { return x[0] === id; });
     if (r > 0) { D.bugs.values[r][head.indexOf("STATUS")] = st; var cn = head.indexOf("NOTE"); if (cn >= 0) D.bugs.values[r][cn] = note; }
-    renderBugs(); if (allowed("overview")) renderOverview(); },
+    renderBugs(); if (allowed("changelog")) renderOverview(); },
     function (err) { b.disabled = false; b.textContent = "Not saved: " + (err && err.message || err); });
 });
 // drag a card to the other column (OWNER): into DONE = FIXED, back into TO DO = CONFIRMED
@@ -429,9 +451,9 @@ function moveBug(id, st) {
   var head = D.bugs.values[0], cs = head.indexOf("STATUS"), r = D.bugs.values.findIndex(function (x) { return x[0] === id; });
   if (r < 1 || (D.bugs.values[r][cs] || "NEW") === st) return;
   var old = D.bugs.values[r][cs];
-  D.bugs.values[r][cs] = st; renderBugs(); if (allowed("overview")) renderOverview();
+  D.bugs.values[r][cs] = st; renderBugs(); if (allowed("changelog")) renderOverview();
   apiPost({ action: "studio_set_bug", k: KEY, id: id, status: st }).catch(function (err) {
-    D.bugs.values[r][cs] = old; renderBugs(); if (allowed("overview")) renderOverview();
+    D.bugs.values[r][cs] = old; renderBugs(); if (allowed("changelog")) renderOverview();
     $("status").textContent = "Bug " + id.slice(0, 4) + " not moved: " + (err && err.message || err);
   });
 }
@@ -810,6 +832,11 @@ function renderOverview() {
   var streak = 0, sd = new Date();
   while ((act[dayKey(sd)] || 0) > 0) { streak++; sd.setDate(sd.getDate() - 1); }
   tiles.push(["Streak", streak + (streak === 1 ? " day" : " days")]);
+  // 1520: the pace - changes per day this week, the builds shipped, the days since the last one
+  tiles.splice(1, 0, ["Per day", (changes / 7).toFixed(1)]);
+  var shipped = clBuilds().filter(function (b) { return b.version !== "NEXT BUILD"; }), last = shipped[0] && String(shipped[0].date).match(/\d{4}-\d\d-\d\d/);
+  tiles.push(["Builds", shipped.length]);
+  if (last) tiles.push(["Since last build", Math.max(0, Math.round((Date.now() - new Date(last[0] + "T00:00:00")) / 864e5)) + " days"]);
   $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
   renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
@@ -1140,28 +1167,60 @@ document.addEventListener("click", function (e) { var td = e.target.closest("td.
 // ── changelog / calendar / files ──
 // CHANGELOG.md: "## NEXT BUILD" (changes not shipped yet, 1205), "## VERSION — DATE" headings and "- TITLE: what changed" lines (a line may go on, indented). One row each:
 // the title in colour, the rest opens on a click; text outside the entries is not shown.
+// 1520: the builds of CHANGELOG.md, newest first: {version, date, items [{cat, title, text}]}; NEXT BUILD = not shipped yet
+function clBuilds() {
+  var out = [], b = null, cat = "", cur = null;
+  String(D.changelog ? D.changelog.text : "").split(/\r?\n/).forEach(function (l) {
+    var v = l.match(/^## (.*)$/);
+    if (v) { var p = v[1].split(/\s+[—-]\s+/); b = { version: /^NEXT BUILD/i.test(v[1]) ? "NEXT BUILD" : p[0], date: /^NEXT BUILD/i.test(v[1]) ? "not shipped yet" : (p[1] || ""), items: [] }; out.push(b); cat = ""; cur = null; return; }
+    var ct = l.match(/^### (.*)$/); if (ct) { cat = ct[1].trim().toUpperCase(); cur = null; return; }
+    var li = l.match(/^- (.*)$/); if (li && b) { var m = li[1].match(/^([^:]{1,90}):\s*(.*)$/); cur = { cat: cat || "OTHER", title: m ? m[1] : li[1], text: m ? m[2] : "" }; b.items.push(cur); return; }
+    if (cur && /^\s{2,}\S/.test(l)) cur.text += " " + l.trim(); else cur = null;
+  });
+  return out;
+}
+var bldOpen = "";
 function renderChangelog() {
   renderNextBuild();
-  if (!D.changelog) { $("cl").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; return; }
-  var items = [], cur = null;
-  D.changelog.text.split(/\r?\n/).forEach(function (l) {
-    var li = l.match(/^- (.*)/);
-    if (li) { cur = { text: li[1] }; items.push(cur); return; }
-    if (cur && /^\s{2,}\S/.test(l)) { cur.text += " " + l.trim(); return; }
-    cur = null;
-    if (/^## NEXT BUILD/i.test(l)) { items.push({ version: "NEXT BUILD", date: "not shipped yet" }); return; }   // 1205
-    var ct = l.match(/^### (.*)$/); if (ct) { items.push({ cat: ct[1].trim().toUpperCase() }); return; }   // 1313
-    var v = l.match(/^## (\S+)\s*[—-]?\s*(.*)$/);
-    if (v) items.push({ version: v[1], date: v[2] });
-  });
-  $("cl").innerHTML = items.map(function (it) {
-    if (it.version) return "<div class='cl-v'><h2>" + esc(it.version) + "</h2><span class='muted'>" + esc(it.date) + "</span></div>";
-    if (it.cat) return "<h3 style='margin-top:6px;color:" + (CHG_COLOR[it.cat] || "var(--dim)") + "'>" + esc(it.cat) + "</h3>";
-    var m = it.text.match(/^([^:]{1,90}):\s*(.*)$/);
-    var d = m && m[2] ? m[2] : "";
-    return "<div class='cl-row" + (d ? " has" : "") + "'><div class='cl-t'>" + esc(m ? m[1] : it.text) + "</div>" + (d ? "<div class='cl-d'>" + esc(d) + "</div>" : "") + "</div>";
+  renderMechanics();
+  if (!D.changelog) { $("cl").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; $("cl-bld").innerHTML = ""; return; }
+  var bs = clBuilds(), shipped = bs.filter(function (b) { return b.version !== "NEXT BUILD"; });
+  var cats = function (b) { var c = {}; b.items.forEach(function (i) { c[i.cat] = (c[i.cat] || 0) + 1; }); return c; };
+  var row = function (i) { return "<div class='cl-row" + (i.text ? " has" : "") + "'><div class='cl-t' style='border-left:3px solid " + (CHG_COLOR[i.cat] || "var(--dim)") + ";padding-left:6px'>" + esc(i.title) + "</div>" + (i.text ? "<div class='cl-d'>" + esc(i.text) + "</div>" : "") + "</div>"; };
+  // SUMMARY: one tile per shipped build - its date and changes per category; a click opens its changes under the grid
+  $("cl-bld-n").textContent = shipped.length + " builds";
+  var opened = shipped.filter(function (b) { return b.version === bldOpen; })[0];
+  $("cl-bld").innerHTML = shipped.map(function (b) {
+    var c = cats(b);
+    return "<div class='bld-t" + (b.version === bldOpen ? " on" : "") + "' data-v='" + esc(b.version) + "'><h3>" + esc(b.version) + "<b>" + b.items.length + "</b></h3><span class='muted'>" + esc(b.date) + "</span><div class='bld-chips'>" +
+      Object.keys(c).map(function (k) { return "<i style='border-left-color:" + (CHG_COLOR[k] || "var(--dim)") + "'>" + esc(k) + " " + c[k] + "</i>"; }).join("") + "</div></div>";
+  }).join("") + (opened ? "<div class='chg-l' style='grid-column:1/-1'>" + opened.items.map(row).join("") + "</div>" : "");
+  // FULL: every build folded, NEXT BUILD and the newest build open, a line opens its text
+  $("cl").innerHTML = bs.map(function (b, n) {
+    var c = cats(b);
+    return "<details class='fold'" + (n < 2 ? " open" : "") + "><summary>" + esc(b.version) + " <span class='muted'>" + esc(b.date) + ", " + b.items.length + " changes</span></summary>" +
+      Object.keys(c).map(function (k) { return "<h3 style='margin:6px 0 2px;color:" + (CHG_COLOR[k] || "var(--dim)") + "'>" + esc(k) + "</h3>" + b.items.filter(function (i) { return i.cat === k; }).map(row).join(""); }).join("") + "</details>";
   }).join("") + "<p class='muted'>Sent " + new Date(D.changelog.updated).toLocaleString() + "</p>";
 }
+$("cl-bld").addEventListener("click", function (e) {
+  if (e.target.closest(".cl-row.has")) { e.target.closest(".cl-row.has").classList.toggle("open"); return; }
+  var t = e.target.closest(".bld-t"); if (!t) return; bldOpen = bldOpen === t.dataset.v ? "" : t.dataset.v; renderChangelog();
+});
+// 1520: MECHANICS - one tile per area of the game (game_mechanics.txt via the sync) and the build's counts; a click opens its names
+var mechOpen = "";
+function renderMechanics() {
+  var d = (D.playstats || {}).dev;
+  if (!d || !d.version) { $("cl-mech").innerHTML = "<div class='muted'>Not loaded yet.</div>"; $("cl-mech-n").textContent = ""; return; }
+  var areas = (d.categories || []).map(function (k) { return [k[0], k[1]]; }).concat([["Unit classes", d.classes], ["Heroes", d.heroes], ["Looks", d.looks],
+    ["Quests written", d.quests], ["Cities built", d.cities], ["Dialog trees", d.dialogs]]).filter(function (a) { return a[1] && a[1].length; });
+  var listed = { "Looks": 1 };   // too many to list: the count says it
+  $("cl-mech-n").textContent = "build " + d.version + ", " + (d.categories || []).reduce(function (a, k) { return a + k[1].length; }, 0) + " mechanics";
+  var opened = areas.filter(function (a) { return a[0] === mechOpen; })[0];
+  $("cl-mech").innerHTML = areas.map(function (a) {
+    return "<div class='chg-t" + (a[0] === mechOpen ? " on" : "") + "' data-m='" + esc(a[0]) + "' style='border-left-color:var(--rose);color:var(--beige)" + (listed[a[0]] ? ";cursor:default" : "") + "'>" + esc(a[0].toUpperCase()) + "<b>" + a[1].length + "</b></div>";
+  }).join("") + (opened && !listed[opened[0]] ? "<div class='chg-l' style='border-left-color:var(--rose)'>" + opened[1].map(function (x) { return "<div><b>" + esc(x[0]) + "</b> <span class='muted'>" + esc(x[1] || "") + "</span></div>"; }).join("") + "</div>" : "");
+}
+$("cl-mech").addEventListener("click", function (e) { var t = e.target.closest(".chg-t"); if (!t) return; mechOpen = mechOpen === t.dataset.m ? "" : t.dataset.m; renderMechanics(); });
 $("cl").addEventListener("click", function (e) { var r = e.target.closest(".cl-row.has"); if (r) r.classList.toggle("open"); });
 // The calendar: one tile per day, Monday to Sunday, from the week before this one to 90 days ahead; today in cyan.
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -1427,11 +1486,6 @@ function pfMusicGate(meta, key) {
 // 1491: a person with a game code in PEOPLE plays with it
 // 1496: each group one matrix in the CHANGES heatmap's look - a row per number: its name, a row of the heatmap's squares lit
 // by the number's share of the group's largest, the number at the end; hover = both
-// 1500: the matrices start empty and the squares light one by one from the left; IN DEVELOPMENT = one square per thing
-// in the build (its rows run on to more lines), hover a square = its name and what it is
-// 1507: drawn once, when the PLAY tab is on screen - every data part that came in drew it again (and lit it again) and
-// showed it again, also over the game already starting; once the game starts it stays hidden
-var pfDrawn = false;
 // 1520: PLAYERS / THE GAME SO FAR - the players' play summed by the sheet (tester and playtest codes only), as a table
 function renderGameStats() {
   var g = (D.playstats || {}).game;
@@ -1439,52 +1493,12 @@ function renderGameStats() {
     ["Battles fought", g.battles], ["Battles won", g.won], ["Battles lost", g.lost], ["Men fallen", g.fallen], ["Enemies slain", g.slain], ["Quests done", g.quests]]
     .map(function (r) { return "<tr><td>" + esc(r[0]) + "</td><td class='num'><b>" + esc(String(r[1] || 0)) + "</b></td></tr>"; }).join("") : "<tr><td class='muted'>Not loaded yet.</td></tr>";
 }
+// PLAY: the build number under the title and the code kept in this browser
 function renderPlayStats() {
   pfKnown((D.mine || [])[0]);
-  if (pfDrawn || pfBusy) return;
-  var ps = D.playstats || {}, g = ps.game || {}, d = ps.dev || {}, n = 0;
-  $("pf-stats").hidden = false;
-  if (!$("pf-stats").clientWidth) return;   // the tab not on screen: drawn when it opens
-  pfDrawn = true;
-  var C = 13, L = 104, V = 64, cells = Math.max(1, Math.floor(($("pf-stats").clientWidth - L - V) / C));
-  var font = " fill='#9a8890' font-size='9' font-family='JetBrains Mono,monospace'";
-  var list = function (x) { return Array.isArray(x) ? x : Array.from({ length: +x || 0 }, function () { return ["", ""]; }); };
-  var matrix = function (rows) {
-    var max = Math.max.apply(null, rows.map(function (r) { return r[3] ? r[3].length : +r[1] || 0; }).concat([1]));
-    var svg = "", y = 0;
-    rows.forEach(function (r) {
-      var items = r[3], v = items ? items.length : +r[1] || 0, shown = r[2] != null ? r[2] : v, t0 = n++ * 90;
-      var lit = items ? v : v ? Math.max(1, Math.round(v / max * cells)) : 0, lines = items ? Math.max(1, Math.ceil(v / cells)) : 1;
-      var row = esc(r[0]) + "' data-w='" + esc(String(shown));
-      svg += "<g><text x='0' y='" + (y + 9) + "'" + font + " data-t='" + row + "'>" + esc(r[0].toUpperCase()) + "</text>";
-      for (var c = 0; c < cells * lines; c++) {
-        var it = items && items[c], tip = items ? (it && it[0] ? esc(it[0]) + "' data-w='" + esc(it[1]) : "") : row;
-        svg += "<rect x='" + (L + c % cells * C) + "' y='" + (y + Math.floor(c / cells) * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' fill='" + HEAT[0] + "'" +
-          (tip ? " data-t='" + tip + "'" : "") + (c < lit ? " class='pf-on' style='--c:" + HEAT[heatLvl(v, max)] + ";animation-delay:" + (t0 + c * 15) + "ms'" : "") + "/>";
-      }
-      svg += "<text x='" + (L + cells * C + V) + "' y='" + (y + 9) + "' text-anchor='end' fill='" + HEAT[4] + "' font-size='10' font-family='JetBrains Mono,monospace'>" + esc(shown) + "</text></g>";
-      y += lines * C;
-    });
-    return "<svg width='" + (L + cells * C + V) + "' height='" + y + "' role='img'>" + svg + "</svg>";
-  };
-  // 1500.3.3: one row per big category of the game, a square per named mechanic (game_mechanics.txt via the sync)
-  $("pf-dev").innerHTML = d.version ? matrix((d.categories || []).map(function (k) { return [k[0], 0, null, list(k[1])]; }).concat([["Characters", 0, null, list(d.characters)], ["Looks", 0, null, list(d.looks)],
-    ["Unit classes", 0, null, list(d.classes)], ["Heroes", 0, null, list(d.heroes)], ["Quests written", 0, null, list(d.quests)], ["Cities built", 0, null, list(d.cities)],
-    ["Dialog trees", 0, null, list(d.dialogs)]])) : "";
+  var d = (D.playstats || {}).dev || {};
   $("pf-sub").textContent = d.version ? "PLAYTEST " + d.version : "PLAYTEST";
 }
-// 1500.3.4: a tile's name in a box right beside the cursor, at once (no browser tooltip)
-$("pf-stats").addEventListener("mousemove", function (e) {
-  var t = e.target.closest("[data-t]"), tip = $("pf-tip");
-  if (!t) { tip.hidden = true; return; }
-  tip.innerHTML = "<b>" + esc(t.dataset.t) + "</b>" + esc(t.dataset.w || "");
-  tip.hidden = false;
-  var x = e.clientX + 14, y = e.clientY + 16;
-  if (x + tip.offsetWidth > innerWidth - 8) x = e.clientX - 14 - tip.offsetWidth;
-  if (y + tip.offsetHeight > innerHeight - 8) y = e.clientY - 12 - tip.offsetHeight;
-  tip.style.left = x + "px"; tip.style.top = y + "px";
-});
-$("pf-stats").addEventListener("mouseleave", function () { $("pf-tip").hidden = true; });
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
 // ignored the request, so one line tells how to switch the browser to the main GPU
 var pfGpuAsked = false;
