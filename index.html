@@ -73,13 +73,15 @@ select.lvl{padding:1px 4px;font-size:11px}
 #pf-sub{margin:0;font:600 12px var(--head);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 details.fold{background:var(--panel);border:2px solid var(--line);padding:6px 10px;margin-top:8px}details.fold>summary{cursor:pointer;font:600 14px var(--head);letter-spacing:.12em;color:var(--rose);list-style:none;display:flex;gap:10px;align-items:baseline}
 details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fold[open]>summary::before{content:"-"}details.fold>summary .muted{font:12px var(--mono);letter-spacing:0}details.fold>:not(summary){margin-top:8px}
+.mx{overflow-x:auto}.mx .on{animation:mx-lit .1s steps(1) forwards}.mx rect:hover{fill:rgb(100,255,255)!important}@keyframes mx-lit{to{fill:var(--c)}}
+#mx-tip{position:fixed;z-index:20;pointer-events:none;max-width:320px;padding:5px 8px;background:var(--panel);border:2px solid rgb(100,255,255);font:11px/1.4 var(--mono);color:var(--fg)}#mx-tip b{display:block;color:rgb(100,255,255);font-weight:600;text-transform:uppercase}
 .bld{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.bld-t{background:var(--bg);border:2px solid var(--line);padding:6px 8px;cursor:pointer;display:grid;gap:4px}.bld-t:hover,.bld-t.on{background:var(--hover)}
 .bld-t h3{margin:0;display:flex;justify-content:space-between;align-items:baseline;font:600 16px var(--head)}.bld-t h3 b{font:600 18px var(--mono);color:var(--fg)}.bld-chips{display:flex;flex-wrap:wrap;gap:3px}.bld-chips i{font:600 11px var(--mono);font-style:normal;border-left:3px solid;padding:0 4px;background:var(--panel)}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px;border-radius:0}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
 #pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
 #pf-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;z-index:10;opacity:0}#pf-canvas.on{opacity:1}
-.prog{display:grid;grid-template-columns:auto max-content;gap:2px 10px;align-items:center;justify-content:start}.pg-n{font:11px/11px var(--mono);color:var(--dim);text-transform:uppercase;white-space:nowrap}.pg-b{display:grid;grid-template-columns:repeat(20,11px);grid-auto-rows:11px;gap:2px}.pg-b i{background:var(--hover);border-radius:2px}.pg-s{grid-column:2;position:relative;height:17px;margin-top:5px}.pg-s span{position:absolute;top:0;transform:translateX(-50%);font:13px var(--mono);color:var(--dim)}.cols>.panel{align-content:start}
+.cols>.panel{align-content:start}
 [hidden]{display:none!important}
 </style></head><body><div class="wrap">
 <header><span class="hello" id="hello"></span><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAM0AAAAUCAYAAAAujbmOAAAByklEQVR42u2aP0tDMRTFE3FRcBDExS8g/QDq5ljQQUEHJ4tzCy466KDooCCuTg5ip4IKOjzBpaCT1k2w6CZIB6cODh3j/E4hl0vS955wflua3Jc/74ac81Lbbd8642G8tGyNAnyeFB/av7a/2OPNu30MpHfw89VNlacXNqxmzLHrpRyJnRPIkCGEqOCmIYSbhpDBMow/nGw3TIjexPiP+wvn08NS/9p4Le+tjkrfbtbOVeuDfkBq/3T1lntS4DuYmykZjefJuj60vfSOedIQQnlGCDcNIcX2NKj/KtWy0eg75DhpWNDDqjsAjK9Uyy5Ev0oeYmJyVKWPd7dWg/Sz5Bnz8DRSDny+fgc9/+j0OlW+Ozh0vnqJy7OHqPPHHF+Zn02Vl/b3LE8aQijPCOGmIeT/3NOgXkQNX28mXj2IevXm8cUM8ps56mHp3ii2npbuMCTP1+n9Ot96ZwF6ludWOygeQY+AOSHlGNK35knY/wtxfAjmDE8aQijPCOGmIaRYngY1uqS5kXozSbWfGhlzvnrtN3cpvq++Zrz9r/cWg8aH67Nj1pzGc2nXLwvQw+ActfEIehjtnLX3Mtr2Wt/Nk4YQyjNCuGkIKRR/dGkmxi2aFWgAAAAASUVORK5CYII="></header>
@@ -105,7 +107,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></div></section>
 
 <section class="panel" data-pane="players" hidden>
-<div class="cols"><div class="panel"><h2>The game so far</h2><div class="scroll"><table id="pl-game" class="tight"></table></div></div>
+<div class="cols"><div class="panel"><h2>The game so far</h2><div class="mx" id="pl-game"></div></div>
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div></div>
 <nav id="tel-tabs"><button data-t="sessions" aria-selected="true">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="feedback" aria-selected="false">FEEDBACK</button><button data-t="performance" aria-selected="false">PERFORMANCE</button></nav>
 <div data-tp="feedback" hidden><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
@@ -144,16 +146,11 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div class="scroll"><table id="pl-t"></table></div></div>
 <div class="panel"><h2>Best posts</h2><div class="scroll"><table id="pl-best"></table></div></div></section>
 <section class="panel" data-pane="changelog" hidden>
-<nav id="clv-tabs"><button data-clv="summary" aria-selected="true">SUMMARY</button><button data-clv="full" aria-selected="false">FULL</button></nav>
-<div data-clvp="summary">
-<details class="fold" open><summary>PACE</summary><div class="tiles" id="ov-tiles"></div></details>
-<details class="fold" open><summary>DEMO COMPLETION</summary><div class="prog" id="ov-prog"></div></details>
-<details class="fold" open><summary>MECHANICS <span class="muted" id="cl-mech-n"></span></summary><div class="chg" id="cl-mech"></div></details>
-<details class="fold" id="ov-heat-fold"><summary>CHANGES <span class="muted" id="ov-heat-n"></span></summary><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></details>
+<details class="fold" id="ov-heat-fold" open><summary>CHANGES <span class="muted" id="ov-heat-n"></span></summary><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></details>
+<details class="fold" open><summary>MECHANICS <span class="muted" id="cl-mech-n"></span></summary><div class="mx" id="cl-mech"></div></details>
 <details class="fold" open><summary>NEXT BUILD</summary><div id="cl-next"></div></details>
 <details class="fold" open><summary>BUILDS <span class="muted" id="cl-bld-n"></span></summary><div class="bld" id="cl-bld"></div></details>
-</div>
-<div data-clvp="full" hidden><div id="cl"></div></div></section>
+<div id="mx-tip" hidden></div></section>
 <section class="panel" data-pane="collaborate" hidden>
 <nav id="st-tabs"><button data-st="calendar" aria-selected="true">CALENDAR</button><button data-st="files" aria-selected="false">FILES</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
 <div data-stp="calendar">
@@ -249,7 +246,8 @@ function showTab(t) {
   document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
   document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
   try { localStorage.setItem("tab", t); } catch (e) {}
-  if (t === "changelog" && D) renderHeatmap();
+  if (t === "changelog" && D) { renderHeatmap(); renderMechanics(); }   // the squares fill the width the tab has on screen
+  if (t === "players" && D) renderGameStats();
   if (t === "bugs") showBt(btCur);
   if (t === "play") { pfGpuNote(); pfTitle(); if (D.playstats) renderPlayStats(); }
   if (t === "collaborate") { showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
@@ -273,13 +271,6 @@ function showBt(t) {
   document.querySelectorAll("[data-btp]").forEach(function (p) { p.hidden = p.dataset.btp !== t; });
 }
 $("bt-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-bt]"); if (b) { showBt(b.dataset.bt); logUse("BUGS / " + b.textContent); } });
-// 1520: CHANGELOG / SUMMARY (tiles, every block folds) and FULL (the whole text, a build per fold)
-$("clv-tabs").addEventListener("click", function (e) {
-  var b = e.target.closest("button[data-clv]"); if (!b) return;
-  document.querySelectorAll("#clv-tabs button").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); });
-  document.querySelectorAll("[data-clvp]").forEach(function (p) { p.hidden = p.dataset.clvp !== b.dataset.clv; });
-  logUse("CHANGELOG / " + b.textContent);
-});
 $("ov-heat-fold").addEventListener("toggle", function () { if (this.open) renderHeatmap(); });
 // 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — PEOPLE / TELEMETRY / DASHBOARD; VIEW AS is not logged
 var logged = false;
@@ -290,9 +281,9 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
-var EAGER = ["changelog", "tasks", "activity", "progress", "bugs", "codes", "events", "people", "team"];
+var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
 var LAZY = { people: ["panel"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players"], play: ["playstats"], backup: ["backups"] };
-var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", progress: "Measuring the walls", bugs: "Hunting bugs",
+var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
   feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", backups: "Counting the copies in the vaults" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
@@ -818,29 +809,9 @@ $("ov-heat-box").addEventListener("mousemove", function (ev) {
 });
 $("ov-heat-box").addEventListener("mouseleave", function () { $("ov-heat-tip").hidden = true; });
 function renderOverview() {
-  var evs = D.events ? events() : [], ss = sessions(evs);
-  // 1204: this week = the last 7 days, today included
-  var from = dayKey(new Date(Date.now() - 6 * 864e5)), act = D.activity || {};
-  var changes = Object.keys(act).filter(function (k) { return k >= from; }).reduce(function (a, k) { return a + act[k]; }, 0);
-  var tiles = [["Changes this week", changes]];
-  if (D.tasks) tiles.push(["Tasks this week", D.tasks.filter(function (t) { return t.state === "done" && String(t.updated || "").slice(0, 10) >= from; }).length]);
-  if (D.events) {
-    tiles.push(["Events this week", evs.filter(function (e) { return String(e.time).slice(0, 10) >= from; }).length]);
-    tiles.push(["Play this week", fmtSec(ss.filter(function (s) { return s.start.slice(0, 10) >= from; }).reduce(function (a, s) { return a + s.len; }, 0))]);
-  }
-  // 1253: STREAK — the days in a row up to today with at least one change (the heatmap's counts)
-  var streak = 0, sd = new Date();
-  while ((act[dayKey(sd)] || 0) > 0) { streak++; sd.setDate(sd.getDate() - 1); }
-  tiles.push(["Streak", streak + (streak === 1 ? " day" : " days")]);
-  // 1520: the pace - changes per day this week, the builds shipped, the days since the last one
-  tiles.splice(1, 0, ["Per day", (changes / 7).toFixed(1)]);
-  var shipped = clBuilds().filter(function (b) { return b.version !== "NEXT BUILD"; }), last = shipped[0] && String(shipped[0].date).match(/\d{4}-\d\d-\d\d/);
-  tiles.push(["Builds", shipped.length]);
-  if (last) tiles.push(["Since last build", Math.max(0, Math.round((Date.now() - new Date(last[0] + "T00:00:00")) / 864e5)) + " days"]);
-  $("ov-tiles").innerHTML = tiles.map(function (t) { return "<div class='tile'><span>" + t[0] + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
+  var ss = sessions(D.events ? events() : []);
   renderHeatmap();
   $("ov-sess").innerHTML = ss.slice(0, 8).map(function (s) { return "<div>" + esc(short(s.start)) + "  " + who(s.code) + " <span class='muted'>" + fmtSec(s.len) + ", " + s.n + " events</span></div>"; }).join("") || "<div class='muted'>No sessions.</div>";
-  renderProgress();
 }
 // 1331: CHANGELOG / NEXT BUILD - the not shipped changes as category tiles (1314), a click opens a category's titles
 function renderNextBuild() {
@@ -861,20 +832,6 @@ function renderNextBuild() {
     var n = ch.filter(function (c) { return c[2] === k; }).length;
     return "<div class='chg-t" + (chgOpen === k ? " on" : "") + "' data-cat='" + esc(k) + "' style='border-left-color:" + col(k) + ";color:" + col(k) + "'>" + esc(k) + "<b>" + n + "</b></div>";
   }).join("") + "</div>" + (opened.length ? "<div class='chg-l' style='margin-top:6px;border-left-color:" + col(chgOpen) + "'>" + opened.map(function (c) { var m = c[1].match(/^([^:]{1,90}):\s*(.*)$/); return "<div>" + esc(m ? m[1] : c[1]) + "</div>"; }).join("") + "</div>" : "") : "<div class='muted'>No changes.</div>";
-}
-// 1331: DEMO COMPLETION - one row per area of the PROGRESS tab (AREA, PERCENT, NOTE): the name and 20 squares, one per
-// 5 percent, drawn like the CHANGES heatmap - filled squares along the RODWAN PIXELS violets (plum first, dusty rose last), empty ones in
-// its empty colour; one scale under all rows
-var violetAt = function (t) { var a = [121, 75, 88], b = [177, 129, 130]; return "rgb(" + a.map(function (v, k) { return Math.round(v + (b[k] - v) * t); }).join(",") + ")"; };   // logo plum 794b58 -> dusty rose b18182
-function renderProgress() {
-  var rows = table(D.progress).rows.filter(function (r) { return r.AREA; });
-  var W = 20 * 13 - 2;
-  $("ov-prog").innerHTML = rows.length ? rows.map(function (r, i) {
-    var p = Math.max(0, Math.min(100, parseFloat(String(r.PERCENT).replace(",", ".")) || 0)), n = Math.round(p / 5), cells = "";
-    for (var k = 0; k < 20; k++) cells += k < n ? "<i style='background:" + violetAt(n > 1 ? k / (n - 1) : 1) + "'></i>" : "<i></i>";
-    return "<span class='pg-n' title='" + esc(r.NOTE || "") + "'>" + esc(r.AREA) + "</span><div class='pg-b' title='" + esc(r.AREA + "  " + Math.round(p) + "%") + "'>" + cells + "</div>";
-  }).join("") + "<div class='pg-s' style='width:" + W + "px'>" + [0, 25, 50, 75, 100].map(function (v) { return "<span style='left:" + (v / 100 * W) + "px'>" + v + "</span>"; }).join("") + "</div>"
-    : "<div class='muted'>No progress set yet (the PROGRESS tab of the tasks sheet).</div>";
 }
 // 1313: the CHANGELOG categories and their colours
 var CHG_COLOR = { SEA: "#4dccff", MAP: "#74b84a", CAMP: "#d1a35c", BATTLE: "#ff8c73", SURVIVAL: "#e6ad47", STORY: "#a796c4", HUD: "#8fb8ff", SOUND: "#5fd3b3", SYSTEM: "#c9d65a", TOOLS: "#e07fb0" };
@@ -1183,11 +1140,11 @@ var bldOpen = "";
 function renderChangelog() {
   renderNextBuild();
   renderMechanics();
-  if (!D.changelog) { $("cl").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; $("cl-bld").innerHTML = ""; return; }
+  if (!D.changelog) { $("cl-bld").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; return; }
   var bs = clBuilds(), shipped = bs.filter(function (b) { return b.version !== "NEXT BUILD"; });
   var cats = function (b) { var c = {}; b.items.forEach(function (i) { c[i.cat] = (c[i.cat] || 0) + 1; }); return c; };
-  var row = function (i) { return "<div class='cl-row" + (i.text ? " has" : "") + "'><div class='cl-t' style='border-left:3px solid " + (CHG_COLOR[i.cat] || "var(--dim)") + ";padding-left:6px'>" + esc(i.title) + "</div>" + (i.text ? "<div class='cl-d'>" + esc(i.text) + "</div>" : "") + "</div>"; };
-  // SUMMARY: one tile per shipped build - its date and changes per category; a click opens its changes under the grid
+  var row = function (i) { return "<div class='cl-row'><div class='cl-t' style='border-left:3px solid " + (CHG_COLOR[i.cat] || "var(--dim)") + ";padding-left:6px'>" + esc(i.title) + "</div>" + (i.text ? "<div class='muted' style='padding-left:9px'>" + esc(i.text) + "</div>" : "") + "</div>"; };
+  // one tile per shipped build - its date and changes per category; a click opens all its changes with their text under the grid
   $("cl-bld-n").textContent = shipped.length + " builds";
   var opened = shipped.filter(function (b) { return b.version === bldOpen; })[0];
   $("cl-bld").innerHTML = shipped.map(function (b) {
@@ -1195,33 +1152,60 @@ function renderChangelog() {
     return "<div class='bld-t" + (b.version === bldOpen ? " on" : "") + "' data-v='" + esc(b.version) + "'><h3>" + esc(b.version) + "<b>" + b.items.length + "</b></h3><span class='muted'>" + esc(b.date) + "</span><div class='bld-chips'>" +
       Object.keys(c).map(function (k) { return "<i style='border-left-color:" + (CHG_COLOR[k] || "var(--dim)") + "'>" + esc(k) + " " + c[k] + "</i>"; }).join("") + "</div></div>";
   }).join("") + (opened ? "<div class='chg-l' style='grid-column:1/-1'>" + opened.items.map(row).join("") + "</div>" : "");
-  // FULL: every build folded, NEXT BUILD and the newest build open, a line opens its text
-  $("cl").innerHTML = bs.map(function (b, n) {
-    var c = cats(b);
-    return "<details class='fold'" + (n < 2 ? " open" : "") + "><summary>" + esc(b.version) + " <span class='muted'>" + esc(b.date) + ", " + b.items.length + " changes</span></summary>" +
-      Object.keys(c).map(function (k) { return "<h3 style='margin:6px 0 2px;color:" + (CHG_COLOR[k] || "var(--dim)") + "'>" + esc(k) + "</h3>" + b.items.filter(function (i) { return i.cat === k; }).map(row).join(""); }).join("") + "</details>";
-  }).join("") + "<p class='muted'>Sent " + new Date(D.changelog.updated).toLocaleString() + "</p>";
 }
 $("cl-bld").addEventListener("click", function (e) {
-  if (e.target.closest(".cl-row.has")) { e.target.closest(".cl-row.has").classList.toggle("open"); return; }
   var t = e.target.closest(".bld-t"); if (!t) return; bldOpen = bldOpen === t.dataset.v ? "" : t.dataset.v; renderChangelog();
 });
-// 1520: MECHANICS - one tile per area of the game (game_mechanics.txt via the sync) and the build's counts; a click opens its names
-var mechOpen = "";
+// 1520: the squares (as the PLAY matrices were): a row per line, lit one by one from the left; a row with names = a square
+// per name (its rows run on), a number = squares in proportion to the largest; hover a square = its name and what it is
+function squares(box, rows) {
+  var C = 13, L = 120, V = 64, w = $(box).clientWidth || 700, cells = Math.max(1, Math.floor((w - L - V) / C)), n = 0;
+  var font = " fill='#9a8890' font-size='9' font-family='JetBrains Mono,monospace'";
+  var max = Math.max.apply(null, rows.map(function (r) { return r[2] ? r[2].length : +r[1] || 0; }).concat([1]));
+  var svg = "", y = 0;
+  rows.forEach(function (r) {
+    var items = r[2], v = items ? items.length : +r[1] || 0, shown = r[3] != null ? r[3] : v, t0 = n++ * 90;
+    var lit = items ? v : v ? Math.max(1, Math.round(v / max * cells)) : 0, lines = items ? Math.max(1, Math.ceil(v / cells)) : 1;
+    var row = esc(r[0]) + "' data-w='" + esc(String(shown));
+    svg += "<g><text x='0' y='" + (y + 9) + "'" + font + " data-t='" + row + "'>" + esc(r[0].toUpperCase()) + "</text>";
+    for (var c = 0; c < cells * lines; c++) {
+      var it = items && items[c], tip = items ? (it && it[0] ? esc(it[0]) + "' data-w='" + esc(it[1] || "") : "") : row;
+      svg += "<rect x='" + (L + c % cells * C) + "' y='" + (y + Math.floor(c / cells) * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' fill='" + HEAT[0] + "'" +
+        (tip ? " data-t='" + tip + "'" : "") + (c < lit ? " class='on' style='--c:" + HEAT[heatLvl(v, max)] + ";animation-delay:" + (t0 + c * 15) + "ms'" : "") + "/>";
+    }
+    svg += "<text x='" + (L + cells * C + V) + "' y='" + (y + 9) + "' text-anchor='end' fill='" + HEAT[4] + "' font-size='10' font-family='JetBrains Mono,monospace'>" + esc(String(shown)) + "</text></g>";
+    y += lines * C;
+  });
+  $(box).innerHTML = "<svg width='" + (L + cells * C + V) + "' height='" + y + "' role='img'>" + svg + "</svg>";
+}
 function renderMechanics() {
   var d = (D.playstats || {}).dev;
   if (!d || !d.version) { $("cl-mech").innerHTML = "<div class='muted'>Not loaded yet.</div>"; $("cl-mech-n").textContent = ""; return; }
-  var areas = (d.categories || []).map(function (k) { return [k[0], k[1]]; }).concat([["Unit classes", d.classes], ["Heroes", d.heroes], ["Looks", d.looks],
-    ["Quests written", d.quests], ["Cities built", d.cities], ["Dialog trees", d.dialogs]]).filter(function (a) { return a[1] && a[1].length; });
-  var listed = { "Looks": 1 };   // too many to list: the count says it
-  $("cl-mech-n").textContent = "build " + d.version + ", " + (d.categories || []).reduce(function (a, k) { return a + k[1].length; }, 0) + " mechanics";
-  var opened = areas.filter(function (a) { return a[0] === mechOpen; })[0];
-  $("cl-mech").innerHTML = areas.map(function (a) {
-    return "<div class='chg-t" + (a[0] === mechOpen ? " on" : "") + "' data-m='" + esc(a[0]) + "' style='border-left-color:var(--rose);color:var(--beige)" + (listed[a[0]] ? ";cursor:default" : "") + "'>" + esc(a[0].toUpperCase()) + "<b>" + a[1].length + "</b></div>";
-  }).join("") + (opened && !listed[opened[0]] ? "<div class='chg-l' style='border-left-color:var(--rose)'>" + opened[1].map(function (x) { return "<div><b>" + esc(x[0]) + "</b> <span class='muted'>" + esc(x[1] || "") + "</span></div>"; }).join("") + "</div>" : "");
+  $("cl-mech-n").textContent = "build " + d.version;
+  squares("cl-mech", (d.categories || []).map(function (k) { return [k[0], 0, k[1]]; }).concat([["Unit classes", 0, d.classes], ["Heroes", 0, d.heroes],
+    ["Quests written", 0, d.quests], ["Cities built", 0, d.cities], ["Dialog trees", 0, d.dialogs],
+    ["Looks", (d.looks || []).length, null], ["Characters", (d.characters || []).length, null]]).filter(function (r) { return r[2] ? r[2].length : r[1]; }));
 }
-$("cl-mech").addEventListener("click", function (e) { var t = e.target.closest(".chg-t"); if (!t) return; mechOpen = mechOpen === t.dataset.m ? "" : t.dataset.m; renderMechanics(); });
-$("cl").addEventListener("click", function (e) { var r = e.target.closest(".cl-row.has"); if (r) r.classList.toggle("open"); });
+// PLAYERS / THE GAME SO FAR - the players' play summed by the sheet (tester and playtest codes only)
+function renderGameStats() {
+  var g = (D.playstats || {}).game;
+  if (!g) { $("pl-game").innerHTML = "<div class='muted'>Not loaded yet.</div>"; return; }
+  squares("pl-game", [["Hours played", g.hours || 0, null, (g.hours || 0).toFixed(1)], ["Sessions", g.sessions], ["Routes sailed", g.sailed], ["Camps made", g.camps],
+    ["Battles fought", g.battles], ["Battles won", g.won], ["Battles lost", g.lost], ["Men fallen", g.fallen], ["Enemies slain", g.slain], ["Quests done", g.quests]]);
+}
+// a square's name in a box beside the cursor, at once (no browser tooltip)
+["cl-mech", "pl-game"].forEach(function (id) {
+  $(id).addEventListener("mousemove", function (e) {
+    var t = e.target.closest("[data-t]"), tip = $("mx-tip");
+    if (!t) { tip.hidden = true; return; }
+    tip.innerHTML = "<b>" + esc(t.dataset.t) + "</b>" + esc(t.dataset.w || ""); tip.hidden = false;
+    var x = e.clientX + 14, y = e.clientY + 16;
+    if (x + tip.offsetWidth > innerWidth - 8) x = e.clientX - 14 - tip.offsetWidth;
+    if (y + tip.offsetHeight > innerHeight - 8) y = e.clientY - 12 - tip.offsetHeight;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  });
+  $(id).addEventListener("mouseleave", function () { $("mx-tip").hidden = true; });
+});
 // The calendar: one tile per day, Monday to Sunday, from the week before this one to 90 days ahead; today in cyan.
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 var calPicked = "";
@@ -1486,13 +1470,6 @@ function pfMusicGate(meta, key) {
 // 1491: a person with a game code in PEOPLE plays with it
 // 1496: each group one matrix in the CHANGES heatmap's look - a row per number: its name, a row of the heatmap's squares lit
 // by the number's share of the group's largest, the number at the end; hover = both
-// 1520: PLAYERS / THE GAME SO FAR - the players' play summed by the sheet (tester and playtest codes only), as a table
-function renderGameStats() {
-  var g = (D.playstats || {}).game;
-  $("pl-game").innerHTML = g ? [["Hours played", (g.hours || 0).toFixed(1)], ["Sessions", g.sessions], ["Routes sailed", g.sailed], ["Camps made", g.camps],
-    ["Battles fought", g.battles], ["Battles won", g.won], ["Battles lost", g.lost], ["Men fallen", g.fallen], ["Enemies slain", g.slain], ["Quests done", g.quests]]
-    .map(function (r) { return "<tr><td>" + esc(r[0]) + "</td><td class='num'><b>" + esc(String(r[1] || 0)) + "</b></td></tr>"; }).join("") : "<tr><td class='muted'>Not loaded yet.</td></tr>";
-}
 // PLAY: the build number under the title and the code kept in this browser
 function renderPlayStats() {
   pfKnown((D.mine || [])[0]);
