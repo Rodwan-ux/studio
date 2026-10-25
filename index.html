@@ -73,7 +73,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 #pf-sub{margin:0;font:600 12px var(--head);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 #pf-stats{width:min(760px,92vw);display:grid;gap:6px;justify-items:center}.pf-lbl{font:600 12px var(--head);letter-spacing:.14em;color:var(--rose)}
 #pf-stats .pf-on{animation:pf-lit .1s steps(1) forwards}#pf-stats rect:hover{fill:rgb(100,255,255)!important}
-#pf>#pf-tip{position:fixed;z-index:20;pointer-events:none;max-width:320px;padding:5px 8px;background:var(--panel);border:2px solid rgb(100,255,255);font:11px/1.4 var(--mono);color:var(--fg)}#pf-tip b{display:block;color:rgb(100,255,255);font-weight:600;text-transform:uppercase}
+#pf-tip{position:fixed;z-index:20;pointer-events:none;max-width:320px;padding:5px 8px;background:var(--panel);border:2px solid rgb(100,255,255);font:11px/1.4 var(--mono);color:var(--fg)}#pf-tip b{display:block;color:rgb(100,255,255);font-weight:600;text-transform:uppercase}
 @keyframes pf-lit{to{fill:var(--c)}}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px;border-radius:0}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
@@ -88,15 +88,12 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
 <nav id="tabs">
 <button data-tab="overview" aria-selected="false" hidden>OVERVIEW</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
-<button data-tab="tasks" aria-selected="false" hidden>TASKS</button>
-<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="performance" aria-selected="false" hidden>PERFORMANCE</button><button data-tab="players" aria-selected="false" hidden>X FOLLOWING</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="calendar" aria-selected="false" hidden>CALENDAR</button>
-<button data-tab="files" aria-selected="false" hidden>FILES</button><button data-tab="backup" aria-selected="false" hidden>BACKUP</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
+<button data-tab="tasks" aria-selected="false" hidden>TASKS</button><button data-tab="players" aria-selected="false" hidden>PLAYERS</button>
+<button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="community" aria-selected="false" hidden>COMMUNITY</button>
+<button data-tab="studio" aria-selected="false" hidden>STUDIO</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
 
 <section class="panel" data-pane="overview" hidden><div class="tiles" id="ov-tiles"></div>
-<div class="cols">
-<div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div>
-<div class="panel"><h2>Demo completion</h2><div class="prog" id="ov-prog"></div></div></div>
-<div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></div>
+<div class="panel"><h2>Demo completion</h2><div class="prog" id="ov-prog"></div></div>
 </section>
 
 <section class="panel" data-pane="bugs" hidden>
@@ -111,35 +108,37 @@ select.lvl{padding:1px 4px;font-size:11px}
 <label for="t-code">Kind</label><select id="t-code"></select><span class="muted" id="t-n"></span></div>
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></section>
 
-<section class="panel" data-pane="people" hidden>
-<nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="telemetry" aria-selected="false">TELEMETRY</button><button data-pp="settings" aria-selected="false">SETTINGS</button></nav>
-<div data-ppn="list"><div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
-<label for="p-cat">Role</label><select id="p-cat"></select><label for="p-tag">Tag</label><select id="p-tag"></select><span class="muted" id="p-n"></span><button id="p-cols-b">Columns</button></div>
-<div class="bar" id="p-cols" hidden></div>
-<div class="scroll"><table id="p-t" class="tight"></table></div></div>
-<div data-ppn="telemetry" hidden>
-<nav id="tel-tabs"><button data-t="feedback" aria-selected="true">FEEDBACK</button><button data-t="sessions" aria-selected="false">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="dashboard" aria-selected="false">DASHBOARD</button></nav>
-<div data-tp="feedback"><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
-<div data-tp="sessions" hidden><div class="bar"><select id="s-mode" aria-label="Sessions view"><option value="person">BY PERSON</option><option value="session">BY SESSION</option></select><label for="s-code">Person</label><select id="s-code"></select><span class="muted" id="s-hint"></span></div><div class="scroll"><table id="sess-t"></table></div></div>
+<section class="panel" data-pane="players" hidden>
+<div class="cols"><div class="panel"><h2>The game so far</h2><div class="scroll"><table id="pl-game" class="tight"></table></div></div>
+<div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div></div>
+<nav id="tel-tabs"><button data-t="sessions" aria-selected="true">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="feedback" aria-selected="false">FEEDBACK</button><button data-t="performance" aria-selected="false">PERFORMANCE</button></nav>
+<div data-tp="feedback" hidden><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
+<div data-tp="sessions"><div class="bar"><select id="s-mode" aria-label="Sessions view"><option value="person">BY PERSON</option><option value="session">BY SESSION</option></select><label for="s-code">Person</label><select id="s-code"></select><span class="muted" id="s-hint"></span></div><div class="scroll"><table id="sess-t"></table></div></div>
 <div data-tp="timeline" hidden><div class="bar"><label for="tl-sess">Session</label><select id="tl-sess"></select></div><div class="legend" id="tl-legend"></div><div class="tl" id="tl"><div class="tip" id="tip" hidden></div></div></div>
-<div data-tp="dashboard" hidden><div class="bar"><label for="db-who">Person</label><select id="db-who"></select></div><div id="db-msg" class="msg" hidden></div><div class="tiles" id="db-tiles"></div>
-<div class="cols"><div class="panel"><h2>By person</h2><div class="scroll"><table id="db-p"></table></div></div><div class="panel"><h2>By tab</h2><div class="scroll"><table id="db-t"></table></div></div></div>
-<div class="panel"><h2>Latest</h2><div class="scroll"><table id="db-l"></table></div></div></div>
 <div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Person</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t"></table></div><button id="ev-more" hidden>Show more</button></div>
-</div>
-<div data-ppn="settings" hidden><div class="bar"><input id="r-new" maxlength="20" placeholder="NEW ROLE" style="width:160px"><button id="r-add">Add role</button><span class="muted" id="r-msg"></span><span class="spacer"></span><label for="view-as">View as</label><select id="view-as" hidden aria-label="View as"></select></div>
-<div class="scroll"><table id="r-t" class="tight"></table></div></div></section>
-
-<section class="panel" data-pane="performance" hidden>
+<div data-tp="performance" hidden>
 <div class="bar"><label for="pr-build">Build</label><select id="pr-build"></select><label for="pr-who">Person</label><select id="pr-who"></select><label for="pr-mode">Mode</label><select id="pr-mode"></select><span class="muted" id="pr-n"></span></div>
 <div id="pr-msg" class="msg" hidden></div><div class="tiles" id="pr-tiles"></div>
 <div class="panel"><div class="bar"><h2>Frames in a session</h2><label for="pr-sess">Session</label><select id="pr-sess"></select></div><div class="legend" id="pr-legend"></div><div class="tl" id="pr-chart"><div class="tip" id="pr-tip" hidden></div></div></div>
 <div class="cols"><div class="panel"><h2>By build</h2><div class="scroll"><table id="pr-b"></table></div></div><div class="panel"><h2>By mode</h2><div class="scroll"><table id="pr-m"></table></div></div></div>
 <div class="panel"><h2>By session</h2><div class="scroll"><table id="pr-s"></table></div></div>
 <div class="cols"><div class="panel"><h2>By person</h2><div class="scroll"><table id="pr-p"></table></div></div>
-<div class="panel"><h2>Telemetry load</h2><div class="tiles" id="pr-lt"></div><div class="scroll"><table id="pr-l"></table></div></div></div></section>
+<div class="panel"><h2>Telemetry load</h2><div class="tiles" id="pr-lt"></div><div class="scroll"><table id="pr-l"></table></div></div></div></div>
+</section>
 
-<section class="panel" data-pane="players" hidden><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
+<section class="panel" data-pane="people" hidden>
+<nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="settings" aria-selected="false">ROLES</button><button data-pp="visitors" aria-selected="false">VISITORS</button></nav>
+<div data-ppn="list"><div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
+<label for="p-cat">Role</label><select id="p-cat"></select><label for="p-tag">Tag</label><select id="p-tag"></select><span class="muted" id="p-n"></span><button id="p-cols-b">Columns</button></div>
+<div class="bar" id="p-cols" hidden></div>
+<div class="scroll"><table id="p-t" class="tight"></table></div></div>
+<div data-ppn="visitors" hidden><div class="bar"><label for="db-who">Person</label><select id="db-who"></select></div><div id="db-msg" class="msg" hidden></div><div class="tiles" id="db-tiles"></div>
+<div class="cols"><div class="panel"><h2>By person</h2><div class="scroll"><table id="db-p"></table></div></div><div class="panel"><h2>By tab</h2><div class="scroll"><table id="db-t"></table></div></div></div>
+<div class="panel"><h2>Latest</h2><div class="scroll"><table id="db-l"></table></div></div></div>
+<div data-ppn="settings" hidden><div class="bar"><input id="r-new" maxlength="20" placeholder="NEW ROLE" style="width:160px"><button id="r-add">Add role</button><span class="muted" id="r-msg"></span><span class="spacer"></span><label for="view-as">View as</label><select id="view-as" hidden aria-label="View as"></select></div>
+<div class="scroll"><table id="r-t" class="tight"></table></div></div></section>
+
+<section class="panel" data-pane="community" hidden><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
 <div class="cols"><div class="panel"><div class="bar"><h2>Per month</h2><span class="legend"><span><i style="background:var(--cyan)"></i>LIKES</span><span><i style="background:var(--rose)"></i>REPLIES</span></span></div><div class="scroll" id="pl-month"></div></div>
 <div class="panel"><h2>How often they come back</h2><div id="pl-back" style="display:grid;gap:6px"></div></div></div>
 <div class="panel"><div class="bar"><h2>Accounts</h2><input id="pl-q" type="search" placeholder="SEARCH HANDLE OR NAME..." style="flex:1;min-width:200px">
@@ -148,22 +147,26 @@ select.lvl{padding:1px 4px;font-size:11px}
 <div class="bar"><button id="pl-copy">Copy ticked</button><button id="pl-top">Tick top 10</button><button id="pl-clear">Clear ticks</button><span class="muted" id="pl-msg"></span></div>
 <div class="scroll"><table id="pl-t"></table></div></div>
 <div class="panel"><h2>Best posts</h2><div class="scroll"><table id="pl-best"></table></div></div></section>
-<section class="panel" data-pane="changelog" hidden><nav id="cl-tabs"><button data-cl="next" aria-selected="true">NEXT BUILD</button><button data-cl="all" aria-selected="false">ALL BUILDS</button></nav><div data-clp="next"><div id="cl-next"></div></div><div data-clp="all" hidden><div id="cl"></div></div></section>
-<section class="panel" data-pane="calendar" hidden>
+<section class="panel" data-pane="changelog" hidden>
+<div class="panel"><h2>In development</h2><div id="pf-stats" hidden><div id="pf-dev"></div></div><div id="pf-tip" hidden></div></div>
+<div class="panel"><div class="bar"><h2>Changes</h2><span class="muted" id="ov-heat-n"></span></div><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></div>
+<div class="panel"><h2>Next build</h2><div id="cl-next"></div></div>
+<div class="panel"><h2>Every build</h2><div id="cl"></div></div></section>
+<section class="panel" data-pane="studio" hidden>
+<nav id="st-tabs"><button data-st="calendar" aria-selected="true">CALENDAR</button><button data-st="files" aria-selected="false">FILES</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
+<div data-stp="calendar">
 <nav id="cal-tabs"><button data-c="grid" aria-selected="true">CALENDAR</button><button data-c="timeline" aria-selected="false">TIMELINE</button><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener" style="align-self:center">OPEN GOOGLE CALENDAR</a></nav>
 <div class="cal-day" id="cal-day" hidden></div>
 <div data-cp="grid"><div id="cal"></div></div>
 <div data-cp="timeline" hidden><div class="bar"><button id="tl2-out">Zoom out</button><button id="tl2-in">Zoom in</button><button id="tl2-today">Today</button><span class="muted" id="tl2-scale"></span></div><div id="tl2"></div></div>
-</section>
-<section class="panel" data-pane="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></section>
-<section class="panel" data-pane="backup" hidden><div class="bar"><span class="muted" id="bk-upd"></span></div><div id="bk-disks"></div><div class="panel"><h2>Copies</h2><div class="scroll"><table id="bk-t"></table></div></div></section>
+</div>
+<div data-stp="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></div>
+<div data-stp="backup" hidden><div class="bar"><span class="muted" id="bk-upd"></span></div><div id="bk-disks"></div><div class="panel"><h2>Copies</h2><div class="scroll"><table id="bk-t"></table></div></div></div></section>
 <section class="panel" data-pane="play" hidden><div class="pf" id="pf">
 <div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
 <div id="pf-gpu"></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button" hidden>RUN</button></form>
-<div id="pf-msg"></div><div id="pf-tip" hidden></div>
-<div id="pf-stats" hidden><div class="pf-lbl">THE GAME SO FAR</div><div id="pf-game"></div>
-<div class="pf-lbl">IN DEVELOPMENT</div><div id="pf-dev"></div></div>
+<div id="pf-msg"></div>
 <canvas id="pf-wave" hidden></canvas><canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
 </div>
 <script>
@@ -230,28 +233,43 @@ function nameTag(name) { return "<span class='nm' style='color:" + personColor(n
 function who(code) { return nameTag(nameOf(code)); }
 
 // tabs (the last one picked is remembered in this browser)
+// 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files and backup (one view each)
+var STUDIO_SUB = ["calendar", "files", "backup"];
+var topAllowed = function (t) { return t === "studio" ? STUDIO_SUB.some(allowed) : allowed(t); };
 function showTab(t) {
   if (!D || !D.tabs) return;
-  if (!allowed(t)) t = D.tabs[0];
+  if (STUDIO_SUB.indexOf(t) >= 0) { stCur = t; t = "studio"; }   // a tab kept from before 1520
+  if (t === "performance") t = "players";
+  if (!topAllowed(t)) t = STUDIO_SUB.indexOf(D.tabs[0]) >= 0 ? "studio" : D.tabs[0];
   curTab = t;
   document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
   document.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== t; });
   try { localStorage.setItem("tab", t); } catch (e) {}
-  if (t === "overview" && D) renderHeatmap();
+  if (t === "changelog" && D) { renderHeatmap(); if (D.playstats) renderPlayStats(); }
   if (t === "play") { pfGpuNote(); pfTitle(); if (D.playstats) renderPlayStats(); }
-  loadLazy(t);
+  if (t === "studio") { showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
+  else loadLazy(t);
 }
+var stCur = "calendar";
+function showSt(t) {
+  if (!allowed(t)) t = STUDIO_SUB.filter(allowed)[0] || "calendar";
+  stCur = t;
+  document.querySelectorAll("#st-tabs button").forEach(function (b) { b.hidden = !allowed(b.dataset.st); b.setAttribute("aria-selected", String(b.dataset.st === t)); });
+  document.querySelectorAll("[data-stp]").forEach(function (p) { p.hidden = p.dataset.stp !== t; });
+  if (t === "calendar" && D && D.calendar) renderTimeline();
+}
+$("st-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-st]"); if (b) { showSt(b.dataset.st); logUse("STUDIO / " + b.textContent); } });
 // 1306: each tab opened by hand (and the first one on opening) goes to the PANEL sheet — PEOPLE / TELEMETRY / DASHBOARD; VIEW AS is not logged
 var logged = false;
 function logUse(tab) { if (VIEW_AS || !KEY) return; apiPost({ action: "studio_log", k: KEY, tab: tab }).catch(function () {}); }
 $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) { showTab(b.dataset.tab); logUse(b.textContent); } });
-function showTel(t) { document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); }
-$("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) { showTel(b.dataset.t); logUse("PEOPLE / TELEMETRY / " + b.textContent); } });
+function showTel(t) { document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); if (t === "performance") drawPerf(); }
+$("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) { showTel(b.dataset.t); logUse("PLAYERS / " + b.textContent); } });
 
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "progress", "bugs", "codes", "events", "people", "team"];
-var LAZY = { people: ["feedback", "panel"], calendar: ["calendar"], files: ["files"], players: ["players"], play: ["playstats"], backup: ["backups"] };
+var LAZY = { people: ["panel"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players"], play: ["playstats"], backup: ["backups"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", progress: "Measuring the walls", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
   feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", backups: "Counting the copies in the vaults" };
@@ -320,8 +338,8 @@ function askKey(why) { $("status").textContent = why || "Enter your key."; $("ke
 $("key-go").addEventListener("click", function () { var k = $("key-in").value.trim(); if (!k) return; saveKey(k); load(); });
 $("key-in").addEventListener("keydown", function (e) { if (e.key === "Enter") $("key-go").click(); });
 function render() {
-  document.querySelectorAll("#tabs button").forEach(function (b) { b.hidden = !allowed(b.dataset.tab); });
-  $("tabs").hidden = D.tabs.length < 2;
+  document.querySelectorAll("#tabs button").forEach(function (b) { b.hidden = !topAllowed(b.dataset.tab); });
+  $("tabs").hidden = document.querySelectorAll("#tabs button:not([hidden])").length < 2;
   var errs = Object.keys(D.errors || {});
   $("hello").innerHTML = D.name ? "Hello <b style='color:" + personColor(D.name) + "'>" + esc(D.name) + "</b>" : "";
   var va = $("view-as");
@@ -335,9 +353,9 @@ function render() {
   if (allowed("overview")) renderOverview();
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
-  if (allowed("people")) { renderTelemetry(); renderPeople(); }
-  if (allowed("performance")) renderPerformance();
-  if (allowed("players") && (got.players || D.players)) renderPlayers();
+  if (allowed("players")) { renderTelemetry(); renderPerformance(); renderGameStats(); }
+  if (allowed("people")) renderPeople();
+  if (allowed("community") && (got.players || D.players)) renderPlayers();
   if (allowed("changelog")) renderChangelog();
   if (D.playstats) renderPlayStats();
   if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
@@ -535,8 +553,9 @@ $("s-code").addEventListener("change", renderTelemetry);
 $("s-mode").addEventListener("change", renderTelemetry);
 $("sess-t").addEventListener("click", function (e) {
   var pr = e.target.closest("tr[data-person]");
-  if (pr) { $("s-mode").value = "session"; sessPerson = pr.dataset.person; renderTelemetry(); return; }
-  var tr = e.target.closest("tr[data-s]"); if (!tr) return; pickedSession = tr.dataset.s; $("tl-sess").value = pickedSession; showTel("timeline");
+  // 1520: a person = their sessions, their feedback below FEEDBACK; a session = its time line, PERFORMANCE on the same session
+  if (pr) { $("s-mode").value = "session"; sessPerson = pr.dataset.person; $("fb-q").value = pr.dataset.person; renderTelemetry(); return; }
+  var tr = e.target.closest("tr[data-s]"); if (!tr) return; pickedSession = prSession = tr.dataset.s; $("tl-sess").value = pickedSession; renderPerformance(); showTel("timeline");
 });
 $("tl-sess").addEventListener("change", function (e) { pickedSession = e.target.value; drawTimeline(); });
 var BAND = { SANDBOX: "#3a5d3a", BATTLE: "#6a3a33", SAIL: "#2d5566" };
@@ -834,11 +853,6 @@ function renderProgress() {
 var CHG_COLOR = { SEA: "#4dccff", MAP: "#74b84a", CAMP: "#d1a35c", BATTLE: "#ff8c73", SURVIVAL: "#e6ad47", STORY: "#a796c4", HUD: "#8fb8ff", SOUND: "#5fd3b3", SYSTEM: "#c9d65a", TOOLS: "#e07fb0" };
 var chgOpen = "";
 $("cl-next").addEventListener("click", function (e) { var t = e.target.closest(".chg-t"); if (!t) return; chgOpen = chgOpen === t.dataset.cat ? "" : t.dataset.cat; renderNextBuild(); });
-$("cl-tabs").addEventListener("click", function (e) {
-  var b = e.target.closest("button[data-cl]"); if (!b) return;
-  document.querySelectorAll("#cl-tabs button").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); });
-  document.querySelectorAll("[data-clp]").forEach(function (p) { p.hidden = p.dataset.clp !== b.dataset.cl; });
-});
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
 var CAT_DEFAULT = ["OWNER", "TEAM", "FRIEND", "GUEST"];
 var catOrder = function () { return D && D.roles ? Object.keys(D.roles) : CAT_DEFAULT; };
@@ -984,7 +998,7 @@ $("r-add").addEventListener("click", function () {
     function (e) { delete D.roles[n]; m.textContent = "NOT SAVED: " + String(e && e.message || e); m.style.color = "var(--red)"; renderPeople(); });
 });
 $("r-new").addEventListener("keydown", function (e) { if (e.key === "Enter") $("r-add").click(); });
-function showPp(t) { document.querySelectorAll("#p-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pp === t)); }); document.querySelectorAll("[data-ppn]").forEach(function (p) { p.hidden = p.dataset.ppn !== t; }); if (t === "telemetry") drawTimeline(); }
+function showPp(t) { document.querySelectorAll("#p-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pp === t)); }); document.querySelectorAll("[data-ppn]").forEach(function (p) { p.hidden = p.dataset.ppn !== t; }); }
 $("p-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-pp]"); if (b) { showPp(b.dataset.pp); logUse("PEOPLE / " + b.textContent); } });
 // the change goes into the loaded data, so the row shows it before the save comes back
 function pApply(r, f, v) {
@@ -1016,6 +1030,8 @@ $("p-t").addEventListener("change", function (e) {
 });
 ["p-q", "p-cat", "p-tag"].forEach(function (id) { $(id).addEventListener("input", renderPeople); });
 $("p-t").addEventListener("click", function (e) {
+  var nm = e.target.closest("td .nm");   // 1520: a name opens that person's sessions in PLAYERS
+  if (nm && allowed("players")) { $("s-mode").value = "session"; sessPerson = nm.textContent; $("fb-q").value = nm.textContent; showTab("players"); showTel("sessions"); renderTelemetry(); return; }
   var g = e.target.closest("button[data-tag]");
   if (g) {
     var gr = pRow(g.closest("tr")); if (!gr) return;
@@ -1416,6 +1432,13 @@ function pfMusicGate(meta, key) {
 // 1507: drawn once, when the PLAY tab is on screen - every data part that came in drew it again (and lit it again) and
 // showed it again, also over the game already starting; once the game starts it stays hidden
 var pfDrawn = false;
+// 1520: PLAYERS / THE GAME SO FAR - the players' play summed by the sheet (tester and playtest codes only), as a table
+function renderGameStats() {
+  var g = (D.playstats || {}).game;
+  $("pl-game").innerHTML = g ? [["Hours played", (g.hours || 0).toFixed(1)], ["Sessions", g.sessions], ["Routes sailed", g.sailed], ["Camps made", g.camps],
+    ["Battles fought", g.battles], ["Battles won", g.won], ["Battles lost", g.lost], ["Men fallen", g.fallen], ["Enemies slain", g.slain], ["Quests done", g.quests]]
+    .map(function (r) { return "<tr><td>" + esc(r[0]) + "</td><td class='num'><b>" + esc(String(r[1] || 0)) + "</b></td></tr>"; }).join("") : "<tr><td class='muted'>Not loaded yet.</td></tr>";
+}
 function renderPlayStats() {
   pfKnown((D.mine || [])[0]);
   if (pfDrawn || pfBusy) return;
@@ -1444,9 +1467,6 @@ function renderPlayStats() {
     });
     return "<svg width='" + (L + cells * C + V) + "' height='" + y + "' role='img'>" + svg + "</svg>";
   };
-  $("pf-game").innerHTML = matrix([["Hours played", g.hours || 0, (g.hours || 0).toFixed(1)], ["Sessions", g.sessions], ["Routes sailed", g.sailed],
-    ["Camps made", g.camps], ["Battles fought", g.battles], ["Battles won", g.won], ["Men fallen", g.fallen], ["Enemies slain", g.slain],
-    ["Quests done", g.quests]]);
   // 1500.3.3: one row per big category of the game, a square per named mechanic (game_mechanics.txt via the sync)
   $("pf-dev").innerHTML = d.version ? matrix((d.categories || []).map(function (k) { return [k[0], 0, null, list(k[1])]; }).concat([["Characters", 0, null, list(d.characters)], ["Looks", 0, null, list(d.looks)],
     ["Unit classes", 0, null, list(d.classes)], ["Heroes", 0, null, list(d.heroes)], ["Quests written", 0, null, list(d.quests)], ["Cities built", 0, null, list(d.cities)],
@@ -1680,7 +1700,7 @@ async function pfTry(code) {
     try { localStorage.setItem("pf_code", code); } catch (x) {}
     // 1500.4.1: the wave alone covers the screen until the game starts, as the game's curtain does
     pfWave.show(); pfSay("");
-    ["pf-head", "pf-stats", "pf-gpu", "pf-f", "pf-msg", "pf-tip"].forEach(function (id) { $(id).hidden = true; });
+    ["pf-head", "pf-gpu", "pf-f", "pf-msg"].forEach(function (id) { $(id).hidden = true; });
     pfDropOldBuilds(meta.sha256.slice(0, 12));
     var pack = await pfOpenParts(meta, key), patch = await pfOpenPatch(meta, key);
     pfMusicGate(meta, key);
