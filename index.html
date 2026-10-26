@@ -172,7 +172,10 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 // RODWAN PIXELS studio panel (1184.4 / 1184.7, renamed 1263): this page asks the PLAYTEST web app for its data, without cookies (as the
 // game does). Opened through the link (API + ?k=KEY) the web app puts the key in (PRESET_KEY); opened from the disk the
 // key is typed once. Either way it is remembered in this browser.
-var API = "https://script.google.com/macros/s/AKfycbxh3QH8N51TvszNQc9sCDNQUU9qZ-CSO7vN7MKF5aiZ1-E3R-2YlydVR7BfU566igPJxQ/exec";
+// 1523: the data = the Supabase function; Google keeps only the calendar, the file packages and the X data (GAPI)
+var API = "https://pvvslmxgzgjuszsoatvp.supabase.co/functions/v1/studio";
+var GAPI = "https://script.google.com/macros/s/AKfycbxh3QH8N51TvszNQc9sCDNQUU9qZ-CSO7vN7MKF5aiZ1-E3R-2YlydVR7BfU566igPJxQ/exec";
+var GOOGLE_PARTS = { calendar: 1, files: 1, players: 1, packages: 1 };
 var KEY = "";
 try { KEY = localStorage.getItem("studio_key") || ""; } catch (e) {}
 if (typeof PRESET_KEY === "string" && PRESET_KEY) saveKey(PRESET_KEY);
@@ -181,7 +184,7 @@ var SITE = "https://rodwan-ux.github.io/studio/";
 (function () { var m = location.search.match(/[?&]k=([\w-]+)/); if (m && location.protocol !== "file:") { saveKey(m[1]); history.replaceState(null, "", location.pathname); } })();
 function saveKey(k) { KEY = k; try { if (k) localStorage.setItem("studio_key", k); else localStorage.removeItem("studio_key"); } catch (e) {} }
 function apiGet(params) {
-  return fetch(API + "?" + new URLSearchParams(params), { credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
+  return fetch((params.api === "download" || GOOGLE_PARTS[params.part] ? GAPI : API) + "?" + new URLSearchParams(params), { credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
     var j; try { j = JSON.parse(t); } catch (e) { throw new Error("The panel's address did not answer with data"); }
     if (j && j.error) throw new Error(j.error);
     return j;
@@ -282,10 +285,10 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
-var LAZY = { people: ["panel"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players"], play: ["playstats"], backup: ["backups"] };
+var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players"], play: ["playstats"], backup: ["backups"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
-  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", backups: "Counting the copies in the vaults" };
+  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", backups: "Counting the copies in the vaults", packages: "Opening the shares" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
 function ldDraw() {
   var n = ldParts.length, d = ldParts.filter(function (p) { return got[p]; }).length, next = ldParts.filter(function (p) { return !got[p]; })[0];
