@@ -12,6 +12,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 nav{display:flex;flex-wrap:wrap;gap:4px;border-bottom:2px solid var(--line)}
 nav button{border:2px solid transparent;border-bottom:none;border-radius:4px 4px 0 0;background:transparent;font:600 16px var(--head);letter-spacing:.1em;color:var(--dim);padding:6px 14px}
 nav button[aria-selected=true]{color:var(--beige);background:var(--panel);border-color:var(--line)}
+nav button:disabled{opacity:.35;cursor:default}   /* 1520.11: PLAY waits for the next build, its pane only hidden */
 .panel{background:var(--panel);border:2px solid var(--line);padding:12px;display:grid;gap:10px;min-width:0}
 h2{margin:0;font:600 18px var(--head);letter-spacing:.1em;color:var(--beige);text-transform:uppercase}
 h3{margin:0;font:600 15px var(--head);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
@@ -90,9 +91,9 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div class="viewbar" id="viewbar" hidden>VIEWING AS <b id="viewbar-cat"></b><span class="muted">what this category sees; status changes are off</span><span class="spacer"></span><button id="viewbar-back">Back to owner</button></div>
 <div class="panel" id="key-box" hidden><div class="bar"><label for="key-in">Your key</label><input id="key-in" autocomplete="off" style="flex:1;min-width:220px" placeholder="KEY FROM THE PERSON WHO INVITED YOU"><button id="key-go">Open</button></div></div>
 <nav id="tabs">
-<button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
+<button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="play" aria-selected="false" hidden disabled>PLAY</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="players" aria-selected="false" hidden>PLAYERS</button><button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="community" aria-selected="false" hidden>COMMUNITY</button>
-<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button><button data-tab="play" aria-selected="false" hidden>PLAY</button></nav>
+<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button></nav>
 
 <section class="panel" data-pane="bugs" hidden>
 <nav id="bt-tabs" hidden><button data-bt="bugs" aria-selected="true">BUGS</button><button data-bt="tasks" aria-selected="false">TASKS</button></nav>
@@ -366,6 +367,7 @@ function render() {
   var fresh = !ldParts.some(function (p) { return !got[p]; });
   $("status").textContent = (fresh ? "loaded " + new Date().toLocaleTimeString() : "saved view from " + hm(savedAt) + ", updating") + (errs.length ? ". Did not load: " + errs.join(", ") : "");
   var t0 = curTab; if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} }
+  if (t0 === "play") t0 = "";   // 1520.11: PLAY is not open now
   showTab(t0 || D.tabs[0]);
   if (allowed("changelog")) renderOverview();
   if (allowed("bugs")) renderBugs();
