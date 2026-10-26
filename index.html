@@ -111,7 +111,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <section class="panel" data-pane="players" hidden>
 <div class="cols"><div class="panel"><h2>The game so far</h2><div class="mx" id="pl-game"></div></div>
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div></div>
-<nav id="tel-tabs"><button data-t="sessions" aria-selected="true">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="feedback" aria-selected="false">FEEDBACK</button><button data-t="performance" aria-selected="false">PERFORMANCE</button></nav>
+<nav id="tel-tabs"><button data-t="sessions" aria-selected="true">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="feedback" aria-selected="false">FEEDBACK</button><button data-t="performance" aria-selected="false">PERFORMANCE</button><button data-t="runs" aria-selected="false">OPTIMIZATION RUNS</button></nav>
 <div data-tp="feedback" hidden><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
 <div data-tp="sessions"><div class="bar"><select id="s-mode" aria-label="Sessions view"><option value="person">BY PERSON</option><option value="session">BY SESSION</option></select><label for="s-code">Person</label><select id="s-code"></select><span class="muted" id="s-hint"></span></div><div class="scroll"><table id="sess-t"></table></div></div>
 <div data-tp="timeline" hidden><div class="bar"><label for="tl-sess">Session</label><select id="tl-sess"></select></div><div class="legend" id="tl-legend"></div><div class="tl" id="tl"><div class="tip" id="tip" hidden></div></div></div>
@@ -124,6 +124,8 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div class="panel"><h2>By session</h2><div class="scroll"><table id="pr-s"></table></div></div>
 <div class="cols"><div class="panel"><h2>By person</h2><div class="scroll"><table id="pr-p"></table></div></div>
 <div class="panel"><h2>Telemetry load</h2><div class="tiles" id="pr-lt"></div><div class="scroll"><table id="pr-l"></table></div></div></div></div>
+<div data-tp="runs" hidden><div id="or-msg" class="msg" hidden></div><div class="panel"><div class="bar"><h2>Runs</h2><span class="muted">One row per PREF switch on, click for its seconds.</span></div><div class="scroll"><table id="or-t"></table></div></div>
+<div class="panel" id="or-sec-p" hidden><h2 id="or-sec-h">Seconds</h2><div class="scroll"><table id="or-s"></table></div></div></div>
 </section>
 
 <section class="panel" data-pane="people" hidden>
@@ -284,7 +286,7 @@ $("ov-heat-fold").addEventListener("toggle", function () { if (this.open) render
 var logged = false;
 function logUse(tab) { if (VIEW_AS || !KEY) return; apiPost({ action: "studio_log", k: KEY, tab: tab }).catch(function () {}); }
 $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) { showTab(b.dataset.tab); logUse(b.textContent); } });
-function showTel(t) { if (t === "feedback" && !owner()) t = "sessions"; document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); if (t === "performance") drawPerf(); }
+function showTel(t) { if ((t === "feedback" || t === "runs") && !owner()) t = "sessions"; document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); if (t === "performance") drawPerf(); }
 $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) { showTel(b.dataset.t); logUse("PLAYERS / " + b.textContent); } });
 
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
@@ -375,7 +377,7 @@ function render() {
   if (allowed("changelog")) renderOverview();
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
-  if (allowed("players")) { renderTelemetry(); renderPerformance(); renderGameStats(); }
+  if (allowed("players")) { renderTelemetry(); renderPerformance(); renderRuns(); renderGameStats(); }
   if (allowed("people")) renderPeople();
   if (allowed("community") && (got.players || D.players)) renderPlayers();
   if (allowed("community") && (got.youtube || D.youtube || D.errors && D.errors.youtube)) renderYoutube();
@@ -790,6 +792,51 @@ function drawPerf() {
   el.addEventListener("mouseleave", function () { tip.hidden = true; });
 }
 ["pr-build", "pr-who", "pr-mode"].forEach(function (id) { $(id).addEventListener("change", renderPerformance); });
+// 1535: OPTIMIZATION RUNS (owner) - the PREF switch of the game's FPS plate: from perf_probe_on to perf_probe_off one run,
+// a perf_probe row a second with every frame cost; one row per run, a click opens its seconds with every value sent
+var orPick = "";
+function probeRuns() {
+  var vals = function (s) { var o = {}; String(s || "").split(" ").forEach(function (p) { var i = p.indexOf("="); if (i > 0) { var k = p.slice(0, i), v = p.slice(i + 1); o[k] = v !== "" && !isNaN(+v) ? +v : v; } }); return o; };
+  var rows = table(D.events).rows.filter(function (r) { return /^perf_probe/.test(r.EVENT); })
+    .sort(function (a, b) { return sessKey(a) < sessKey(b) ? -1 : sessKey(a) > sessKey(b) ? 1 : (+a.SEQ || 0) - (+b.SEQ || 0); });
+  var runs = [], cur = null;
+  rows.forEach(function (r) {
+    if (r.EVENT === "perf_probe_on" || !cur || cur.key !== sessKey(r)) {
+      cur = { id: sessKey(r) + "|" + r.SEQ, key: sessKey(r), code: r.CODE, start: r.TIME, build: r.VERSION || "-", on: r.EVENT === "perf_probe_on" ? vals(r.VALUES) : {}, secs: [], modes: {} };
+      runs.push(cur);
+    }
+    if (r.EVENT === "perf_probe") { var v = vals(r.VALUES); v.time = r.TIME; v.mode = r.MODE; cur.secs.push(v); cur.modes[r.MODE] = 1; }
+    if (r.EVENT === "perf_probe_off") cur = null;
+  });
+  runs.forEach(function (x) {
+    var f = 0, ms = 0; x.len = 0; x.p95 = 0; x.worst = 0; x.hitches = 0;
+    x.secs.forEach(function (s) { var n = +s.frames || 0; f += n; ms += (+s.frame_avg || 0) * n; x.len += +s.sec || 0; x.p95 = Math.max(x.p95, +s.frame_p95 || 0); x.worst = Math.max(x.worst, +s.frame_worst || 0); x.hitches += +s.hitches || 0; });
+    x.avg = f ? ms / f : 0; x.fps = x.len ? f / x.len : 0;
+  });
+  return runs.sort(function (a, b) { return String(b.start).localeCompare(String(a.start)); });
+}
+function renderRuns() {
+  $("tel-tabs").querySelector("[data-t='runs']").hidden = !owner();
+  if (!owner()) return;
+  var runs = probeRuns(), n1 = function (v) { return v ? (+v).toFixed(1) : ""; };
+  $("or-msg").hidden = !!runs.length; $("or-msg").className = "msg"; $("or-msg").textContent = "No run yet - the PREF switch on the game's FPS plate starts one.";
+  $("or-t").innerHTML = grid([
+    ["Start", function (x) { return esc(short(x.start)); }], ["Who", function (x) { return who(x.code); }], ["Build", function (x) { return esc(x.build); }],
+    ["Mode", function (x) { return esc(Object.keys(x.modes).join(", ")); }], ["Length", function (x) { return fmtSec(x.len); }, "num"],
+    ["Window", function (x) { return esc(x.on.window || ""); }], ["GPU", function (x) { return esc(String(x.on.gpu || "").replace(/_/g, " ")); }],
+    ["Vsync", function (x) { return x.on.vsync != null ? esc(String(x.on.vsync)) : ""; }, "num"], ["FPS", function (x) { return n1(x.fps); }, "num"],
+    ["Frame avg", function (x) { return n1(x.avg); }, "num"], ["P95 worst second", function (x) { return n1(x.p95); }, "num"],
+    ["Worst frame", function (x) { return n1(x.worst); }, "num"], ["Hitches", function (x) { return x.hitches ? String(x.hitches) : ""; }, "num"],
+  ], runs, function (x) { return " class='click" + (x.id === orPick ? " sel" : "") + "' data-run='" + esc(x.id) + "'"; });
+  var run = runs.filter(function (x) { return x.id === orPick; })[0];
+  $("or-sec-p").hidden = !run;
+  if (!run) return;
+  $("or-sec-h").textContent = "Seconds of " + short(run.start) + " " + nameOf(run.code);
+  var keys = ["time", "mode"];
+  run.secs.forEach(function (s) { Object.keys(s).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); }); });
+  $("or-s").innerHTML = grid(keys.map(function (k) { return [k.replace(/_/g, " "), function (s) { return s[k] == null ? "" : esc(k === "time" ? short(s[k]) : String(s[k])); }, k === "classes" || k === "map_parts" ? "x" : typeof run.secs[0][k] === "number" ? "num" : ""]; }), run.secs);
+}
+$("or-t").addEventListener("click", function (e) { var tr = e.target.closest("tr[data-run]"); if (!tr) return; orPick = orPick === tr.dataset.run ? "" : tr.dataset.run; renderRuns(); });
 $("pr-sess").addEventListener("change", function (e) { prSession = e.target.value; renderPerformance(); });
 $("pr-s").addEventListener("click", function (e) { var tr = e.target.closest("tr[data-s]"); if (!tr) return; prSession = tr.dataset.s; renderPerformance(); });
 
