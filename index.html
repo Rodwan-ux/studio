@@ -28,8 +28,8 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--hover)}tr.sel td{back
 .chip{display:inline-block;padding:0 7px;border-radius:9px;border:2px solid currentColor;font-size:11px;white-space:nowrap}
 .who b{font-weight:600}.who .nm{color:var(--cyan);white-space:nowrap}
 .sev-BLOCKER{color:var(--blood)}.sev-CRITICAL{color:var(--red)}.sev-MAJOR{color:var(--amber)}.sev-MINOR{color:var(--dim)}
-.st-NEW{color:var(--beige)}.st-CONFIRMED{color:var(--cyan)}.st-IN_PROGRESS{color:var(--violet)}.st-FIXED{color:var(--green)}.st-REJECTED,.st-DUPLICATE{color:var(--dim)}
-.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}@media (max-width:620px){.board{grid-template-columns:1fr}}
+.st-NEW{color:var(--beige)}.st-CONFIRMED{color:var(--cyan)}.st-IN_PROGRESS{color:var(--violet)}.st-FIXED{color:var(--green)}.st-VERIFIED{color:var(--cyan)}.st-REJECTED{color:var(--dim)}
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}@media (max-width:620px){.board{grid-template-columns:1fr}}
 .col{background:var(--bg);border:2px solid var(--line);padding:6px;display:grid;gap:6px;align-content:start;min-width:0}
 .col h3{display:flex;justify-content:space-between}
 .card{background:var(--panel);border:2px solid var(--line);border-left:3px solid var(--line);padding:6px 8px;display:grid;gap:3px;cursor:pointer;min-width:0}
@@ -74,6 +74,7 @@ select.lvl{padding:1px 4px;font-size:11px}
 details.fold{background:var(--panel);border:2px solid var(--line);padding:6px 10px;margin-top:8px}details.fold>summary{cursor:pointer;font:600 14px var(--head);letter-spacing:.12em;color:var(--rose);list-style:none;display:flex;gap:10px;align-items:baseline}
 details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fold[open]>summary::before{content:"-"}details.fold>summary .muted{font:12px var(--mono);letter-spacing:0}details.fold>:not(summary){margin-top:8px}
 .mx{overflow-x:auto}.mx .on{animation:mx-lit .1s steps(1) forwards}.mx rect:hover{fill:rgb(100,255,255)!important}@keyframes mx-lit{to{fill:var(--c)}}
+.mx-h{font:600 11px var(--mono);letter-spacing:1px;margin:6px 0 3px}.mx-leg{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;font:11px var(--mono);color:var(--dim)}.mx-leg i{display:inline-block;width:11px;height:11px;margin-right:4px;vertical-align:-1px}
 #mx-tip{position:fixed;z-index:20;pointer-events:none;max-width:320px;padding:5px 8px;background:var(--panel);border:2px solid rgb(100,255,255);font:11px/1.4 var(--mono);color:var(--fg)}#mx-tip b{display:block;color:rgb(100,255,255);font-weight:600;text-transform:uppercase}
 .bld{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.bld-t{background:var(--bg);border:2px solid var(--line);padding:6px 8px;cursor:pointer;display:grid;gap:4px}.bld-t:hover,.bld-t.on{background:var(--hover)}
 .bld-t h3{margin:0;display:flex;justify-content:space-between;align-items:baseline;font:600 16px var(--head)}.bld-t h3 b{font:600 18px var(--mono);color:var(--fg)}.bld-chips{display:flex;flex-wrap:wrap;gap:3px}.bld-chips i{font:600 11px var(--mono);font-style:normal;border-left:3px solid;padding:0 4px;background:var(--panel)}
@@ -98,7 +99,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div data-btp="bugs">
 <div class="bar"><input id="b-q" type="search" placeholder="SEARCH ID, TEXT OR TESTER..." style="flex:1;min-width:200px">
 <label for="b-sev">Severity</label><select id="b-sev"></select><label for="b-type">Type</label><select id="b-type"></select>
-<label for="b-who">Tester</label><select id="b-who"></select><label id="b-mine-l" hidden><input type="checkbox" id="b-mine"> my reports</label><label><input type="checkbox" id="b-closed"> rejected / duplicate</label></div>
+<label for="b-who">Tester</label><select id="b-who"></select><label id="b-mine-l" hidden><input type="checkbox" id="b-mine"> my reports</label><label><input type="checkbox" id="b-closed"> rejected</label></div>
 <div id="b-msg" class="msg" hidden></div><div class="detail" id="b-detail" hidden></div><div class="board" id="b-board"></div></div>
 <div data-btp="tasks" hidden>
 <div class="bar"><input id="t-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px">
@@ -147,7 +148,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div class="panel"><h2>Best posts</h2><div class="scroll"><table id="pl-best"></table></div></div></section>
 <section class="panel" data-pane="changelog" hidden>
 <details class="fold" id="ov-heat-fold" open><summary>CHANGES <span class="muted" id="ov-heat-n"></span></summary><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></details>
-<details class="fold" open><summary>MECHANICS <span class="muted" id="cl-mech-n"></span></summary><div class="mx" id="cl-mech"></div></details>
+<details class="fold" open><summary>MECHANICS <span class="muted" id="cl-mech-n"></span></summary><div class="mx-h muted">GAME</div><div class="mx" id="cl-mech"></div><div class="mx-h muted">CONTENT</div><div class="mx" id="cl-mech2"></div><div class="mx-leg" id="cl-mech-leg"></div></details>
 <details class="fold" open><summary>NEXT BUILD</summary><div id="cl-next"></div></details>
 <details class="fold" open><summary>BUILDS <span class="muted" id="cl-bld-n"></span></summary><div class="bld" id="cl-bld"></div></details>
 <div id="mx-tip" hidden></div></section>
@@ -385,10 +386,12 @@ var owner = function () { return !!D.canSetStatus; };
 var isMine = function (r) { return (D.mine || []).indexOf(String(r.CODE).toLowerCase()) >= 0; };
 function bugRows() { var t = table(D.bugs && D.bugs.values); return t.rows.map(function (r, i) { r._i = i + 1; return r; }).filter(function (r) { return r.ID; }).map(function (r) { r.STATUS = r.STATUS || "NEW"; return r; }); }
 function bugLinks(r) { if (!D.bugs.links) return ""; var head = D.bugs.values[0], row = D.bugs.links[r._i] || []; return ["SCREENSHOT", "SAVE", "SETTINGS"].map(function (h) { var j = head.indexOf(h); return j >= 0 && row[j] ? "<a href='" + esc(row[j]) + "' target='_blank' rel='noopener'>" + h + "</a>" : ""; }).filter(Boolean).join(" "); }
-function stCls(s) { return "st-" + String(s).replace(" ", "_"); }
+// 1521: the column tells the status, the severity is a coloured word (no box) beside the stripe of its colour
+var TODO = { NEW: true, CONFIRMED: true, "IN PROGRESS": true };
+function sevWord(r) { return "<span class='sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY || "-") + "</span>"; }
 function bugCard(r) {
   return "<div class='card" + (r.ID === pickedBug ? " on" : "") + (!owner() && isMine(r) ? " mine" : "") + "' data-bug='" + esc(r.ID) + "'" + (owner() ? " draggable='true'" : "") + " style='border-left-color:" + ({ BLOCKER: "var(--blood)", CRITICAL: "var(--red)", MAJOR: "var(--amber)" }[r.SEVERITY] || "var(--line)") + "'>" +
-    "<div class='t'><b>" + esc(r.ID.slice(0, 4)) + "</b><span class='chip " + stCls(r.STATUS) + "'>" + esc(r.STATUS) + "</span><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY || "-") + "</span><span class='muted'>" + esc(r.TYPE) + "</span>" + (r.TASK ? "<span class='chip st-IN_PROGRESS'>#" + esc(r.TASK) + "</span>" : "") + (r["FIXED IN"] ? "<span class='chip st-FIXED'>" + esc(r["FIXED IN"]) + "</span>" : "") + "</div>" +
+    "<div class='t'><b>" + esc(r.ID.slice(0, 4)) + "</b>" + sevWord(r) + "<span class='muted'>" + esc(r.TYPE) + "</span>" + (TODO[r.STATUS] ? "<span class='muted'>" + esc(r.STATUS) + "</span>" : r.STATUS === "REJECTED" ? "<span class='muted'>REJECTED</span>" : "") + (r.TASK ? "<span class='muted'>#" + esc(r.TASK) + "</span>" : "") + (r["FIXED IN"] ? "<span class='muted'>" + esc(r["FIXED IN"]) + "</span>" : "") + "</div>" +
     "<div class='d'>" + esc(r.DESCRIPTION) + "</div><div class='muted'>" + who(r.CODE) + " · " + esc(short(r.TIME)) + "</div></div>";
 }
 function renderBugs() {
@@ -404,10 +407,11 @@ function renderBugs() {
   var q = $("b-q").value.trim().toLowerCase();
   var list = rows.filter(function (r) { return (!$("b-sev").value || r.SEVERITY === $("b-sev").value) && (!$("b-type").value || r.TYPE === $("b-type").value) && (!$("b-who").value || nameOf(r.CODE) === $("b-who").value) &&
     (!$("b-mine").checked || isMine(r)) && (!q || (r.ID + " " + r.DESCRIPTION + " " + r.CODE + " " + person(r.CODE).name + " " + (r.NOTE || "")).toLowerCase().indexOf(q) >= 0); }).reverse();
-  // the board: TO DO (new, confirmed, in progress) and DONE (fixed; rejected / duplicate with the checkbox)
-  var done = { FIXED: true }; if ($("b-closed").checked) { done.REJECTED = true; done.DUPLICATE = true; }
-  var cols = [["TODO", "TO DO", "st-NEW", function (r) { return r.STATUS === "NEW" || r.STATUS === "CONFIRMED" || r.STATUS === "IN PROGRESS"; }],
-    ["DONE", "DONE", "st-FIXED", function (r) { return !!done[r.STATUS]; }]];
+  // the board (1521): TO DO (new, confirmed, in progress), FIXED (waits for the reporter), VERIFIED (rejected with the checkbox)
+  var closed = $("b-closed").checked;
+  var cols = [["TODO", "TO DO", "st-NEW", function (r) { return !!TODO[r.STATUS]; }],
+    ["FIXED", "FIXED", "st-FIXED", function (r) { return r.STATUS === "FIXED"; }],
+    ["VERIFIED", "VERIFIED", "st-VERIFIED", function (r) { return r.STATUS === "VERIFIED" || closed && r.STATUS === "REJECTED"; }]];
   $("b-board").innerHTML = cols.map(function (c) { var l = list.filter(c[3]); return "<div class='col' data-col='" + c[0] + "'><h3><span class='" + c[2] + "'>" + c[1] + "</span><span>" + l.length + "</span></h3>" + (l.map(bugCard).join("") || "<div class='muted'>-</div>") + "</div>"; }).join("");
   renderBugDetail();
 }
@@ -415,16 +419,29 @@ function renderBugDetail() {
   var box = $("b-detail"), r = bugRows().find(function (x) { return x.ID === pickedBug; });
   if (!r) { box.hidden = true; return; }
   box.hidden = false;
-  box.innerHTML = "<div class='bar'><b>" + esc(r.ID) + "</b><span class='chip " + stCls(r.STATUS) + "'>" + esc(r.STATUS) + "</span><span class='chip sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY) + "</span>" + who(r.CODE) + "<span class='muted'>" + esc(r.TIME) + "</span><span class='spacer'></span><button id='bd-x'>Close</button></div>" +
+  box.innerHTML = "<div class='bar'><b>" + esc(r.ID) + "</b><span class='muted'>" + esc(r.STATUS) + "</span>" + sevWord(r) + who(r.CODE) + "<span class='muted'>" + esc(r.TIME) + "</span><span class='spacer'></span><button id='bd-x'>Close</button></div>" +
     "<div>" + esc(r.DESCRIPTION) + "</div><div class='muted'>" + esc([r.MODE, r.DAY ? "day " + r.DAY : "", r.PLATFORM, r.VERSION ? "v" + r.VERSION : ""].filter(Boolean).join(" / ")) + "  " + bugLinks(r) + (r.EMAIL ? "  " + esc(r.EMAIL) : "") + "</div>" +
     (r.TASK ? "<div>Task <b>#" + esc(r.TASK) + "</b>" + (r["FIXED IN"] ? " · fixed in " + esc(r["FIXED IN"]) : "") + "</div>" : "") +
-    (owner() ? "<div class='bar'>" + ["CONFIRMED", "REJECTED", "DUPLICATE", "NEW"].map(function (s) { return "<button data-set='" + s + "'>" + (s === "NEW" ? "REOPEN" : s === "CONFIRMED" ? "CONFIRM" : s) + "</button>"; }).join("") +
-      "<input id='bd-note' placeholder='NOTE...' value='" + esc(r.NOTE) + "' style='flex:1;min-width:180px'><button data-set='" + esc(r.STATUS) + "'>Save note</button></div>" : "") +
+    (owner() ? "<div class='bar'>" + [["CONFIRMED", "CONFIRM"], ["REJECTED", "REJECT"], ["NEW", "REOPEN"]].map(function (s) { return "<button data-set='" + s[0] + "'>" + s[1] + "</button>"; }).join("") +
+      "<input id='bd-note' placeholder='NOTE...' value='" + esc(r.NOTE) + "' style='flex:1;min-width:180px'><button data-set='" + esc(r.STATUS) + "'>Save note</button></div>" :
+      isMine(r) && r.STATUS === "FIXED" ? "<div class='bar'><button data-verify='1'>FIX WORKS</button><button data-verify='0'>STILL BROKEN</button>" +
+      "<input id='bd-note' placeholder='WHAT IS STILL WRONG...' style='flex:1;min-width:180px'></div>" : "") +
     (r["RECENT EVENTS"] ? "<h3>What the player did last</h3><pre>" + esc(r["RECENT EVENTS"]) + "</pre>" : "");
 }
 $("b-board").addEventListener("click", function (e) { var c = e.target.closest("[data-bug]"); if (!c) return; pickedBug = pickedBug === c.dataset.bug ? "" : c.dataset.bug; renderBugs(); if (pickedBug) $("b-detail").scrollIntoView({ block: "nearest" }); });
 $("b-detail").addEventListener("click", function (e) {
   if (e.target.id === "bd-x") { pickedBug = ""; renderBugs(); return; }
+  var v = e.target.closest("button[data-verify]");
+  if (v) {   // 1521: the reporter's answer on a FIXED bug - works = VERIFIED, still broken = back to CONFIRMED with the note
+    var works = v.dataset.verify === "1", vid = pickedBug, vnote = $("bd-note").value;
+    v.disabled = true; v.textContent = "Saving...";
+    apiPost({ action: "studio_verify_bug", k: KEY, id: vid, works: works, note: vnote }).then(function () {
+      var head = D.bugs.values[0], r = D.bugs.values.findIndex(function (x) { return x[0] === vid; });
+      if (r > 0) D.bugs.values[r][head.indexOf("STATUS")] = works ? "VERIFIED" : "CONFIRMED";
+      renderBugs(); },
+      function (err) { v.disabled = false; v.textContent = "Not saved: " + (err && err.message || err); });
+    return;
+  }
   var b = e.target.closest("button[data-set]"); if (!b) return;
   var st = b.dataset.set, note = $("bd-note").value, id = pickedBug;
   b.disabled = true; b.textContent = "Saving...";
@@ -434,12 +451,12 @@ $("b-detail").addEventListener("click", function (e) {
     renderBugs(); if (allowed("changelog")) renderOverview(); },
     function (err) { b.disabled = false; b.textContent = "Not saved: " + (err && err.message || err); });
 });
-// drag a card to the other column (OWNER): into DONE = FIXED, back into TO DO = CONFIRMED
+// drag a card to another column (OWNER): into FIXED = FIXED, into VERIFIED = VERIFIED, back into TO DO = CONFIRMED
 var dragId = "", dragFrom = "";
 var clearDrop = function () { document.querySelectorAll(".col.drop").forEach(function (x) { x.classList.remove("drop"); }); };
 $("b-board").addEventListener("dragstart", function (e) { var c = e.target.closest("[data-bug]"); if (!c || !owner()) return; dragId = c.dataset.bug; dragFrom = (c.closest(".col[data-col]") || {}).dataset ? c.closest(".col[data-col]").dataset.col : ""; e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragId); } catch (err) {} });
 $("b-board").addEventListener("dragover", function (e) { var col = e.target.closest(".col[data-col]"); if (!col || !dragId) return; e.preventDefault(); if (!col.classList.contains("drop")) { clearDrop(); col.classList.add("drop"); } });
-$("b-board").addEventListener("drop", function (e) { e.preventDefault(); var col = e.target.closest(".col[data-col]"), id = dragId; dragId = ""; clearDrop(); if (col && id && col.dataset.col !== dragFrom) moveBug(id, col.dataset.col === "DONE" ? "FIXED" : "CONFIRMED"); });
+$("b-board").addEventListener("drop", function (e) { e.preventDefault(); var col = e.target.closest(".col[data-col]"), id = dragId; dragId = ""; clearDrop(); if (col && id && col.dataset.col !== dragFrom) moveBug(id, col.dataset.col === "TODO" ? "CONFIRMED" : col.dataset.col); });
 $("b-board").addEventListener("dragend", function () { dragId = ""; clearDrop(); });
 function moveBug(id, st) {
   var head = D.bugs.values[0], cs = head.indexOf("STATUS"), r = D.bugs.values.findIndex(function (x) { return x[0] === id; });
@@ -1169,25 +1186,55 @@ function squares(box, rows) {
   rows.forEach(function (r) {
     var items = r[2], v = items ? items.length : +r[1] || 0, shown = r[3] != null ? r[3] : v, t0 = n++ * 90;
     var lit = items ? v : v ? Math.max(1, Math.round(v / max * cells)) : 0, lines = items ? Math.max(1, Math.ceil(v / cells)) : 1;
-    var row = esc(r[0]) + "' data-w='" + esc(String(shown));
+    var row = esc(r[0]) + "' data-w='" + esc(String(r[4] || shown));
     svg += "<g><text x='0' y='" + (y + 9) + "'" + font + " data-t='" + row + "'>" + esc(r[0].toUpperCase()) + "</text>";
     for (var c = 0; c < cells * lines; c++) {
       var it = items && items[c], tip = items ? (it && it[0] ? esc(it[0]) + "' data-w='" + esc(it[1] || "") : "") : row;
       svg += "<rect x='" + (L + c % cells * C) + "' y='" + (y + Math.floor(c / cells) * C) + "' width='" + (C - 2) + "' height='" + (C - 2) + "' fill='" + HEAT[0] + "'" +
-        (tip ? " data-t='" + tip + "'" : "") + (c < lit ? " class='on' style='--c:" + HEAT[heatLvl(v, max)] + ";animation-delay:" + (t0 + c * 15) + "ms'" : "") + "/>";
+        (tip ? " data-t='" + tip + "'" : "") + (c < lit ? " class='on' style='--c:" + (it && it[2] || HEAT[heatLvl(v, max)]) + ";animation-delay:" + (t0 + c * 15) + "ms'" : "") + "/>";
     }
     svg += "<text x='" + (L + cells * C + V) + "' y='" + (y + 9) + "' text-anchor='end' fill='" + HEAT[4] + "' font-size='10' font-family='JetBrains Mono,monospace'>" + esc(String(shown)) + "</text></g>";
     y += lines * C;
   });
   $(box).innerHTML = "<svg width='" + (L + cells * C + V) + "' height='" + y + "' role='img'>" + svg + "</svg>";
 }
+// 1520.8: GAME = a row per game area, a square per mechanic coloured by the build that brought it; CONTENT = what is
+// written into the game, one neutral colour; a row name on hover says what the row holds
+var MECH_ROW = { "SEA": "Sailing between landings - the boat, the wind and what is found at sea",
+  "WORLD MAP": "The map of the coast - fog, cities, army marches and enemy bands",
+  "CAMP": "The beach camp - tents, the men's work, healing and refits",
+  "SURVIVAL": "What keeps the band alive - days, food, fatigue, trade and supplies",
+  "ARMY": "Who fights - heroes, unit classes, looks and the formation",
+  "BATTLE": "The real-time battle - orders, stances, morale and the enemy AI",
+  "STORY": "The quests and the story told in dialogs",
+  "HUD": "The screen around the game - day block, logs, scrolls and saves",
+  "SOUND": "Music, ambience and battle sounds",
+  "UNIT TYPES": "The unit classes in the game, a V variant counted with its class",
+  "HEROES": "The heroes that can lead an army", "QUESTS": "The quests written", "CITIES": "The cities built on the world map",
+  "DIALOGS": "The dialog trees written" };
+var BUILD_COLOR = ["#74b84a", "#d1a35c", "#8fb8ff", "#a796c4", "#e07fb0", "#4dccff"], MECH_NEUTRAL = "#9a8890";   // newest build first
 function renderMechanics() {
   var d = (D.playstats || {}).dev;
-  if (!d || !d.version) { $("cl-mech").innerHTML = "<div class='muted'>Not loaded yet.</div>"; $("cl-mech-n").textContent = ""; return; }
+  if (!d || !d.version) { $("cl-mech").innerHTML = "<div class='muted'>Not loaded yet.</div>"; $("cl-mech2").innerHTML = $("cl-mech-leg").innerHTML = $("cl-mech-n").textContent = ""; return; }
   $("cl-mech-n").textContent = "build " + d.version;
-  squares("cl-mech", (d.categories || []).map(function (k) { return [k[0], 0, k[1]]; }).concat([["Unit classes", 0, d.classes], ["Heroes", 0, d.heroes],
-    ["Quests written", 0, d.quests], ["Cities built", 0, d.cities], ["Dialog trees", 0, d.dialogs],
-    ["Looks", (d.looks || []).length, null], ["Characters", (d.characters || []).length, null]]).filter(function (r) { return r[2] ? r[2].length : r[1]; }));
+  var cats = d.categories || [], builds = [];
+  cats.forEach(function (k) { k[1].forEach(function (m) { if (m[2] && builds.indexOf(m[2]) < 0) builds.push(m[2]); }); });
+  var num = function (b) { return b.split(".").reduce(function (a, x) { return a * 1000 + (+x || 0); }, 0); };
+  builds.sort(function (a, b) { return num(b) - num(a); });
+  var col = function (b) { var i = builds.indexOf(b); return i < 0 ? MECH_NEUTRAL : BUILD_COLOR[i % BUILD_COLOR.length]; };
+  var row = function (name, items) { return [name, 0, items, null, MECH_ROW[name.toUpperCase()]]; };
+  squares("cl-mech", cats.map(function (k) { return row(k[0], k[1].map(function (m) { return [m[0], m[1] + (m[2] ? ", since " + m[2] : ""), col(m[2])]; })); }));
+  // a class whose name is another class + V is that class's variant
+  var cls = d.classes || [], names = cls.map(function (c) { return c[0]; }), units = [];
+  cls.forEach(function (c) {
+    if (/V$/.test(c[0]) && names.indexOf(c[0].slice(0, -1)) >= 0) return;
+    units.push([c[0], c[1] + (names.indexOf(c[0] + "V") >= 0 ? ", with the variant " + c[0] + "V" : ""), MECH_NEUTRAL]);
+  });
+  var plain = function (l) { return (l || []).map(function (x) { return [x[0], x[1], MECH_NEUTRAL]; }); };
+  squares("cl-mech2", [row("Unit types", units), row("Heroes", plain(d.heroes)), row("Quests", plain(d.quests)), row("Cities", plain(d.cities)),
+    row("Dialogs", plain(d.dialogs))].filter(function (r) { return r[2].length; }));
+  $("cl-mech-leg").innerHTML = builds.map(function (b) { return "<span><i style='background:" + col(b) + "'></i>" + esc(b) + "</span>"; }).join("") +
+    "<span><i style='background:" + MECH_NEUTRAL + "'></i>NOT DATED</span>";
 }
 // PLAYERS / THE GAME SO FAR - the players' play summed by the sheet (tester and playtest codes only)
 function renderGameStats() {
@@ -1197,7 +1244,7 @@ function renderGameStats() {
     ["Battles fought", g.battles], ["Battles won", g.won], ["Battles lost", g.lost], ["Men fallen", g.fallen], ["Enemies slain", g.slain], ["Quests done", g.quests]]);
 }
 // a square's name in a box beside the cursor, at once (no browser tooltip)
-["cl-mech", "pl-game"].forEach(function (id) {
+["cl-mech", "cl-mech2", "pl-game"].forEach(function (id) {
   $(id).addEventListener("mousemove", function (e) {
     var t = e.target.closest("[data-t]"), tip = $("mx-tip");
     if (!t) { tip.hidden = true; return; }
