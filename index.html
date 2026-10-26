@@ -75,6 +75,8 @@ select.lvl{padding:1px 4px;font-size:11px}
 details.fold{background:var(--panel);border:2px solid var(--line);padding:6px 10px;margin-top:8px}details.fold>summary{cursor:pointer;font:600 14px var(--head);letter-spacing:.12em;color:var(--rose);list-style:none;display:flex;gap:10px;align-items:baseline}
 details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fold[open]>summary::before{content:"-"}details.fold>summary .muted{font:12px var(--mono);letter-spacing:0}details.fold>:not(summary){margin-top:8px}
 .mx{overflow-x:auto}.mx .on{animation:mx-lit .1s steps(1) forwards}.mx rect:hover{fill:rgb(100,255,255)!important}@keyframes mx-lit{to{fill:var(--c)}}
+.yt{display:grid;gap:6px}.yt-c{background:var(--bg);border:2px solid var(--line);border-left:3px solid var(--line);padding:6px 8px;display:grid;gap:4px}.yt-c.open{border-left-color:var(--beige)}.yt-c .t{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.yt-r{margin-left:18px;padding:3px 8px;border-left:3px solid var(--line);color:var(--dim)}.yt-r.mine{border-left-color:var(--rose);color:var(--fg);background:var(--panel)}.yt-r.mine b{color:var(--rose)}
 .mx-h{font:600 11px var(--mono);letter-spacing:1px;margin:6px 0 3px}.mx-leg{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;font:11px var(--mono);color:var(--dim)}.mx-leg i{display:inline-block;width:11px;height:11px;margin-right:4px;vertical-align:-1px}
 #mx-tip{position:fixed;z-index:20;pointer-events:none;max-width:320px;padding:5px 8px;background:var(--panel);border:2px solid rgb(100,255,255);font:11px/1.4 var(--mono);color:var(--fg)}#mx-tip b{display:block;color:rgb(100,255,255);font-weight:600;text-transform:uppercase}
 .bld{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.bld-t{background:var(--bg);border:2px solid var(--line);padding:6px 8px;cursor:pointer;display:grid;gap:4px}.bld-t:hover,.bld-t.on{background:var(--hover)}
@@ -142,10 +144,10 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 
 <section class="panel" data-pane="community" hidden><nav id="cm-tabs"><button data-cm="x" aria-selected="true">X</button><button data-cm="youtube" aria-selected="false">YOUTUBE</button></nav>
 <div data-cmp="youtube" hidden><div class="msg" id="yt-msg" hidden></div><div class="bar"><h2 id="yt-ch">YouTube</h2><input id="yt-q" type="search" placeholder="SEARCH AUTHOR, VIDEO OR TEXT..." style="flex:1;min-width:200px">
-<label><input type="checkbox" id="yt-open"> not answered only</label><span class="muted" id="yt-n"></span></div><div class="scroll"><table id="yt-t"></table></div></div>
-<div data-cmp="x"><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
-<div class="cols"><div class="panel"><div class="bar"><h2>Per month</h2><span class="legend"><span><i style="background:var(--cyan)"></i>LIKES</span><span><i style="background:var(--rose)"></i>REPLIES</span></span></div><div class="scroll" id="pl-month"></div></div>
-<div class="panel"><h2>How often they come back</h2><div id="pl-back" style="display:grid;gap:6px"></div></div></div>
+<label for="yt-show">Show</label><select id="yt-show"><option value="">ALL</option><option value="open">NOT ANSWERED</option><option value="done">ANSWERED</option></select>
+<label for="yt-vid">Video</label><select id="yt-vid"></select><label for="yt-from">From</label><input type="date" id="yt-from"><label for="yt-to">To</label><input type="date" id="yt-to">
+<label for="yt-sort">Sort</label><select id="yt-sort"><option value="new">NEWEST FIRST</option><option value="old">OLDEST FIRST</option></select><span class="muted" id="yt-n"></span></div><div id="yt-t" class="yt"></div></div>
+<div data-cmp="x"><div class="msg" id="pl-empty" hidden></div>
 <div class="panel"><div class="bar"><h2>Accounts</h2><input id="pl-q" type="search" placeholder="SEARCH HANDLE OR NAME..." style="flex:1;min-width:200px">
 <label for="pl-sort">Sort</label><select id="pl-sort"><option value="all">TOGETHER</option><option value="likes">LIKES</option><option value="replies">REPLIES</option><option value="last">LAST REPLY</option></select>
 <label><input type="checkbox" id="pl-ret"> returning only</label><label><input type="checkbox" id="pl-only"> ticked only</label><span class="muted" id="pl-n"></span></div>
@@ -1156,46 +1158,34 @@ function renderYoutube() {
   else if (!Y.comments.length) { msg.hidden = false; msg.className = "msg"; msg.textContent = D.youtube ? "No comments under the videos yet." : "Reading the comments..."; }
   else msg.hidden = true;
   $("yt-ch").textContent = Y.channel ? "YouTube · " + Y.channel : "YouTube";
-  var q = $("yt-q").value.trim().toLowerCase(), open = $("yt-open").checked;
-  var rows = Y.comments.filter(function (c) { return !c.own && (!open || !c.answered) && (!q || (c.author + " " + c.title + " " + c.text).toLowerCase().indexOf(q) >= 0); })
-    .sort(function (a, b) { return b.date.localeCompare(a.date); });
+  // 1534.2: show all / not answered / answered, one video, a day range, newest or oldest first; under each comment its
+  // replies - the channel's own in its colour
+  var vids = {}; Y.comments.forEach(function (c) { if (c.video) vids[c.video] = c.title || c.video; });
+  var vs = $("yt-vid"), vv = vs.value;
+  vs.innerHTML = "<option value=''>ALL</option>" + Object.keys(vids).sort(function (a, b) { return vids[a].localeCompare(vids[b]); }).map(function (v) { return "<option value='" + esc(v) + "'>" + esc(vids[v]) + "</option>"; }).join("");
+  vs.value = vids[vv] ? vv : "";
+  var q = $("yt-q").value.trim().toLowerCase(), show = $("yt-show").value, from = $("yt-from").value, to = $("yt-to").value, old = $("yt-sort").value === "old";
+  var rows = Y.comments.filter(function (c) {
+    var day = c.date.slice(0, 10);
+    return !c.own && (!show || (show === "open") === !c.answered) && (!vs.value || c.video === vs.value) && (!from || day >= from) && (!to || day <= to) &&
+      (!q || (c.author + " " + c.title + " " + c.text + " " + (c.thread || []).map(function (r) { return r.text; }).join(" ")).toLowerCase().indexOf(q) >= 0);
+  }).sort(function (a, b) { return old ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date); });
   var left = Y.comments.filter(function (c) { return !c.own && !c.answered; }).length;
   $("yt-n").textContent = Y.comments.length ? rows.length + " SHOWN · " + left + " NOT ANSWERED" : "";
-  $("yt-t").innerHTML = grid([
-    ["Date", function (c) { return esc(c.date.slice(0, 16).replace("T", " ")); }, "muted"],
-    ["Video", function (c) { return "<a href='https://www.youtube.com/watch?v=" + encodeURIComponent(c.video) + "&lc=" + encodeURIComponent(c.id) + "' target='_blank' rel='noopener'>" + esc(c.title || c.video) + "</a>"; }],
-    ["Author", function (c) { return esc(c.author); }], ["Comment", function (c) { return esc(c.text); }, "x"],
-    ["Likes", function (c) { return c.likes ? String(c.likes) : ""; }, "num"], ["Replies", function (c) { return c.replies ? String(c.replies) : ""; }, "num"],
-    ["", function (c) { return c.answered ? "<span class='st-FIXED'>ANSWERED</span>" : "<span class='st-NEW'>NOT ANSWERED</span>"; }],
-  ], rows);
+  var when = function (d) { return esc(String(d || "").slice(0, 16).replace("T", " ")); };
+  $("yt-t").innerHTML = rows.map(function (c) {
+    return "<div class='yt-c" + (c.answered ? "" : " open") + "'><div class='t'><span class='muted'>" + when(c.date) + "</span>" +
+      "<a href='https://www.youtube.com/watch?v=" + encodeURIComponent(c.video) + "&lc=" + encodeURIComponent(c.id) + "' target='_blank' rel='noopener'>" + esc(c.title || c.video) + "</a>" +
+      "<b>" + esc(c.author) + "</b>" + (c.likes ? "<span class='muted'>" + c.likes + " likes</span>" : "") +
+      (c.answered ? "<span class='st-FIXED'>ANSWERED</span>" : "<span class='st-NEW'>NOT ANSWERED</span>") + "</div><div>" + esc(c.text) + "</div>" +
+      (c.thread || []).map(function (r) { return "<div class='yt-r" + (r.mine ? " mine" : "") + "'><b>" + esc(r.mine ? (Y.channel || "CHANNEL").toUpperCase() : r.author) + "</b> <span class='muted'>" + when(r.date) + "</span><div>" + esc(r.text) + "</div></div>"; }).join("") +
+      "</div>";
+  }).join("");
 }
-["yt-q", "yt-open"].forEach(function (id) { $(id).addEventListener("input", renderYoutube); });
+["yt-q", "yt-show", "yt-vid", "yt-from", "yt-to", "yt-sort"].forEach(function (id) { $(id).addEventListener("input", renderYoutube); });
 function renderPlayers() {
-  var X = plData(), nPosts = X.posts.length, all = X.list.length;
+  var X = plData(), all = X.list.length;
   $("pl-empty").hidden = !!all; $("pl-empty").textContent = "No data yet: the X sheet has no USERS rows.";
-  var likes = X.posts.reduce(function (s, p) { return s + p.likes; }, 0), replies = X.posts.reduce(function (s, p) { return s + p.replies; }, 0);
-  var ret = X.list.filter(function (a) { return a.all >= 2; }).length, rows = X.list.reduce(function (s, a) { return s + a.all; }, 0);
-  var top10 = X.list.slice().sort(function (a, b) { return b.all - a.all; }).slice(0, 10).reduce(function (s, a) { return s + a.all; }, 0);
-  var per = function (v) { return nPosts ? (v / nPosts).toFixed(1) : "0"; }, pct = function (v, of) { return of ? Math.round(v * 100 / of) + "%" : "0%"; };
-  $("pl-tiles").innerHTML = [["Posts", nPosts], ["Accounts", all], ["Likes", likes], ["Replies", replies], ["Likes per post", per(likes)], ["Replies per post", per(replies)],
-    ["Returning", ret + " · " + pct(ret, all)], ["Top 10 share", pct(top10, rows)]].map(function (t) { return "<div class='tile'><span>" + esc(t[0]) + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
-  // likes and replies per month of the post
-  var mon = {};
-  X.posts.forEach(function (p) { if (!p.date) return; var m = mon[p.date.slice(0, 7)] || (mon[p.date.slice(0, 7)] = { l: 0, r: 0, p: 0 }); m.l += p.likes; m.r += p.replies; m.p++; });
-  var mk = Object.keys(mon).sort(), max = Math.max(1, Math.max.apply(null, mk.map(function (k) { return mon[k].l + mon[k].r; }).concat([0]))), W = 34, H = 120, T = 14;
-  var svg = "<svg width='" + Math.max(1, mk.length * W) + "' height='" + (H + T + 26) + "' role='img' aria-label='Likes and replies per month'>";
-  mk.forEach(function (k, i) {
-    var m = mon[k], hl = Math.round(m.l / max * H), hr = Math.round(m.r / max * H), x = i * W + 4, base = T + H;
-    svg += "<g><title>" + esc(k + "  " + m.p + " posts  " + m.l + " likes  " + m.r + " replies") + "</title><rect x='" + x + "' y='" + (base - hl) + "' width='" + (W - 8) + "' height='" + hl + "' fill='#4dccff'/><rect x='" + x + "' y='" + (base - hl - hr) + "' width='" + (W - 8) + "' height='" + hr + "' fill='#e6ad47'/></g>";
-    svg += "<text x='" + (x + (W - 8) / 2) + "' y='" + (base - hl - hr - 3) + "' fill='#efd6b0' font-size='9' text-anchor='middle' font-family='JetBrains Mono,monospace'>" + (m.l + m.r) + "</text>";
-    svg += "<text x='" + (x + (W - 8) / 2) + "' y='" + (base + 12) + "' fill='#9a8890' font-size='9' text-anchor='middle' font-family='JetBrains Mono,monospace'>" + MONTHS[+k.slice(5, 7) - 1] + "</text>";
-    if (i === 0 || k.slice(5) === "01") svg += "<text x='" + (x + (W - 8) / 2) + "' y='" + (base + 23) + "' fill='#9a8890' font-size='9' text-anchor='middle' font-family='JetBrains Mono,monospace'>" + k.slice(0, 4) + "</text>";
-  });
-  $("pl-month").innerHTML = mk.length ? svg + "</svg>" : "<span class='muted'>No dated posts.</span>";
-  // how many posts each account liked
-  var B = [["1 post", 1, 1], ["2 posts", 2, 2], ["3 to 5", 3, 5], ["6 to 10", 6, 10], ["11 to 50", 11, 50], ["51 or more", 51, 1e9]].map(function (b) { return [b[0], X.list.filter(function (a) { return a.likes >= b[1] && a.likes <= b[2]; }).length]; });
-  var bm = Math.max(1, Math.max.apply(null, B.map(function (b) { return b[1]; })));
-  $("pl-back").innerHTML = B.map(function (b) { return "<div class='bar' style='flex-wrap:nowrap'><span style='width:92px;flex:none' class='muted'>" + b[0].toUpperCase() + "</span><span style='flex:1;background:var(--bg);height:14px'><i style='display:block;height:14px;width:" + (b[1] / bm * 100) + "%;background:var(--cyan)'></i></span><b style='width:110px;text-align:right'>" + b[1] + " · " + pct(b[1], all) + "</b></div>"; }).join("");
   renderPlayerList();
   // best posts
   var best = X.posts.slice().sort(function (a, b) { return (b.likes + b.replies) - (a.likes + a.replies); }).slice(0, 10);
