@@ -856,7 +856,7 @@ var CHG_COLOR = { SEA: "#4dccff", MAP: "#74b84a", CAMP: "#d1a35c", BATTLE: "#ff8
 var chgOpen = "";
 $("cl-next").addEventListener("click", function (e) { var t = e.target.closest(".chg-t"); if (!t) return; chgOpen = chgOpen === t.dataset.cat ? "" : t.dataset.cat; renderNextBuild(); });
 // ── people (owner): one row per person — the PEOPLE sheet and everyone named in the Codes tab ──
-var CAT_DEFAULT = ["OWNER", "TEAM", "FRIEND", "GUEST"];
+var CAT_DEFAULT = ["OWNER", "TEAM", "GUEST"];
 var catOrder = function () { return D && D.roles ? Object.keys(D.roles) : CAT_DEFAULT; };
 function peopleRows() {
   var low = function (s) { return String(s || "").trim().toLowerCase(); };
@@ -882,7 +882,7 @@ function peopleRows() {
     return p;
   }).sort(function (a, b) { return rank(a) - rank(b) || b.last.localeCompare(a.last) || a.name.localeCompare(b.name); });
 }
-var CAT_COLOR = { OWNER: "var(--rose)", TEAM: "var(--cyan)", FRIEND: "var(--green)", GUEST: "var(--dim)" };
+var CAT_COLOR = { OWNER: "var(--rose)", TEAM: "var(--cyan)", GUEST: "var(--dim)" };
 var catColor = function (c) { return CAT_COLOR[c] || (c ? personColor(c) : "var(--dim)"); };
 // 1307: no typing here — the role from the list, packages by ON / OFF switches (names, mail, codes, notes are changed in
 // the PEOPLE / Codes sheets); the tabs of each role in the ROLES window above. A change shows at once; the saves of one
