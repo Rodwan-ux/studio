@@ -506,11 +506,13 @@ var KINDS = [
 var kindOf = function (e) { return (KINDS.find(function (k) { return k.test(e); }) || KINDS[0]).id; };
 var kindById = function (id) { return KINDS.find(function (k) { return k.id === id; }); };
 var evCache = null;
+// 1531: the game counts sessions per code, so two codes on one computer share session names - a session = code + name
+var sessKey = function (r) { return String(r.CODE || "").toLowerCase() + "|" + r.SESSION; };
 function events() {
   if (evCache) return evCache;
   var t = table(D.events), seen = {}, out = [];
-  t.rows.forEach(function (r) { var k = r.SESSION + "|" + r.SEQ; if (!r.EVENT || r.EVENT === "perf" || seen[k]) return; seen[k] = 1;   // 1457: frame summaries only in PERFORMANCE
-    out.push({ code: r.CODE, session: r.SESSION, seq: +r.SEQ || 0, time: r.TIME, sec: +r.SEC || 0, mode: r.MODE, day: r.DAY, event: r.EVENT, values: r.VALUES, count: +r.COUNT || 1, kind: kindOf(r.EVENT) }); });
+  t.rows.forEach(function (r) { var k = sessKey(r) + "|" + r.SEQ; if (!r.EVENT || r.EVENT === "perf" || seen[k]) return; seen[k] = 1;   // 1457: frame summaries only in PERFORMANCE
+    out.push({ code: r.CODE, session: sessKey(r), seq: +r.SEQ || 0, time: r.TIME, sec: +r.SEC || 0, mode: r.MODE, day: r.DAY, event: r.EVENT, values: r.VALUES, count: +r.COUNT || 1, kind: kindOf(r.EVENT) }); });
   return evCache = out;
 }
 function sessions(evs) {
@@ -682,9 +684,9 @@ function perfRows() {
   if (prCache) return prCache;
   var seen = {}, out = [];
   table(D.events).rows.forEach(function (r) {
-    var k = r.SESSION + "|" + r.SEQ; if (r.EVENT !== "perf" || seen[k]) return; seen[k] = 1;
+    var k = sessKey(r) + "|" + r.SEQ; if (r.EVENT !== "perf" || seen[k]) return; seen[k] = 1;
     var v = {}; String(r.VALUES).split(" ").forEach(function (p) { var i = p.indexOf("="); if (i > 0) v[p.slice(0, i)] = +p.slice(i + 1) || 0; });
-    out.push({ code: r.CODE, session: r.SESSION, seq: +r.SEQ || 0, time: r.TIME, sec: +r.SEC || 0, mode: r.MODE || "-", build: r.VERSION || "-",
+    out.push({ code: r.CODE, session: sessKey(r), seq: +r.SEQ || 0, time: r.TIME, sec: +r.SEC || 0, mode: r.MODE || "-", build: r.VERSION || "-",
       frames: v.frames || 0, len: v.sec || 0, avg: v.avg_ms || 0, p95: v.p95_ms || 0, worst: v.worst_ms || 0, hitches: v.hitches || 0, ram: v.ram_mb || 0, vram: v.vram_mb || 0 });
   });
   return prCache = out;
@@ -731,7 +733,7 @@ function renderPerformance() {
   $("pr-m").innerHTML = grid([["Mode", function (x) { return esc(x.key); }]].concat([PR_SESS], PR_COLS), perfBy(rows, function (r) { return r.mode; }).sort(sortLen));
   $("pr-p").innerHTML = grid([["Who", function (x) { return nameTag(x.key); }]].concat([PR_SESS], PR_COLS), perfBy(rows, function (r) { return nameOf(r.code); }).sort(sortLen));
   var starts = {}; sessions(events()).forEach(function (x) { starts[x.id] = x; });
-  var gpus = {}; raw.forEach(function (r) { var g = r.EVENT === "session_start" && /(?:^| )gpu=(\S+)/.exec(String(r.VALUES)); if (g) gpus[r.SESSION] = g[1].replace(/_/g, " "); });   // 1478
+  var gpus = {}; raw.forEach(function (r) { var g = r.EVENT === "session_start" && /(?:^| )gpu=(\S+)/.exec(String(r.VALUES)); if (g) gpus[sessKey(r)] = g[1].replace(/_/g, " "); });   // 1478
   var ss = perfBy(rows, function (r) { return r.session; }).map(function (x) { x.start = (starts[x.key] || {}).start || x.rows[0].time; x.code = x.rows[0].code; x.build = x.rows[0].build; return x; })
     .sort(function (a, b) { return String(b.start).localeCompare(String(a.start)); });
   if (!ss.some(function (x) { return x.key === prSession; })) prSession = ss[0] ? ss[0].key : "";
