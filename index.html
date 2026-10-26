@@ -138,7 +138,10 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div data-ppn="settings" hidden><div class="bar"><input id="r-new" maxlength="20" placeholder="NEW ROLE" style="width:160px"><button id="r-add">Add role</button><span class="muted" id="r-msg"></span><span class="spacer"></span><label for="view-as">View as</label><select id="view-as" hidden aria-label="View as"></select></div>
 <div class="scroll"><table id="r-t" class="tight"></table></div></div></section>
 
-<section class="panel" data-pane="community" hidden><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
+<section class="panel" data-pane="community" hidden><nav id="cm-tabs"><button data-cm="x" aria-selected="true">X</button><button data-cm="youtube" aria-selected="false">YOUTUBE</button></nav>
+<div data-cmp="youtube" hidden><div class="msg" id="yt-msg" hidden></div><div class="bar"><h2 id="yt-ch">YouTube</h2><input id="yt-q" type="search" placeholder="SEARCH AUTHOR, VIDEO OR TEXT..." style="flex:1;min-width:200px">
+<label><input type="checkbox" id="yt-open"> not answered only</label><span class="muted" id="yt-n"></span></div><div class="scroll"><table id="yt-t"></table></div></div>
+<div data-cmp="x"><div class="msg" id="pl-empty" hidden></div><div class="tiles" id="pl-tiles"></div>
 <div class="cols"><div class="panel"><div class="bar"><h2>Per month</h2><span class="legend"><span><i style="background:var(--cyan)"></i>LIKES</span><span><i style="background:var(--rose)"></i>REPLIES</span></span></div><div class="scroll" id="pl-month"></div></div>
 <div class="panel"><h2>How often they come back</h2><div id="pl-back" style="display:grid;gap:6px"></div></div></div>
 <div class="panel"><div class="bar"><h2>Accounts</h2><input id="pl-q" type="search" placeholder="SEARCH HANDLE OR NAME..." style="flex:1;min-width:200px">
@@ -146,7 +149,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <label><input type="checkbox" id="pl-ret"> returning only</label><label><input type="checkbox" id="pl-only"> ticked only</label><span class="muted" id="pl-n"></span></div>
 <div class="bar"><button id="pl-copy">Copy ticked</button><button id="pl-top">Tick top 10</button><button id="pl-clear">Clear ticks</button><span class="muted" id="pl-msg"></span></div>
 <div class="scroll"><table id="pl-t"></table></div></div>
-<div class="panel"><h2>Best posts</h2><div class="scroll"><table id="pl-best"></table></div></div></section>
+<div class="panel"><h2>Best posts</h2><div class="scroll"><table id="pl-best"></table></div></div></div></section>
 <section class="panel" data-pane="changelog" hidden>
 <details class="fold" id="ov-heat-fold" open><summary>CHANGES <span class="muted" id="ov-heat-n"></span></summary><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></details>
 <details class="fold" open><summary>MECHANICS <span class="muted" id="cl-mech-n"></span></summary><div class="mx-h muted">GAME</div><div class="mx" id="cl-mech"></div><div class="mx-h muted">CONTENT</div><div class="mx" id="cl-mech2"></div><div class="mx-leg" id="cl-mech-leg"></div></details>
@@ -177,7 +180,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 // 1523: the data = the Supabase function; Google keeps only the calendar, the file packages and the X data (GAPI)
 var API = "https://pvvslmxgzgjuszsoatvp.supabase.co/functions/v1/studio";
 var GAPI = "https://script.google.com/macros/s/AKfycbxh3QH8N51TvszNQc9sCDNQUU9qZ-CSO7vN7MKF5aiZ1-E3R-2YlydVR7BfU566igPJxQ/exec";
-var GOOGLE_PARTS = { calendar: 1, files: 1, players: 1, packages: 1 };
+var GOOGLE_PARTS = { calendar: 1, files: 1, players: 1, packages: 1, youtube: 1 };
 var KEY = "";
 try { KEY = localStorage.getItem("studio_key") || ""; } catch (e) {}
 if (typeof PRESET_KEY === "string" && PRESET_KEY) saveKey(PRESET_KEY);
@@ -287,10 +290,10 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
-var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players"], play: ["playstats"], backup: ["backups"] };
+var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players", "youtube"], play: ["playstats"], backup: ["backups"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
-  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", backups: "Counting the copies in the vaults", packages: "Opening the shares" };
+  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", packages: "Opening the shares" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
 function ldDraw() {
   var n = ldParts.length, d = ldParts.filter(function (p) { return got[p]; }).length, next = ldParts.filter(function (p) { return !got[p]; })[0];
@@ -375,6 +378,7 @@ function render() {
   if (allowed("players")) { renderTelemetry(); renderPerformance(); renderGameStats(); }
   if (allowed("people")) renderPeople();
   if (allowed("community") && (got.players || D.players)) renderPlayers();
+  if (allowed("community") && (got.youtube || D.youtube || D.errors && D.errors.youtube)) renderYoutube();
   if (allowed("changelog")) renderChangelog();
   if (D.playstats) renderPlayStats();
   if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
@@ -1088,6 +1092,33 @@ function plSorted(by) {
   s.forEach(function (a, i) { a.rank = i + 1; });
   return s;
 }
+// 1534: COMMUNITY = X / YOUTUBE; YOUTUBE = the channel's comments, newest first, ANSWERED when the channel wrote under one
+// (the replies go out from a Claude session through the studio tool, on the owner's word)
+function showCm(t) {
+  document.querySelectorAll("#cm-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.cm === t)); });
+  document.querySelectorAll("[data-cmp]").forEach(function (p) { p.hidden = p.dataset.cmp !== t; });
+}
+$("cm-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-cm]"); if (b) { showCm(b.dataset.cm); logUse("COMMUNITY / " + b.textContent); } });
+function renderYoutube() {
+  var msg = $("yt-msg"), Y = D.youtube || { comments: [] };
+  if (D.errors && D.errors.youtube) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "YOUTUBE did not load: " + D.errors.youtube; }
+  else if (!Y.comments.length) { msg.hidden = false; msg.className = "msg"; msg.textContent = D.youtube ? "No comments under the videos yet." : "Reading the comments..."; }
+  else msg.hidden = true;
+  $("yt-ch").textContent = Y.channel ? "YouTube · " + Y.channel : "YouTube";
+  var q = $("yt-q").value.trim().toLowerCase(), open = $("yt-open").checked;
+  var rows = Y.comments.filter(function (c) { return !c.own && (!open || !c.answered) && (!q || (c.author + " " + c.title + " " + c.text).toLowerCase().indexOf(q) >= 0); })
+    .sort(function (a, b) { return b.date.localeCompare(a.date); });
+  var left = Y.comments.filter(function (c) { return !c.own && !c.answered; }).length;
+  $("yt-n").textContent = Y.comments.length ? rows.length + " SHOWN · " + left + " NOT ANSWERED" : "";
+  $("yt-t").innerHTML = grid([
+    ["Date", function (c) { return esc(c.date.slice(0, 16).replace("T", " ")); }, "muted"],
+    ["Video", function (c) { return "<a href='https://www.youtube.com/watch?v=" + encodeURIComponent(c.video) + "&lc=" + encodeURIComponent(c.id) + "' target='_blank' rel='noopener'>" + esc(c.title || c.video) + "</a>"; }],
+    ["Author", function (c) { return esc(c.author); }], ["Comment", function (c) { return esc(c.text); }, "x"],
+    ["Likes", function (c) { return c.likes ? String(c.likes) : ""; }, "num"], ["Replies", function (c) { return c.replies ? String(c.replies) : ""; }, "num"],
+    ["", function (c) { return c.answered ? "<span class='st-FIXED'>ANSWERED</span>" : "<span class='st-NEW'>NOT ANSWERED</span>"; }],
+  ], rows);
+}
+["yt-q", "yt-open"].forEach(function (id) { $(id).addEventListener("input", renderYoutube); });
 function renderPlayers() {
   var X = plData(), nPosts = X.posts.length, all = X.list.length;
   $("pl-empty").hidden = !!all; $("pl-empty").textContent = "No data yet: the X sheet has no USERS rows.";
