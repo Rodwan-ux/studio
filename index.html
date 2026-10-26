@@ -834,7 +834,7 @@ function renderRuns() {
   $("or-sec-h").textContent = "Seconds of " + short(run.start) + " " + nameOf(run.code);
   var keys = ["time", "mode"];
   run.secs.forEach(function (s) { Object.keys(s).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); }); });
-  $("or-s").innerHTML = grid(keys.map(function (k) { return [k.replace(/_/g, " "), function (s) { return s[k] == null ? "" : esc(k === "time" ? short(s[k]) : String(s[k])); }, k === "classes" || k === "map_parts" ? "x" : typeof run.secs[0][k] === "number" ? "num" : ""]; }), run.secs);
+  $("or-s").innerHTML = grid(keys.map(function (k) { return [k.replace(/_/g, " "), function (s) { return s[k] == null ? "" : esc(k === "time" ? String(s[k]).slice(11, 19) : String(s[k])); }, k === "classes" || k === "map_parts" ? "x" : typeof run.secs[0][k] === "number" ? "num" : ""]; }), run.secs);
 }
 $("or-t").addEventListener("click", function (e) { var tr = e.target.closest("tr[data-run]"); if (!tr) return; orPick = orPick === tr.dataset.run ? "" : tr.dataset.run; renderRuns(); });
 $("pr-sess").addEventListener("change", function (e) { prSession = e.target.value; renderPerformance(); });
