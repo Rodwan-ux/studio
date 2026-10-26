@@ -938,21 +938,11 @@ function renderPeople() {
   var on = function (n) { return !n || (n in pCols ? pCols[n] : !P_COLS_OFF[n]); };
   $("p-cols").innerHTML = "<label>Columns</label>" + specs.filter(function (c) { return c[0]; }).map(function (c) { return "<span class='muted'>" + esc(c[0].toUpperCase()) + "</span>" + swBtn("data-col='" + esc(c[0]) + "'", on(c[0]), false, c[0]); }).join("");
   $("p-t").innerHTML = grid(specs.filter(function (c) { return on(c[0]); }), list, function (r) { return " data-pk='" + esc(pId(r)) + "'"; });
-  pWidths();
   renderRoles();
 }
 var P_COLS_OFF = { "Full name": 1, Mail: 1, Codes: 1 };   // OFF until switched on
-var pCols = {}, pW = {};
-try { pCols = JSON.parse(localStorage.getItem("p_cols") || "{}") || {}; pW = JSON.parse(localStorage.getItem("p_w") || "{}") || {}; } catch (e) {}
-function pWidths() {
-  var t = $("p-t"), heads = t.querySelectorAll("th[data-col]");
-  heads.forEach(function (th, i) {
-    var w = pW[th.dataset.col]; if (!w) return;
-    var px = w + "px";
-    th.style.width = th.style.minWidth = th.style.maxWidth = px;
-    t.querySelectorAll("tbody tr").forEach(function (tr) { var td = tr.children[i]; if (td) { td.style.minWidth = td.style.maxWidth = px; td.style.overflow = "hidden"; td.style.textOverflow = "ellipsis"; } });
-  });
-}
+var pCols = {};
+try { pCols = JSON.parse(localStorage.getItem("p_cols") || "{}") || {}; } catch (e) {}
 $("p-cols-b").addEventListener("click", function () { $("p-cols").hidden = !$("p-cols").hidden; });
 $("p-cols").addEventListener("click", function (e) {
   var b = e.target.closest("button[data-col]"); if (!b) return;
@@ -960,15 +950,29 @@ $("p-cols").addEventListener("click", function (e) {
   try { localStorage.setItem("p_cols", JSON.stringify(pCols)); } catch (err) {}
   renderPeople();
 });
-// a heading's right edge: the cursor turns to a resize arrow there, a drag sets the column width
-var pEdge = function (e) { var th = e.target.closest && e.target.closest("#p-t th[data-col]"); if (!th || !th.dataset.col) return null; return th.getBoundingClientRect().right - e.clientX <= 6 ? th : null; };
-$("p-t").addEventListener("mousemove", function (e) { var th = e.target.closest("th"); if (th) th.style.cursor = pEdge(e) ? "col-resize" : ""; });
-$("p-t").addEventListener("mousedown", function (e) {
-  var th = pEdge(e); if (!th) return;
+// 1520.13: every table - a heading's right edge turns the cursor to a resize arrow, a drag sets that column's width (text
+// past it cut with dots); the widths per table in this browser, set again each time the table is drawn
+var colW = {};
+try { colW = JSON.parse(localStorage.getItem("col_w") || "{}") || {}; var oldP = JSON.parse(localStorage.getItem("p_w") || "null"); if (oldP && !colW["p-t"]) colW["p-t"] = oldP; } catch (e) {}
+var colKey = function (th, i) { return th.dataset.col || th.textContent.trim() || String(i); };
+function colWidths(t) {
+  var W = colW[t.id]; if (!W) return;
+  t.querySelectorAll("thead th").forEach(function (th, i) {
+    var w = W[colKey(th, i)]; if (!w) return;
+    var px = w + "px";
+    th.style.width = th.style.minWidth = th.style.maxWidth = px;
+    t.querySelectorAll("tbody tr").forEach(function (tr) { var td = tr.children[i]; if (td) { td.style.minWidth = td.style.maxWidth = px; td.style.overflow = "hidden"; td.style.textOverflow = "ellipsis"; } });
+  });
+}
+document.querySelectorAll("table[id]").forEach(function (t) { new MutationObserver(function () { colWidths(t); }).observe(t, { childList: true }); });
+var colEdge = function (e) { var th = e.target.closest && e.target.closest("table[id] thead th"); return th && th.getBoundingClientRect().right - e.clientX <= 6 ? th : null; };
+document.addEventListener("mousemove", function (e) { var th = e.target.closest && e.target.closest("table[id] thead th"); if (th) th.style.cursor = colEdge(e) ? "col-resize" : ""; });
+document.addEventListener("mousedown", function (e) {
+  var th = colEdge(e); if (!th) return;
   e.preventDefault();
-  var col = th.dataset.col, x0 = e.clientX, w0 = th.getBoundingClientRect().width;
-  var mv = function (ev) { pW[col] = Math.max(1, Math.round(w0 + ev.clientX - x0)); pWidths(); };
-  var up = function () { document.removeEventListener("mousemove", mv); document.removeEventListener("mouseup", up); try { localStorage.setItem("p_w", JSON.stringify(pW)); } catch (err) {} };
+  var t = th.closest("table"), col = colKey(th, Array.prototype.indexOf.call(th.parentNode.children, th)), x0 = e.clientX, w0 = th.getBoundingClientRect().width;
+  var mv = function (ev) { (colW[t.id] = colW[t.id] || {})[col] = Math.max(1, Math.round(w0 + ev.clientX - x0)); colWidths(t); };
+  var up = function () { document.removeEventListener("mousemove", mv); document.removeEventListener("mouseup", up); try { localStorage.setItem("col_w", JSON.stringify(colW)); } catch (err) {} };
   document.addEventListener("mousemove", mv); document.addEventListener("mouseup", up);
 });
 // ROLES (1307): a row per role, a switch per tab; OWNER fixed
