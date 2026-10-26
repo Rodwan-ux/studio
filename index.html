@@ -1198,8 +1198,9 @@ function squares(box, rows) {
   });
   $(box).innerHTML = "<svg width='" + (L + cells * C + V) + "' height='" + y + "' role='img'>" + svg + "</svg>";
 }
-// 1520.8: GAME = a row per game area, a square per mechanic coloured by the build that brought it; CONTENT = what is
-// written into the game, one neutral colour; a row name on hover says what the row holds
+// 1520.9: GAME = a row per game area, a square per mechanic; CONTENT = what is written into the game; a square is the
+// lighter (the CHANGES colours) the more changelog lines and task titles hold every word of its name; a row name on
+// hover says what the row holds
 var MECH_ROW = { "SEA": "Sailing between landings - the boat, the wind and what is found at sea",
   "WORLD MAP": "The map of the coast - fog, cities, army marches and enemy bands",
   "CAMP": "The beach camp - tents, the men's work, healing and refits",
@@ -1212,29 +1213,40 @@ var MECH_ROW = { "SEA": "Sailing between landings - the boat, the wind and what 
   "UNIT TYPES": "The unit classes in the game, a V variant counted with its class",
   "HEROES": "The heroes that can lead an army", "QUESTS": "The quests written", "CITIES": "The cities built on the world map",
   "DIALOGS": "The dialog trees written" };
-var BUILD_COLOR = ["#74b84a", "#d1a35c", "#8fb8ff", "#a796c4", "#e07fb0", "#4dccff"], MECH_NEUTRAL = "#9a8890";   // newest build first
 function renderMechanics() {
   var d = (D.playstats || {}).dev;
   if (!d || !d.version) { $("cl-mech").innerHTML = "<div class='muted'>Not loaded yet.</div>"; $("cl-mech2").innerHTML = $("cl-mech-leg").innerHTML = $("cl-mech-n").textContent = ""; return; }
   $("cl-mech-n").textContent = "build " + d.version;
-  var cats = d.categories || [], builds = [];
-  cats.forEach(function (k) { k[1].forEach(function (m) { if (m[2] && builds.indexOf(m[2]) < 0) builds.push(m[2]); }); });
-  var num = function (b) { return b.split(".").reduce(function (a, x) { return a * 1000 + (+x || 0); }, 0); };
-  builds.sort(function (a, b) { return num(b) - num(a); });
-  var col = function (b) { var i = builds.indexOf(b); return i < 0 ? MECH_NEUTRAL : BUILD_COLOR[i % BUILD_COLOR.length]; };
+  var low = function (x) { return String(x || "").toLowerCase(); };
+  var changes = [], tasks = (D.tasks || []).map(function (t) { return low(t.title); });
+  clBuilds().forEach(function (b) { b.items.forEach(function (i) { changes.push(low(i.title + " " + i.text)); }); });
+  var STOP = { and: 1, the: 1, of: 1 };
+  var hits = function (name, texts) {
+    var w = low(name).split(/\s+/).filter(function (x) { return x.length >= 3 && !STOP[x]; }).map(function (x) { return new RegExp("\\b" + x.replace(/[^a-z0-9]/g, "\\$&")); });
+    return w.length ? texts.filter(function (t) { return w.every(function (x) { return x.test(t); }); }).length : 0;
+  };
+  // [name, what] -> [name, what with the counts, count]; the colour comes after, from the largest count of both boxes
+  var item = function (name, what) {
+    var c = hits(name, changes), t = hits(name, tasks);
+    return [name, what + " - " + c + " changes" + (D.tasks ? ", " + t + " tasks" : ""), c + t];
+  };
   var row = function (name, items) { return [name, 0, items, null, MECH_ROW[name.toUpperCase()]]; };
-  squares("cl-mech", cats.map(function (k) { return row(k[0], k[1].map(function (m) { return [m[0], m[1] + (m[2] ? ", since " + m[2] : ""), col(m[2])]; })); }));
+  var game = (d.categories || []).map(function (k) { return row(k[0], k[1].map(function (m) { return item(m[0], m[1] + (m[2] ? ", since " + m[2] : "")); })); });
   // a class whose name is another class + V is that class's variant
   var cls = d.classes || [], names = cls.map(function (c) { return c[0]; }), units = [];
   cls.forEach(function (c) {
     if (/V$/.test(c[0]) && names.indexOf(c[0].slice(0, -1)) >= 0) return;
-    units.push([c[0], c[1] + (names.indexOf(c[0] + "V") >= 0 ? ", with the variant " + c[0] + "V" : ""), MECH_NEUTRAL]);
+    units.push(item(c[0], c[1] + (names.indexOf(c[0] + "V") >= 0 ? ", with the variant " + c[0] + "V" : "")));
   });
-  var plain = function (l) { return (l || []).map(function (x) { return [x[0], x[1], MECH_NEUTRAL]; }); };
-  squares("cl-mech2", [row("Unit types", units), row("Heroes", plain(d.heroes)), row("Quests", plain(d.quests)), row("Cities", plain(d.cities)),
-    row("Dialogs", plain(d.dialogs))].filter(function (r) { return r[2].length; }));
-  $("cl-mech-leg").innerHTML = builds.map(function (b) { return "<span><i style='background:" + col(b) + "'></i>" + esc(b) + "</span>"; }).join("") +
-    "<span><i style='background:" + MECH_NEUTRAL + "'></i>NOT DATED</span>";
+  var plain = function (l) { return (l || []).map(function (x) { return item(x[0], x[1]); }); };
+  var content = [row("Unit types", units), row("Heroes", plain(d.heroes)), row("Quests", plain(d.quests)), row("Cities", plain(d.cities)),
+    row("Dialogs", plain(d.dialogs))].filter(function (r) { return r[2].length; });
+  var max = 1;
+  game.concat(content).forEach(function (r) { r[2].forEach(function (x) { max = Math.max(max, x[2]); }); });
+  game.concat(content).forEach(function (r) { r[2].forEach(function (x) { x[2] = HEAT[Math.max(1, heatLvl(x[2], max))]; }); });
+  squares("cl-mech", game);
+  squares("cl-mech2", content);
+  $("cl-mech-leg").innerHTML = "FEWER" + HEAT.slice(1).map(function (c) { return "<i style='background:" + c + "'></i>"; }).join("") + "MORE";
 }
 // PLAYERS / THE GAME SO FAR - the players' play summed by the sheet (tester and playtest codes only)
 function renderGameStats() {
