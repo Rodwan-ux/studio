@@ -280,7 +280,7 @@ $("ov-heat-fold").addEventListener("toggle", function () { if (this.open) render
 var logged = false;
 function logUse(tab) { if (VIEW_AS || !KEY) return; apiPost({ action: "studio_log", k: KEY, tab: tab }).catch(function () {}); }
 $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) { showTab(b.dataset.tab); logUse(b.textContent); } });
-function showTel(t) { document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); if (t === "performance") drawPerf(); }
+function showTel(t) { if (t === "feedback" && !owner()) t = "sessions"; document.querySelectorAll("#tel-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.t === t)); }); document.querySelectorAll("[data-tp]").forEach(function (p) { p.hidden = p.dataset.tp !== t; }); if (t === "timeline") drawTimeline(); if (t === "performance") drawPerf(); }
 $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) { showTel(b.dataset.t); logUse("PLAYERS / " + b.textContent); } });
 
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
@@ -521,6 +521,9 @@ function sessions(evs) {
 }
 // FEEDBACK: the messages players sent from the game (mails of the FEEDBACK window), newest first.
 function renderFeedback() {
+  // 1524: the FEEDBACK page is the owner's alone - no button and no page for any other role or VIEW AS
+  document.querySelector("#tel-tabs [data-t='feedback']").hidden = !owner();
+  if (!owner()) { if (!document.querySelector("[data-tp='feedback']").hidden) showTel("sessions"); return; }
   var msg = $("fb-msg"), list = D.feedback || [];
   if (D.errors && D.errors.feedback) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "FEEDBACK did not load: " + D.errors.feedback; }
   else if (!got.feedback && !D.feedback) { msg.hidden = false; msg.className = "msg"; msg.textContent = "Opening the letters..."; }
