@@ -28,7 +28,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--hover)}tr.sel td{back
 .chip{display:inline-block;padding:0 7px;border-radius:9px;border:2px solid currentColor;font-size:11px;white-space:nowrap}
 .who b{font-weight:600}.who .nm{color:var(--cyan);white-space:nowrap}
 .sev-BLOCKER{color:var(--blood)}.sev-CRITICAL{color:var(--red)}.sev-MAJOR{color:var(--amber)}.sev-MINOR{color:var(--dim)}
-.st-NEW{color:var(--beige)}.st-CONFIRMED{color:var(--cyan)}.st-IN_PROGRESS{color:var(--violet)}.st-FIXED{color:var(--green)}.st-VERIFIED{color:var(--cyan)}.st-REJECTED{color:var(--dim)}
+.st-NEW{color:var(--beige)}.st-CONFIRMED{color:var(--cyan)}.st-IN_PROGRESS{color:var(--violet)}.st-FIXED{color:var(--green)}
 .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}@media (max-width:620px){.board{grid-template-columns:1fr}}
 .col{background:var(--bg);border:2px solid var(--line);padding:6px;display:grid;gap:6px;align-content:start;min-width:0}
 .col h3{display:flex;justify-content:space-between}
@@ -99,7 +99,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div data-btp="bugs">
 <div class="bar"><input id="b-q" type="search" placeholder="SEARCH ID, TEXT OR TESTER..." style="flex:1;min-width:200px">
 <label for="b-sev">Severity</label><select id="b-sev"></select><label for="b-type">Type</label><select id="b-type"></select>
-<label for="b-who">Tester</label><select id="b-who"></select><label id="b-mine-l" hidden><input type="checkbox" id="b-mine"> my reports</label><label><input type="checkbox" id="b-closed"> rejected</label></div>
+<label for="b-who">Tester</label><select id="b-who"></select><label id="b-mine-l" hidden><input type="checkbox" id="b-mine"> my reports</label></div>
 <div id="b-msg" class="msg" hidden></div><div class="detail" id="b-detail" hidden></div><div class="board" id="b-board"></div></div>
 <div data-btp="tasks" hidden>
 <div class="bar"><input id="t-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px">
@@ -384,14 +384,15 @@ function render() {
 var SEV = ["BLOCKER", "CRITICAL", "MAJOR", "MINOR"];
 var owner = function () { return !!D.canSetStatus; };
 var isMine = function (r) { return (D.mine || []).indexOf(String(r.CODE).toLowerCase()) >= 0; };
-function bugRows() { var t = table(D.bugs && D.bugs.values); return t.rows.map(function (r, i) { r._i = i + 1; return r; }).filter(function (r) { return r.ID; }).map(function (r) { r.STATUS = r.STATUS || "NEW"; return r; }); }
+function bugRows() { var t = table(D.bugs && D.bugs.values); return t.rows.map(function (r, i) { r._i = i + 1; return r; }).filter(function (r) { return r.ID; }).map(function (r) { r.STATUS = r.STATUS || "TO DO"; return r; }); }
 function bugLinks(r) { if (!D.bugs.links) return ""; var head = D.bugs.values[0], row = D.bugs.links[r._i] || []; return ["SCREENSHOT", "SAVE", "SETTINGS"].map(function (h) { var j = head.indexOf(h); return j >= 0 && row[j] ? "<a href='" + esc(row[j]) + "' target='_blank' rel='noopener'>" + h + "</a>" : ""; }).filter(Boolean).join(" "); }
-// 1521: the column tells the status, the severity is a coloured word (no box) beside the stripe of its colour
-var TODO = { NEW: true, CONFIRMED: true, "IN PROGRESS": true };
+// 1521.3: three statuses = the three columns TO DO, DONE, CONFIRMED (the reporter says the fix works); the severity is a
+// coloured word (no box) beside the stripe of its colour; a rejected report = DONE with the note REJECTED
+var rejected = function (r) { return /^REJECTED/.test(r.NOTE || ""); };
 function sevWord(r) { return "<span class='sev-" + esc(r.SEVERITY) + "'>" + esc(r.SEVERITY || "-") + "</span>"; }
 function bugCard(r) {
   return "<div class='card" + (r.ID === pickedBug ? " on" : "") + (!owner() && isMine(r) ? " mine" : "") + "' data-bug='" + esc(r.ID) + "'" + (owner() ? " draggable='true'" : "") + " style='border-left-color:" + ({ BLOCKER: "var(--blood)", CRITICAL: "var(--red)", MAJOR: "var(--amber)" }[r.SEVERITY] || "var(--line)") + "'>" +
-    "<div class='t'><b>" + esc(r.ID.slice(0, 4)) + "</b>" + sevWord(r) + "<span class='muted'>" + esc(r.TYPE) + "</span>" + (TODO[r.STATUS] ? "<span class='muted'>" + esc(r.STATUS) + "</span>" : r.STATUS === "REJECTED" ? "<span class='muted'>REJECTED</span>" : "") + (r.TASK ? "<span class='muted'>#" + esc(r.TASK) + "</span>" : "") + (r["FIXED IN"] ? "<span class='muted'>" + esc(r["FIXED IN"]) + "</span>" : "") + "</div>" +
+    "<div class='t'><b>" + esc(r.ID.slice(0, 4)) + "</b>" + sevWord(r) + "<span class='muted'>" + esc(r.TYPE) + "</span>" + (rejected(r) ? "<span class='muted'>REJECTED</span>" : "") + (r.TASK ? "<span class='muted'>#" + esc(r.TASK) + "</span>" : "") + (r["FIXED IN"] ? "<span class='muted'>" + esc(r["FIXED IN"]) + "</span>" : "") + "</div>" +
     "<div class='d'>" + esc(r.DESCRIPTION) + "</div><div class='muted'>" + who(r.CODE) + " · " + esc(short(r.TIME)) + "</div></div>";
 }
 function renderBugs() {
@@ -407,11 +408,7 @@ function renderBugs() {
   var q = $("b-q").value.trim().toLowerCase();
   var list = rows.filter(function (r) { return (!$("b-sev").value || r.SEVERITY === $("b-sev").value) && (!$("b-type").value || r.TYPE === $("b-type").value) && (!$("b-who").value || nameOf(r.CODE) === $("b-who").value) &&
     (!$("b-mine").checked || isMine(r)) && (!q || (r.ID + " " + r.DESCRIPTION + " " + r.CODE + " " + person(r.CODE).name + " " + (r.NOTE || "")).toLowerCase().indexOf(q) >= 0); }).reverse();
-  // the board (1521): TO DO (new, confirmed, in progress), FIXED (waits for the reporter), VERIFIED (rejected with the checkbox)
-  var closed = $("b-closed").checked;
-  var cols = [["TODO", "TO DO", "st-NEW", function (r) { return !!TODO[r.STATUS]; }],
-    ["FIXED", "FIXED", "st-FIXED", function (r) { return r.STATUS === "FIXED"; }],
-    ["VERIFIED", "VERIFIED", "st-VERIFIED", function (r) { return r.STATUS === "VERIFIED" || closed && r.STATUS === "REJECTED"; }]];
+  var cols = [["TO DO", "st-NEW"], ["DONE", "st-FIXED"], ["CONFIRMED", "st-CONFIRMED"]].map(function (c) { return [c[0], c[0], c[1], function (r) { return r.STATUS === c[0]; }]; });
   $("b-board").innerHTML = cols.map(function (c) { var l = list.filter(c[3]); return "<div class='col' data-col='" + c[0] + "'><h3><span class='" + c[2] + "'>" + c[1] + "</span><span>" + l.length + "</span></h3>" + (l.map(bugCard).join("") || "<div class='muted'>-</div>") + "</div>"; }).join("");
   renderBugDetail();
 }
@@ -422,9 +419,9 @@ function renderBugDetail() {
   box.innerHTML = "<div class='bar'><b>" + esc(r.ID) + "</b><span class='muted'>" + esc(r.STATUS) + "</span>" + sevWord(r) + who(r.CODE) + "<span class='muted'>" + esc(r.TIME) + "</span><span class='spacer'></span><button id='bd-x'>Close</button></div>" +
     "<div>" + esc(r.DESCRIPTION) + "</div><div class='muted'>" + esc([r.MODE, r.DAY ? "day " + r.DAY : "", r.PLATFORM, r.VERSION ? "v" + r.VERSION : ""].filter(Boolean).join(" / ")) + "  " + bugLinks(r) + (r.EMAIL ? "  " + esc(r.EMAIL) : "") + "</div>" +
     (r.TASK ? "<div>Task <b>#" + esc(r.TASK) + "</b>" + (r["FIXED IN"] ? " · fixed in " + esc(r["FIXED IN"]) : "") + "</div>" : "") +
-    (owner() ? "<div class='bar'>" + [["CONFIRMED", "CONFIRM"], ["REJECTED", "REJECT"], ["NEW", "REOPEN"]].map(function (s) { return "<button data-set='" + s[0] + "'>" + s[1] + "</button>"; }).join("") +
+    (owner() ? "<div class='bar'>" + [["TO DO", "TO DO"], ["DONE", "DONE"], ["DONE", "REJECT"]].map(function (s) { return "<button data-set='" + s[0] + "'" + (s[1] === "REJECT" ? " data-rej='1'" : "") + ">" + s[1] + "</button>"; }).join("") +
       "<input id='bd-note' placeholder='NOTE...' value='" + esc(r.NOTE) + "' style='flex:1;min-width:180px'><button data-set='" + esc(r.STATUS) + "'>Save note</button></div>" :
-      isMine(r) && r.STATUS === "FIXED" ? "<div class='bar'><button data-verify='1'>FIX WORKS</button><button data-verify='0'>STILL BROKEN</button>" +
+      isMine(r) && r.STATUS === "DONE" && !rejected(r) ? "<div class='bar'><button data-verify='1'>FIX WORKS</button><button data-verify='0'>STILL BROKEN</button>" +
       "<input id='bd-note' placeholder='WHAT IS STILL WRONG...' style='flex:1;min-width:180px'></div>" : "") +
     (r["RECENT EVENTS"] ? "<h3>What the player did last</h3><pre>" + esc(r["RECENT EVENTS"]) + "</pre>" : "");
 }
@@ -432,18 +429,19 @@ $("b-board").addEventListener("click", function (e) { var c = e.target.closest("
 $("b-detail").addEventListener("click", function (e) {
   if (e.target.id === "bd-x") { pickedBug = ""; renderBugs(); return; }
   var v = e.target.closest("button[data-verify]");
-  if (v) {   // 1521: the reporter's answer on a FIXED bug - works = VERIFIED, still broken = back to CONFIRMED with the note
+  if (v) {   // 1521: the reporter's answer on a DONE bug - works = CONFIRMED, still broken = back to TO DO with the note
     var works = v.dataset.verify === "1", vid = pickedBug, vnote = $("bd-note").value;
     v.disabled = true; v.textContent = "Saving...";
     apiPost({ action: "studio_verify_bug", k: KEY, id: vid, works: works, note: vnote }).then(function () {
       var head = D.bugs.values[0], r = D.bugs.values.findIndex(function (x) { return x[0] === vid; });
-      if (r > 0) D.bugs.values[r][head.indexOf("STATUS")] = works ? "VERIFIED" : "CONFIRMED";
+      if (r > 0) D.bugs.values[r][head.indexOf("STATUS")] = works ? "CONFIRMED" : "TO DO";
       renderBugs(); },
       function (err) { v.disabled = false; v.textContent = "Not saved: " + (err && err.message || err); });
     return;
   }
   var b = e.target.closest("button[data-set]"); if (!b) return;
-  var st = b.dataset.set, note = $("bd-note").value, id = pickedBug;
+  var st = b.dataset.set, note = $("bd-note").value.replace(/^REJECTED( \/ )?/, ""), id = pickedBug;
+  if (b.dataset.rej || st !== "TO DO" && /^REJECTED/.test($("bd-note").value)) note = "REJECTED" + (note ? " / " + note : "");   // REJECT = DONE with the note, TO DO lifts it
   b.disabled = true; b.textContent = "Saving...";
   apiPost({ action: "studio_set_bug", k: KEY, id: id, status: st, note: note }).then(function () {
     var head = D.bugs.values[0], r = D.bugs.values.findIndex(function (x) { return x[0] === id; });
@@ -451,16 +449,16 @@ $("b-detail").addEventListener("click", function (e) {
     renderBugs(); if (allowed("changelog")) renderOverview(); },
     function (err) { b.disabled = false; b.textContent = "Not saved: " + (err && err.message || err); });
 });
-// drag a card to another column (OWNER): into FIXED = FIXED, into VERIFIED = VERIFIED, back into TO DO = CONFIRMED
+// drag a card to another column (OWNER): the column's name = the new status
 var dragId = "", dragFrom = "";
 var clearDrop = function () { document.querySelectorAll(".col.drop").forEach(function (x) { x.classList.remove("drop"); }); };
 $("b-board").addEventListener("dragstart", function (e) { var c = e.target.closest("[data-bug]"); if (!c || !owner()) return; dragId = c.dataset.bug; dragFrom = (c.closest(".col[data-col]") || {}).dataset ? c.closest(".col[data-col]").dataset.col : ""; e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragId); } catch (err) {} });
 $("b-board").addEventListener("dragover", function (e) { var col = e.target.closest(".col[data-col]"); if (!col || !dragId) return; e.preventDefault(); if (!col.classList.contains("drop")) { clearDrop(); col.classList.add("drop"); } });
-$("b-board").addEventListener("drop", function (e) { e.preventDefault(); var col = e.target.closest(".col[data-col]"), id = dragId; dragId = ""; clearDrop(); if (col && id && col.dataset.col !== dragFrom) moveBug(id, col.dataset.col === "TODO" ? "CONFIRMED" : col.dataset.col); });
+$("b-board").addEventListener("drop", function (e) { e.preventDefault(); var col = e.target.closest(".col[data-col]"), id = dragId; dragId = ""; clearDrop(); if (col && id && col.dataset.col !== dragFrom) moveBug(id, col.dataset.col); });
 $("b-board").addEventListener("dragend", function () { dragId = ""; clearDrop(); });
 function moveBug(id, st) {
   var head = D.bugs.values[0], cs = head.indexOf("STATUS"), r = D.bugs.values.findIndex(function (x) { return x[0] === id; });
-  if (r < 1 || (D.bugs.values[r][cs] || "NEW") === st) return;
+  if (r < 1 || (D.bugs.values[r][cs] || "TO DO") === st) return;
   var old = D.bugs.values[r][cs];
   D.bugs.values[r][cs] = st; renderBugs(); if (allowed("changelog")) renderOverview();
   apiPost({ action: "studio_set_bug", k: KEY, id: id, status: st }).catch(function (err) {
@@ -468,7 +466,7 @@ function moveBug(id, st) {
     $("status").textContent = "Bug " + id.slice(0, 4) + " not moved: " + (err && err.message || err);
   });
 }
-["b-q", "b-sev", "b-type", "b-who", "b-mine", "b-closed"].forEach(function (id) { $(id).addEventListener("input", renderBugs); });
+["b-q", "b-sev", "b-type", "b-who", "b-mine"].forEach(function (id) { $(id).addEventListener("input", renderBugs); });
 
 // ── tasks ──
 function renderTasks() {
