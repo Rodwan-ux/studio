@@ -150,8 +150,8 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <section class="panel" data-pane="changelog" hidden>
 <details class="fold" id="ov-heat-fold" open><summary>CHANGES <span class="muted" id="ov-heat-n"></span></summary><div class="scroll" id="ov-heat-box" style="position:relative"><div id="ov-heat"></div><div class="tip" id="ov-heat-tip" hidden></div></div></details>
 <details class="fold" open><summary>MECHANICS <span class="muted" id="cl-mech-n"></span></summary><div class="mx-h muted">GAME</div><div class="mx" id="cl-mech"></div><div class="mx-h muted">CONTENT</div><div class="mx" id="cl-mech2"></div><div class="mx-leg" id="cl-mech-leg"></div></details>
-<details class="fold" open><summary>NEXT BUILD</summary><div id="cl-next"></div></details>
-<details class="fold" open><summary>BUILDS <span class="muted" id="cl-bld-n"></span></summary><div class="bld" id="cl-bld"></div></details>
+<details class="fold" id="cl-next-fold" open><summary>NEXT BUILD</summary><div id="cl-next"></div></details>
+<details class="fold" id="cl-bld-fold" open><summary>BUILDS <span class="muted" id="cl-bld-n"></span></summary><div class="bld" id="cl-bld"></div></details>
 <div id="mx-tip" hidden></div></section>
 <section class="panel" data-pane="collaborate" hidden>
 <nav id="st-tabs"><button data-st="calendar" aria-selected="true">CALENDAR</button><button data-st="files" aria-selected="false">FILES</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
@@ -1161,6 +1161,8 @@ function clBuilds() {
 }
 var bldOpen = "";
 function renderChangelog() {
+  // 1520.12: a GUEST sees only CHANGES and MECHANICS
+  $("cl-next-fold").hidden = $("cl-bld-fold").hidden = D.category === "GUEST";
   renderNextBuild();
   renderMechanics();
   if (!D.changelog) { $("cl-bld").innerHTML = "<div class='msg'>CHANGELOG.md has not been sent here yet.</div>"; return; }
