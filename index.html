@@ -1308,8 +1308,8 @@ function squares(box, rows) {
   $(box).innerHTML = "<svg width='" + (L + cells * C + V) + "' height='" + y + "' role='img'>" + svg + "</svg>";
 }
 // 1520.9: GAME = a row per game area, a square per mechanic; CONTENT = what is written into the game; a square is the
-// lighter (the CHANGES colours) the more changelog lines and task titles hold every word of its name; a row name on
-// hover says what the row holds
+// lighter (the CHANGES colours) the more tasks carry its name as their MECHANIC (1591); a row name on hover says what
+// the row holds
 var MECH_ROW = { "SEA": "Sailing between landings - the boat, the wind and what is found at sea",
   "WORLD MAP": "The map of the coast - fog, cities, army marches and enemy bands",
   "CAMP": "The beach camp - tents, the men's work, healing and refits",
@@ -1326,18 +1326,13 @@ function renderMechanics() {
   var d = (D.playstats || {}).dev;
   if (!d || !d.version) { $("cl-mech").innerHTML = "<div class='muted'>Not loaded yet.</div>"; $("cl-mech2").innerHTML = $("cl-mech-leg").innerHTML = $("cl-mech-n").textContent = ""; return; }
   $("cl-mech-n").textContent = "build " + d.version;
-  var low = function (x) { return String(x || "").toLowerCase(); };
-  var changes = [], tasks = (D.tasks || []).map(function (t) { return low(t.title); });
-  clBuilds().forEach(function (b) { b.items.forEach(function (i) { changes.push(low(i.title + " " + i.text)); }); });
-  var STOP = { and: 1, the: 1, of: 1 };
-  var hits = function (name, texts) {
-    var w = low(name).split(/\s+/).filter(function (x) { return x.length >= 3 && !STOP[x]; }).map(function (x) { return new RegExp("\\b" + x.replace(/[^a-z0-9]/g, "\\$&")); });
-    return w.length ? texts.filter(function (t) { return w.every(function (x) { return x.test(t); }); }).length : 0;
-  };
-  // [name, what] -> [name, what with the counts, count]; the colour comes after, from the largest count of both boxes
+  // 1591: the tasks of each mechanic - the MECHANIC field every task carries
+  var byMech = {};
+  (D.tasks || []).forEach(function (t) { if (t.mech) (byMech[t.mech.toLowerCase()] = byMech[t.mech.toLowerCase()] || []).push(t.no); });
+  // [name, what] -> [name, what with its tasks, count]; the colour comes after, from the largest count of both boxes
   var item = function (name, what) {
-    var c = hits(name, changes), t = hits(name, tasks);
-    return [name, what + " - " + c + " changes" + (D.tasks ? ", " + t + " tasks" : ""), c + t];
+    var l = byMech[String(name).toLowerCase()] || [];
+    return [name, what + (D.tasks ? " - " + l.length + " tasks" + (l.length ? ": " + l.join(" ") : "") : ""), l.length];
   };
   var row = function (name, items) { return [name, 0, items, null, MECH_ROW[name.toUpperCase()]]; };
   var game = (d.categories || []).map(function (k) { return row(k[0], k[1].map(function (m) { return item(m[0], m[1] + (m[2] ? ", since " + m[2] : "")); })); });
