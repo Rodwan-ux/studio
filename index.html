@@ -60,8 +60,8 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 table.tight{width:auto}table.tight td.nar{max-width:110px}td.sw-c{padding:3px 2px;text-align:center}th.sw-c{writing-mode:vertical-rl;transform:rotate(180deg);text-align:left;vertical-align:middle;padding:6px 2px}
 .sw{padding:0;width:28px;height:17px;border-radius:9px;font-size:9px;letter-spacing:0;color:var(--dim)}.sw[aria-pressed=true]{background:#1c2a18;border-color:var(--green);color:var(--green)}.sw:disabled{opacity:.45;cursor:default}
 select.lvl{padding:1px 4px;font-size:11px}
-.ld{display:grid;gap:4px;transition:opacity .6s}.ld-track{height:8px;background:repeating-linear-gradient(90deg,var(--hover) 0 6px,var(--sunk) 6px 8px);border:2px solid var(--line);overflow:hidden}
-.ld-track i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--rose) 0 6px,var(--plum) 6px 8px);transition:width .3s steps(6)}
+.ld{display:grid;gap:4px;transition:opacity .6s}.ld-track{height:8px;background:#2a2027;overflow:hidden}
+.ld-track i{display:block;height:100%;width:0;background-repeat:repeat-x;image-rendering:pixelated}
 #ld-txt{font:600 15px var(--head);letter-spacing:.12em;color:var(--beige);text-transform:uppercase}#ld-txt b{color:var(--dim);font-weight:600;margin-left:8px}
 .ld.idle{opacity:.3}.ld.idle #ld-txt{display:none}.ld.idle .ld-track{height:4px}.ld.idle:hover{opacity:1}
 .chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.chg-t{background:var(--bg);border:2px solid var(--line);border-left:3px solid;padding:6px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 14px var(--head);letter-spacing:.1em}
@@ -299,10 +299,19 @@ var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orde
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
   feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", packages: "Opening the shares" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
+// 1578: the bar as the RODWAN PIXELS logo - 4 px squares side by side in the logo's six shades, the top row from the light
+// ones, the bottom row from the dark ones, each square its own; it grows square by square
+(function () {
+  var c = document.createElement("canvas"), g = c.getContext("2d"), SH = ["#efd6b0", "#d8b69f", "#c4a095", "#b18182", "#794b58", "#5e424b"];
+  c.width = 256; c.height = 8;
+  for (var x = 0; x < 64; x++) for (var y = 0; y < 2; y++) { g.fillStyle = SH[y * 2 + Math.floor(Math.random() * 4)]; g.fillRect(x * 4, y * 4, 4, 4); }
+  try { $("ld-fill").style.backgroundImage = "url(" + c.toDataURL() + ")"; } catch (e) {}
+})();
 function ldDraw() {
   var n = ldParts.length, d = ldParts.filter(function (p) { return got[p]; }).length, next = ldParts.filter(function (p) { return !got[p]; })[0];
   $("ld").hidden = false; $("ld").classList.toggle("idle", !next);
-  $("ld-fill").style.width = (n ? d * 100 / n : 100) + "%";
+  var tw = $("ld-fill").parentNode.clientWidth || 0, f = n ? d / n : 1;
+  $("ld-fill").style.width = f >= 1 || !tw ? "100%" : Math.round(tw * f / 4) * 4 + "px";
   $("ld-txt").innerHTML = esc(next ? PART_LABEL[next] + "..." : "All aboard") + "<b>" + d + " / " + n + "</b>";
   $("ld").title = ldParts.filter(function (p) { return partMs[p] != null; }).map(function (p) { return PART_LABEL[p] + "  " + (partMs[p] / 1000).toFixed(1) + " s" + (D && D.errors && D.errors[p] ? "  (did not load)" : ""); }).join("\n");
 }
