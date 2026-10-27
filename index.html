@@ -386,8 +386,7 @@ function render() {
   $("viewbar").hidden = !D.viewAs; $("viewbar-cat").textContent = D.viewAs || "";
   var fresh = !ldParts.some(function (p) { return !got[p]; });
   $("status").textContent = (fresh ? "loaded " + new Date().toLocaleTimeString() : "saved view from " + hm(savedAt) + ", updating") + (errs.length ? ". Did not load: " + errs.join(", ") : "");
-  var t0 = curTab; if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} }
-  if (t0 === "play") t0 = "";   // 1520.11: PLAY is not open now
+  var t0 = curTab; if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} if (t0 === "play") t0 = ""; }   // 1520.11: PLAY is not reopened from the last visit; 1605: an open PLAY stays open through a refresh
   showTab(t0 || D.tabs[0]);
   if (allowed("changelog")) renderOverview();
   if (allowed("bugs")) renderBugs();
@@ -1725,7 +1724,8 @@ function pfStartGodot(meta, pack, code, patch, libs) {
   return new Promise(function (ok, fail) {
     var s = document.createElement("script"); s.src = PF_B + "index.js"; s.onerror = function () { fail(new Error("the game engine did not load")); };
     s.onload = function () {
-      var user = ["gate_code=" + code].concat(PF_TD ? ["testdrive=" + PF_TD] : [], patch ? ["patch_pack=patch.pck"] : []);
+      var user = ["gate_code=" + code].concat(PF_TD ? ["testdrive=" + PF_TD] : [], patch ? ["patch_pack=patch.pck"] : [],
+        PF_B === PC_B && (D.mine || [])[0] ? ["tel_code=" + D.mine[0]] : []);   // 1605: CULTURES reports to the studio with the owner's own game code
       var cfg = Object.assign({}, meta.godot, { executable: PF_B + "index", canvas: $("pf-canvas"), args: ["--"].concat(user) });
       var engine = new Engine(cfg);
       $("pf-canvas").hidden = false;
