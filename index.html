@@ -95,7 +95,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <nav id="tabs">
 <button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="play" aria-selected="false" hidden disabled>PLAY</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="players" aria-selected="false" hidden>PLAYERS</button><button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="community" aria-selected="false" hidden>COMMUNITY</button>
-<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button></nav>
+<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button><button data-tab="cultures" aria-selected="false" hidden>PIXEL CULTURES</button></nav>
 
 <section class="panel" data-pane="bugs" hidden>
 <nav id="bt-tabs" hidden><button data-bt="bugs" aria-selected="true">BUGS</button><button data-bt="tasks" aria-selected="false">TASKS</button></nav>
@@ -109,6 +109,12 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <label for="t-st">State</label><select id="t-st"><option value="active">OPEN + DOING</option><option value="doing">DOING</option><option value="open">OPEN</option><option value="bug">WITH A BUG</option><option value="done">DONE</option></select>
 <label for="t-code">Kind</label><select id="t-code"></select><span class="muted" id="t-n"></span></div>
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></div></section>
+
+<section class="panel" data-pane="cultures" hidden>
+<div class="bar"><input id="c-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px">
+<label for="c-st">State</label><select id="c-st"><option value="active">OPEN + DOING</option><option value="doing">DOING</option><option value="open">OPEN</option><option value="done">DONE</option></select>
+<span class="muted" id="c-n"></span><button id="c-play">PLAY</button></div>
+<div id="c-msg" class="msg" hidden></div><div class="scroll"><table id="c-t"></table></div></section>
 
 <section class="panel" data-pane="players" hidden>
 <div class="cols"><div class="panel"><h2>The game so far</h2><div class="mx" id="pl-game"></div></div>
@@ -246,7 +252,8 @@ function who(code) { return nameTag(nameOf(code)); }
 // tabs (the last one picked is remembered in this browser)
 // 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files and backup (one view each)
 var STUDIO_SUB = ["calendar", "files", "backup"];
-var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : allowed(t); };
+// 1598: PIXEL CULTURES - the owner's own project, never in a VIEW AS
+var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : t === "cultures" ? !!(D && D.isOwner && !D.viewAs) : allowed(t); };
 function showTab(t) {
   if (!D || !D.tabs) return;
   if (STUDIO_SUB.indexOf(t) >= 0) { stCur = t; t = "collaborate"; }   // a tab kept from before 1520
@@ -294,10 +301,10 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
-var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players", "youtube"], play: ["playstats"], backup: ["backups"] };
+var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players", "youtube"], play: ["playstats"], backup: ["backups"], cultures: ["cultures"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
-  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", packages: "Opening the shares" };
+  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", packages: "Opening the shares", cultures: "Sorting the cultures' orders" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
 // 1578: the bar as the RODWAN PIXELS logo - one row of 4 px squares side by side, each a shade of the logo's six at random;
 // it grows square by square and stays faded when all is in
@@ -388,6 +395,7 @@ function render() {
   if (allowed("changelog")) renderOverview();
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
+  if (topAllowed("cultures") && (got.cultures || D.cultures)) renderCultures();
   if (allowed("players")) { renderTelemetry(); renderPerformance(); renderRuns(); renderGameStats(); }
   if (allowed("people")) renderPeople();
   if (allowed("community") && (got.players || D.players)) renderPlayers();
@@ -509,6 +517,28 @@ function renderTasks() {
 }
 $("t-t").addEventListener("click", function (e) { var r = e.target.closest("tr[data-task]"); if (!r) return; openTask[r.dataset.task] = !openTask[r.dataset.task]; renderTasks(); });
 ["t-q", "t-st", "t-code"].forEach(function (id) { $(id).addEventListener("input", renderTasks); });
+
+// 1598: PIXEL CULTURES - its own task list (own numbers, studio_cli --cultures) and its sealed build for the owner
+var openCul = {};
+function renderCultures() {
+  var msg = $("c-msg");
+  if (!D.cultures) { msg.hidden = false; msg.className = "msg"; msg.textContent = "The tasks did not load: " + ((D.errors && D.errors.cultures) || "no tasks yet"); $("c-t").innerHTML = ""; return; }
+  msg.hidden = true;
+  var st = $("c-st").value, q = $("c-q").value.trim().toLowerCase();
+  var list = D.cultures.filter(function (t) { return (st === "active" ? t.state !== "done" : t.state === st) && (!q || (t.no + " " + t.title).toLowerCase().indexOf(q) >= 0); })
+    .sort(function (a, b) { return (a.state === "doing" ? 0 : 1) - (b.state === "doing" ? 0 : 1) || parseFloat(b.no) - parseFloat(a.no); });
+  $("c-n").textContent = list.length + " OF " + D.cultures.length;
+  $("c-t").innerHTML = grid([
+    ["#", function (t) { return "<b>" + esc(t.no) + "</b>"; }],
+    ["State", function (t) { return "<span class='chip " + (t.state === "doing" ? "st-IN_PROGRESS" : t.state === "done" ? "st-FIXED" : "st-NEW") + "'>" + t.state.toUpperCase() + "</span>"; }],
+    ["Kind", function (t) { return esc(t.code); }],
+    ["Task", function (t) { return esc(t.title) + (openCul[t.no] && t.lines.length ? "<pre>" + esc(t.lines.join("\n\n")) + "</pre>" : ""); }, function (t) { return "x" + (openCul[t.no] ? " open" : ""); }],
+    ["Session", function (t) { return "<span class='muted'>" + esc(t.session) + "</span>"; }],
+  ], list.slice(0, 400), function (t) { return " class='click' data-task='" + esc(t.no) + "'"; });
+}
+$("c-t").addEventListener("click", function (e) { var r = e.target.closest("tr[data-task]"); if (!r) return; openCul[r.dataset.task] = !openCul[r.dataset.task]; renderCultures(); });
+["c-q", "c-st"].forEach(function (id) { $(id).addEventListener("input", renderCultures); });
+$("c-play").addEventListener("click", function () { PF_B = PC_B; PF_TITLE = "PIXEL CULTURES"; PF_KEEP = "pc_code"; PF_DB = null; pfMeta = null; showTab("play"); });
 
 // ── telemetry ──
 var KINDS = [
@@ -1530,6 +1560,8 @@ $("files").addEventListener("click", function (e) {
 // covers it.
 var PF_B = (function (b) { var home = "https://rodwan-ux.github.io/play/";   // 1485: another build only under the play repo
   return b && b.indexOf(home) === 0 && /^([\w.-]+\/)*$/.test(b.slice(home.length)) && b.indexOf("..") < 0 ? b : home; })(new URLSearchParams(location.search).get("b"));
+// 1598: PIXEL CULTURES' sealed build (its own Pages repo, the owner's code only); its PLAY keeps its own code and store
+var PC_B = "https://rodwan-ux.github.io/cultures/", PF_KEEP = "pf_code";
 var PF_TD = (new URLSearchParams(location.search).get("td") || "").replace(/[^a-z0-9_ =,-]/g, "");   // 1419: a test drive plan + its options
 var pfB64 = function (s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); };
 var pfHex = function (buf) { return Array.from(new Uint8Array(buf), function (x) { return x.toString(16).padStart(2, "0"); }).join(""); };
@@ -1554,7 +1586,7 @@ async function pfGameKey(meta, code) {
 var PF_DB = null;
 function pfIdb() {
   return PF_DB || (PF_DB = new Promise(function (ok, no) {
-    var q = indexedDB.open("pf-play", 1);
+    var q = indexedDB.open(PF_B === PC_B ? "pc-play" : "pf-play", 1);
     q.onupgradeneeded = function () { q.result.createObjectStore("files"); };
     q.onsuccess = function () { ok(q.result); }; q.onerror = function () { no(q.error); };
   }));
@@ -1647,9 +1679,9 @@ function pfMusicGate(meta, key) {
 // by the number's share of the group's largest, the number at the end; hover = both
 // PLAY: the build number under the title and the code kept in this browser
 function renderPlayStats() {
-  pfKnown((D.mine || [])[0]);
+  pfKnown(PF_B === PC_B ? "" : (D.mine || [])[0]);
   var d = (D.playstats || {}).dev || {};
-  $("pf-sub").textContent = d.version ? "PLAYTEST " + d.version : "PLAYTEST";
+  $("pf-sub").textContent = PF_B === PC_B ? "" : d.version ? "PLAYTEST " + d.version : "PLAYTEST";
 }
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
 // ignored the request, so one line tells how to switch the browser to the main GPU
@@ -1675,9 +1707,28 @@ async function pfOpenPatch(meta, key) {
   return pfInflate(new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: pfB64(meta.patch.iv) }, key, await res.arrayBuffer())));
 }
 
+// 1598: the build's GDExtension libraries (the game's own C++ code) sealed whole beside the parts, opened in memory
+async function pfOpenLibs(meta, key) {
+  var out = {};
+  for (var f in meta.libs || {}) {
+    var res = await pfSealed(PF_B + f + ".enc?v=" + meta.sha256.slice(0, 12));
+    if (!res.ok) throw new Error("library " + f + " did not load (" + res.status + ")");
+    out[f] = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: pfB64(meta.libs[f]) }, key, await res.arrayBuffer()));
+  }
+  return out;
+}
+
 // the game: Godot's own loader from the build folder, fed the opened file as its main pack (1455: and the patch beside it,
-// which the game loads over the pack at its first step)
-function pfStartGodot(meta, pack, code, patch) {
+// which the game loads over the pack at its first step); 1598: the engine fetches its libraries by name - those
+// names answer from the opened bytes
+function pfStartGodot(meta, pack, code, patch, libs) {
+  if (Object.keys(libs).length) {
+    var fetch0 = window.fetch;
+    window.fetch = function (u, o) {
+      var n = String(u && u.url || u).split("?")[0].split("/").pop();
+      return libs[n] ? Promise.resolve(new Response(libs[n], { headers: { "Content-Type": "application/wasm" } })) : fetch0.call(window, u, o);
+    };
+  }
   return new Promise(function (ok, fail) {
     var s = document.createElement("script"); s.src = PF_B + "index.js"; s.onerror = function () { fail(new Error("the game engine did not load")); };
     s.onload = function () {
@@ -1837,7 +1888,7 @@ var pfWave = (function () {
 // field - opening the tab starts nothing
 var pfMeta = null, pfBusy = false, pfWait = 0;
 function pfKnown(own) {
-  var kept = ""; try { kept = localStorage.getItem("pf_code") || ""; } catch (e) {}
+  var kept = ""; try { kept = localStorage.getItem(PF_KEEP) || ""; } catch (e) {}
   var code = own || kept;
   if (!code || pfBusy) return;
   $("pf-code").value = code; $("pf-code").hidden = true; $("pf-run").hidden = false;
@@ -1855,7 +1906,7 @@ async function pfTry(code) {
     if (!key) {
       pfBusy = false;
       if ($("pf-code").hidden) {   // a kept code the new build does not know - the field back
-        try { localStorage.removeItem("pf_code"); } catch (x) {}
+        try { localStorage.removeItem(PF_KEEP); } catch (x) {}
         $("pf-code").hidden = false; $("pf-run").hidden = true; $("pf-code").value = ""; pfLit = 0; pfTitle();
       }
       var now = $("pf-code").value.trim().toLowerCase();   // typed on while this one was checked
@@ -1863,14 +1914,14 @@ async function pfTry(code) {
       return;
     }
     try { if (!document.fullscreenElement) $("pf").requestFullscreen().catch(function () {}); } catch (x) {}   // the tab full screen - only soon after a key or a click
-    try { localStorage.setItem("pf_code", code); } catch (x) {}
+    try { localStorage.setItem(PF_KEEP, code); } catch (x) {}
     // 1500.4.1: the wave alone covers the screen until the game starts, as the game's curtain does
     pfWave.show(); pfSay("");
     ["pf-head", "pf-gpu", "pf-f", "pf-msg"].forEach(function (id) { $(id).hidden = true; });
     pfDropOldBuilds(meta.sha256.slice(0, 12));
-    var pack = await pfOpenParts(meta, key), patch = await pfOpenPatch(meta, key);
+    var pack = await pfOpenParts(meta, key), patch = await pfOpenPatch(meta, key), libs = await pfOpenLibs(meta, key);
     pfMusicGate(meta, key);
-    await pfStartGodot(meta, pack, code, patch);
+    await pfStartGodot(meta, pack, code, patch, libs);
   } catch (e) {
     pfMeta = null; $("pf-head").hidden = false; $("pf-msg").hidden = false; $("pf-f").hidden = false; pfSay(String(e && e.message || e), "err");
     $("pf-code").disabled = false; $("pf-run").disabled = false; pfBusy = false;
