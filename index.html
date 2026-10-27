@@ -60,10 +60,10 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 table.tight{width:auto}table.tight td.nar{max-width:110px}td.sw-c{padding:3px 2px;text-align:center}th.sw-c{writing-mode:vertical-rl;transform:rotate(180deg);text-align:left;vertical-align:middle;padding:6px 2px}
 .sw{padding:0;width:28px;height:17px;border-radius:9px;font-size:9px;letter-spacing:0;color:var(--dim)}.sw[aria-pressed=true]{background:#1c2a18;border-color:var(--green);color:var(--green)}.sw:disabled{opacity:.45;cursor:default}
 select.lvl{padding:1px 4px;font-size:11px}
-.ld{display:grid;gap:4px;transition:opacity .6s}.ld-track{height:8px;background:#2a2027;overflow:hidden}
+.ld{display:grid;gap:4px;transition:opacity .6s}.ld-track{height:4px;background:#2a2027;overflow:hidden}
 .ld-track i{display:block;height:100%;width:0;background-repeat:repeat-x;image-rendering:pixelated}
-#ld-txt{font:600 15px var(--head);letter-spacing:.12em;color:var(--beige);text-transform:uppercase}#ld-txt b{color:var(--dim);font-weight:600;margin-left:8px}
-.ld.idle{opacity:.3}.ld.idle #ld-txt{display:none}.ld.idle .ld-track{height:4px}.ld.idle:hover{opacity:1}
+#ld-txt{font:600 11px var(--head);letter-spacing:.12em;color:var(--beige);text-transform:uppercase}#ld-txt b{color:var(--dim);font-weight:600;margin-left:8px}
+.ld.idle{opacity:.3}.ld.idle:hover{opacity:1}
 .chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.chg-t{background:var(--bg);border:2px solid var(--line);border-left:3px solid;padding:6px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 14px var(--head);letter-spacing:.1em}
 .chg-t b{font:600 18px var(--mono);color:var(--fg)}.chg-t:hover{background:var(--hover)}.chg-t.on{background:var(--hover)}.chg-l{grid-column:1/-1;border:2px solid var(--line);border-left:3px solid;padding:4px 10px;display:grid;gap:2px}
 .pf{min-height:60vh;display:grid;place-content:center;justify-items:center;gap:22px;padding:24px 16px;background:var(--bg)}.pf:fullscreen{min-height:100vh}
@@ -299,12 +299,12 @@ var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orde
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
   feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", packages: "Opening the shares" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
-// 1578: the bar as the RODWAN PIXELS logo - 4 px squares side by side in the logo's six shades, the top row from the light
-// ones, the bottom row from the dark ones, each square its own; it grows square by square
+// 1578: the bar as the RODWAN PIXELS logo - one row of 4 px squares side by side, each a shade of the logo's six at random;
+// it grows square by square and stays faded when all is in
 (function () {
   var c = document.createElement("canvas"), g = c.getContext("2d"), SH = ["#efd6b0", "#d8b69f", "#c4a095", "#b18182", "#794b58", "#5e424b"];
-  c.width = 256; c.height = 8;
-  for (var x = 0; x < 64; x++) for (var y = 0; y < 2; y++) { g.fillStyle = SH[y * 2 + Math.floor(Math.random() * 4)]; g.fillRect(x * 4, y * 4, 4, 4); }
+  c.width = 256; c.height = 4;
+  for (var x = 0; x < 64; x++) { g.fillStyle = SH[Math.floor(Math.random() * SH.length)]; g.fillRect(x * 4, 0, 4, 4); }
   try { $("ld-fill").style.backgroundImage = "url(" + c.toDataURL() + ")"; } catch (e) {}
 })();
 function ldDraw() {
@@ -565,6 +565,17 @@ $("fb-q").addEventListener("input", renderFeedback);
 // SESSIONS: BY PERSON = one row per person (all their sessions summed), BY SESSION = every session; a person's row opens
 // their sessions.
 var sessPerson = "";
+// 1579: the session list sorts by a click on a heading, a second click on it turns the order; newest first at the start
+var sessSort = { person: { col: "Last played", dir: -1 }, session: { col: "Start", dir: -1 } };
+var SESS_KEY = {
+  person: { Who: function (p) { return p.name; }, Sessions: function (p) { return p.n; }, "Time played": function (p) { return p.len; }, "Last played": function (p) { return p.last; },
+    Events: function (p) { return p.events; }, Clicks: function (p) { return p.clicks; }, Battles: function (p) { return p.battles; }, Deaths: function (p) { return p.deaths; }, Bugs: function (p) { return p.bugs; } },
+  session: { Start: function (s) { return s.start; }, Who: function (s) { return nameOf(s.code); }, Length: function (s) { return s.len; }, Modes: function (s) { return Object.keys(s.modes).join(" "); },
+    Events: function (s) { return s.n; }, Clicks: function (s) { return s.clicks; }, Battles: function (s) { return s.battles; }, Deaths: function (s) { return s.deaths; }, Bugs: function (s) { return s.bugs; } } };
+function sessSorted(mode, rows) {
+  var st = sessSort[mode], key = SESS_KEY[mode][st.col] || SESS_KEY[mode][mode === "person" ? "Last played" : "Start"];
+  return rows.slice().sort(function (a, b) { var x = key(a), y = key(b); return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * st.dir; });
+}
 function renderTelemetry() {
   evCache = null;
   renderFeedback();
@@ -587,7 +598,7 @@ function renderTelemetry() {
       ["Time played", function (p) { return fmtSec(p.len); }, "num"], ["Last played", function (p) { return esc(short(p.last)); }],
       ["Events", function (p) { return n(p.events); }, "num"], ["Clicks", function (p) { return n(p.clicks); }, "num"], ["Battles", function (p) { return n(p.battles); }, "num"],
       ["Deaths", function (p) { return n(p.deaths); }, "num"], ["Bugs", function (p) { return n(p.bugs); }, "num"],
-    ], Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.last.localeCompare(a.last); }),
+    ], sessSorted("person", Object.keys(by).map(function (k) { return by[k]; })),
     function (p) { return " class='click' data-person='" + esc(p.name) + "'"; });
   } else {
     $("s-hint").textContent = "Click a session for its time line.";
@@ -596,8 +607,10 @@ function renderTelemetry() {
       ["Modes", function (s) { return Object.keys(s.modes).map(function (m) { return "<span class='chip'>" + esc(m) + "</span>"; }).join(" "); }],
       ["Events", function (s) { return n(s.n); }, "num"], ["Clicks", function (s) { return n(s.clicks); }, "num"], ["Battles", function (s) { return n(s.battles); }, "num"],
       ["Deaths", function (s) { return n(s.deaths); }, "num"], ["Bugs", function (s) { return n(s.bugs); }, "num"],
-    ], list, function (s) { return " class='click" + (s.id === pickedSession ? " sel" : "") + "' data-s='" + esc(s.id) + "'"; });
+    ], sessSorted("session", list), function (s) { return " class='click" + (s.id === pickedSession ? " sel" : "") + "' data-s='" + esc(s.id) + "'"; });
   }
+  var srt = sessSort[mode];   // the sorted heading carries its arrow
+  $("sess-t").querySelectorAll("thead th").forEach(function (th) { if (th.dataset.col === srt.col) th.textContent += srt.dir < 0 ? " ▼" : " ▲"; });
   var tl = $("tl-sess");
   tl.innerHTML = ss.map(function (s) { return "<option value='" + esc(s.id) + "'>" + esc(short(s.start) + "  " + nameOf(s.code) + "  " + fmtSec(s.len) + "  (" + s.n + " events)") + "</option>"; }).join("");
   if (!pickedSession && ss[0]) pickedSession = ss[0].id; tl.value = pickedSession;
@@ -607,6 +620,14 @@ function renderTelemetry() {
 $("s-code").addEventListener("change", renderTelemetry);
 $("s-mode").addEventListener("change", renderTelemetry);
 $("sess-t").addEventListener("click", function (e) {
+  var th = e.target.closest("thead th[data-col]");
+  if (th) {
+    if (colEdge(e)) return;   // the width drag of 1520.13
+    var mode = $("s-mode").value, col = th.dataset.col, st = sessSort[mode];
+    if (!SESS_KEY[mode][col]) return;
+    sessSort[mode] = { col: col, dir: st.col === col ? -st.dir : -1 };
+    renderTelemetry(); return;
+  }
   var pr = e.target.closest("tr[data-person]");
   // 1520: a person = their sessions, their feedback below FEEDBACK; a session = its time line, PERFORMANCE on the same session
   if (pr) { $("s-mode").value = "session"; sessPerson = pr.dataset.person; $("fb-q").value = pr.dataset.person; renderTelemetry(); return; }
@@ -1337,9 +1358,18 @@ function renderMechanics() {
   $("cl-mech-leg").innerHTML = "FEWER" + HEAT.slice(1).map(function (c) { return "<i style='background:" + c + "'></i>"; }).join("") + "MORE";
 }
 // PLAYERS / THE GAME SO FAR - the players' play summed by the sheet (tester and playtest codes only)
+// 1579: summed on the page from the same sessions as the session list (every code, a session = code + name)
 function renderGameStats() {
-  var g = (D.playstats || {}).game;
-  if (!g) { $("pl-game").innerHTML = "<div class='muted'>Not loaded yet.</div>"; return; }
+  var evs = events(), g = { sessions: sessions(evs).length, hours: 0, sailed: 0, camps: 0, battles: 0, won: 0, lost: 0, fallen: 0, slain: 0, quests: 0 }, len = {};
+  evs.forEach(function (e) {
+    len[e.session] = Math.max(len[e.session] || 0, e.sec);
+    var c = e.count;
+    if (e.event === "sail_leg") g.sailed += c; else if (e.event === "camp_made") g.camps += c; else if (e.event === "battle_fight") g.battles += c;
+    else if (e.event === "battle_player") g.won += c; else if (e.event === "battle_enemy" || e.event === "battle_draw") g.lost += c;
+    else if (e.event === "unit_death") { if (String(e.values || "").indexOf("side=player") >= 0) g.fallen += c; else g.slain += c; }
+    else if (e.event === "quest_done") g.quests += c;
+  });
+  g.hours = Object.keys(len).reduce(function (a, k) { return a + len[k]; }, 0) / 3600;
   squares("pl-game", [["Hours played", g.hours || 0, null, (g.hours || 0).toFixed(1)], ["Sessions", g.sessions], ["Routes sailed", g.sailed], ["Camps made", g.camps],
     ["Battles fought", g.battles], ["Battles won", g.won], ["Battles lost", g.lost], ["Men fallen", g.fallen], ["Enemies slain", g.slain], ["Quests done", g.quests]]);
 }
