@@ -1332,7 +1332,7 @@ function renderMechanics() {
   // [name, what] -> [name, what with its tasks, count]; the colour comes after, from the largest count of both boxes
   var item = function (name, what) {
     var l = byMech[String(name).toLowerCase()] || [];
-    return [name, what + (D.tasks ? " - " + l.length + " tasks" + (l.length ? ": " + l.join(" ") : "") : ""), l.length];
+    return [name, what + (D.tasks ? " · " + l.length : ""), l.length];   // 1591.9: the description and one number, the tasks
   };
   var row = function (name, items) { return [name, 0, items, null, MECH_ROW[name.toUpperCase()]]; };
   var game = (d.categories || []).map(function (k) { return row(k[0], k[1].map(function (m) { return item(m[0], m[1] + (m[2] ? ", since " + m[2] : "")); })); });
