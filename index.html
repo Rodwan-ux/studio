@@ -95,7 +95,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <nav id="tabs">
 <button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="play" aria-selected="false" hidden disabled>PLAY</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="players" aria-selected="false" hidden>PLAYERS</button><button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="community" aria-selected="false" hidden>COMMUNITY</button>
-<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button><button data-tab="cultures" aria-selected="false" hidden>PIXEL CULTURES</button></nav>
+<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button></nav>
 
 <section class="panel" data-pane="bugs" hidden>
 <nav id="bt-tabs" hidden><button data-bt="bugs" aria-selected="true">BUGS</button><button data-bt="tasks" aria-selected="false">TASKS</button></nav>
@@ -106,15 +106,10 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div id="b-msg" class="msg" hidden></div><div class="detail" id="b-detail" hidden></div><div class="board" id="b-board"></div></div>
 <div data-btp="tasks" hidden>
 <div class="bar"><input id="t-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px">
+<label for="t-prj">Project</label><select id="t-prj"><option value="pixel">PIXEL</option><option value="studio">STUDIO</option><option value="cultures" hidden>CULTURES</option></select>
 <label for="t-st">State</label><select id="t-st"><option value="active">OPEN + DOING</option><option value="doing">DOING</option><option value="open">OPEN</option><option value="bug">WITH A BUG</option><option value="done">DONE</option></select>
 <label for="t-code">Kind</label><select id="t-code"></select><span class="muted" id="t-n"></span></div>
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></div></section>
-
-<section class="panel" data-pane="cultures" hidden>
-<div class="bar"><input id="c-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px">
-<label for="c-st">State</label><select id="c-st"><option value="active">OPEN + DOING</option><option value="doing">DOING</option><option value="open">OPEN</option><option value="done">DONE</option></select>
-<span class="muted" id="c-n"></span><button id="c-play">PLAY</button></div>
-<div id="c-msg" class="msg" hidden></div><div class="scroll"><table id="c-t"></table></div></section>
 
 <section class="panel" data-pane="players" hidden>
 <div class="cols"><div class="panel"><h2>The game so far</h2><div class="mx" id="pl-game"></div></div>
@@ -176,7 +171,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 </div>
 <div data-stp="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></div>
 <div data-stp="backup" hidden><div class="bar"><span class="muted" id="bk-upd"></span></div><div id="bk-disks"></div><div class="panel"><h2>Copies</h2><div class="scroll"><table id="bk-t"></table></div></div></div></section>
-<section class="panel" data-pane="play" hidden><div class="pf" id="pf">
+<section class="panel" data-pane="play" hidden><nav id="pf-tabs" hidden><button data-pf="formation" aria-selected="true">FORMATION</button><button data-pf="cultures" aria-selected="false">CULTURES</button></nav><div class="pf" id="pf">
 <div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
 <div id="pf-gpu"></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button" hidden>RUN</button></form>
@@ -252,8 +247,9 @@ function who(code) { return nameTag(nameOf(code)); }
 // tabs (the last one picked is remembered in this browser)
 // 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files and backup (one view each)
 var STUDIO_SUB = ["calendar", "files", "backup"];
-// 1598: PIXEL CULTURES - the owner's own project, never in a VIEW AS
-var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : t === "cultures" ? !!(D && D.isOwner && !D.viewAs) : allowed(t); };
+// 1598 / 1605: PIXEL CULTURES - the owner's own project, never in a VIEW AS; a project in TASKS and a game in PLAY
+var culturesOk = function () { return !!(D && D.isOwner && !D.viewAs); };
+var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : allowed(t); };
 function showTab(t) {
   if (!D || !D.tabs) return;
   if (STUDIO_SUB.indexOf(t) >= 0) { stCur = t; t = "collaborate"; }   // a tab kept from before 1520
@@ -268,7 +264,7 @@ function showTab(t) {
   if (t === "changelog" && D) { renderHeatmap(); renderMechanics(); }   // the squares fill the width the tab has on screen
   if (t === "players" && D) renderGameStats();
   if (t === "bugs") showBt(btCur);
-  if (t === "play") { pfGpuNote(); pfTitle(); if (D.playstats) renderPlayStats(); }
+  if (t === "play") { $("pf-tabs").hidden = !culturesOk(); if (!culturesOk() && PF_B === PC_B) pfPick("formation"); pfGpuNote(); pfTitle(); if (D.playstats) renderPlayStats(); }
   if (t === "collaborate") { showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
   else loadLazy(t);
 }
@@ -395,7 +391,6 @@ function render() {
   if (allowed("changelog")) renderOverview();
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
-  if (topAllowed("cultures") && (got.cultures || D.cultures)) renderCultures();
   if (allowed("players")) { renderTelemetry(); renderPerformance(); renderRuns(); renderGameStats(); }
   if (allowed("people")) renderPeople();
   if (allowed("community") && (got.players || D.players)) renderPlayers();
@@ -496,49 +491,34 @@ function moveBug(id, st) {
 ["b-q", "b-sev", "b-type", "b-who", "b-mine"].forEach(function (id) { $(id).addEventListener("input", renderBugs); });
 
 // ── tasks ──
+// 1605: one list, three projects - PIXEL (game tasks, with a mechanic), STUDIO (tools and studio, no mechanic) and
+// CULTURES (its own list and numbers, studio_cli --cultures, the owner only)
 function renderTasks() {
-  var msg = $("t-msg");
-  if (!D.tasks) { msg.hidden = false; msg.className = "msg"; msg.textContent = "The tasks did not load: " + ((D.errors && D.errors.tasks) || "no tasks yet"); $("t-t").innerHTML = ""; return; }
+  var msg = $("t-msg"), ps = $("t-prj");
+  ps.querySelector("option[value=cultures]").hidden = !culturesOk();
+  if (ps.value === "cultures" && !culturesOk()) ps.value = "pixel";
+  var prj = ps.value, src = prj === "cultures" ? D.cultures : D.tasks;
+  if (!src) { msg.hidden = false; msg.className = "msg"; msg.textContent = "The tasks did not load: " + ((D.errors && D.errors[prj === "cultures" ? "cultures" : "tasks"]) || (prj === "cultures" && !got.cultures ? "loading" : "no tasks yet")); $("t-t").innerHTML = ""; return; }
   msg.hidden = true;
-  var cs = $("t-code"), kc = cs.value, codes = Array.from(new Set(D.tasks.map(function (t) { return t.code; }))).sort();
+  if (prj !== "cultures") src = src.filter(function (t) { return prj === "pixel" ? !!t.mech : !t.mech; });
+  var cs = $("t-code"), kc = cs.value, codes = Array.from(new Set(src.map(function (t) { return t.code; }))).sort();
   cs.innerHTML = "<option value=''>ALL</option>" + codes.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join(""); cs.value = codes.indexOf(kc) >= 0 ? kc : "";
-  var st = $("t-st").value, q = $("t-q").value.trim().toLowerCase();
-  var list = D.tasks.filter(function (t) { return (st === "active" ? t.state !== "done" : st === "bug" ? t.bugs.length > 0 : t.state === st) && (!cs.value || t.code === cs.value) && (!q || (t.no + " " + t.title).toLowerCase().indexOf(q) >= 0); })
+  var st = $("t-st").value, q = $("t-q").value.trim().toLowerCase(), key = function (t) { return prj + ":" + t.no; };
+  var list = src.filter(function (t) { return (st === "active" ? t.state !== "done" : st === "bug" ? (t.bugs || []).length > 0 : t.state === st) && (!cs.value || t.code === cs.value) && (!q || (t.no + " " + t.title).toLowerCase().indexOf(q) >= 0); })
     .sort(function (a, b) { return (a.state === "doing" ? 0 : 1) - (b.state === "doing" ? 0 : 1) || parseFloat(b.no) - parseFloat(a.no); });
-  $("t-n").textContent = list.length + " OF " + D.tasks.length;
+  $("t-n").textContent = list.length + " OF " + src.length;
   $("t-t").innerHTML = grid([
     ["#", function (t) { return "<b>" + esc(t.no) + "</b>"; }],
     ["State", function (t) { return "<span class='chip " + (t.state === "doing" ? "st-IN_PROGRESS" : t.state === "done" ? "st-FIXED" : "st-NEW") + "'>" + t.state.toUpperCase() + "</span>"; }],
     ["Kind", function (t) { return esc(t.code); }],
-    ["Task", function (t) { return esc(t.title) + (openTask[t.no] && t.lines.length ? "<pre>" + esc(t.lines.join("\n\n")) + "</pre>" : ""); }, function (t) { return "x" + (openTask[t.no] ? " open" : ""); }],
-    ["Bugs", function (t) { return t.bugs.map(function (b) { return "<span class='chip st-CONFIRMED'>" + esc(b) + "</span>"; }).join(" "); }],
+    ["Task", function (t) { return esc(t.title) + (openTask[key(t)] && t.lines.length ? "<pre>" + esc(t.lines.join("\n\n")) + "</pre>" : ""); }, function (t) { return "x" + (openTask[key(t)] ? " open" : ""); }],
+    ["Bugs", function (t) { return (t.bugs || []).map(function (b) { return "<span class='chip st-CONFIRMED'>" + esc(b) + "</span>"; }).join(" "); }],
     ["Session", function (t) { return "<span class='muted'>" + esc(t.session) + "</span>"; }],
-  ], list.slice(0, 400), function (t) { return " class='click' data-task='" + esc(t.no) + "'"; });
+  ], list.slice(0, 400), function (t) { return " class='click' data-task='" + esc(key(t)) + "'"; });
 }
 $("t-t").addEventListener("click", function (e) { var r = e.target.closest("tr[data-task]"); if (!r) return; openTask[r.dataset.task] = !openTask[r.dataset.task]; renderTasks(); });
-["t-q", "t-st", "t-code"].forEach(function (id) { $(id).addEventListener("input", renderTasks); });
-
-// 1598: PIXEL CULTURES - its own task list (own numbers, studio_cli --cultures) and its sealed build for the owner
-var openCul = {};
-function renderCultures() {
-  var msg = $("c-msg");
-  if (!D.cultures) { msg.hidden = false; msg.className = "msg"; msg.textContent = "The tasks did not load: " + ((D.errors && D.errors.cultures) || "no tasks yet"); $("c-t").innerHTML = ""; return; }
-  msg.hidden = true;
-  var st = $("c-st").value, q = $("c-q").value.trim().toLowerCase();
-  var list = D.cultures.filter(function (t) { return (st === "active" ? t.state !== "done" : t.state === st) && (!q || (t.no + " " + t.title).toLowerCase().indexOf(q) >= 0); })
-    .sort(function (a, b) { return (a.state === "doing" ? 0 : 1) - (b.state === "doing" ? 0 : 1) || parseFloat(b.no) - parseFloat(a.no); });
-  $("c-n").textContent = list.length + " OF " + D.cultures.length;
-  $("c-t").innerHTML = grid([
-    ["#", function (t) { return "<b>" + esc(t.no) + "</b>"; }],
-    ["State", function (t) { return "<span class='chip " + (t.state === "doing" ? "st-IN_PROGRESS" : t.state === "done" ? "st-FIXED" : "st-NEW") + "'>" + t.state.toUpperCase() + "</span>"; }],
-    ["Kind", function (t) { return esc(t.code); }],
-    ["Task", function (t) { return esc(t.title) + (openCul[t.no] && t.lines.length ? "<pre>" + esc(t.lines.join("\n\n")) + "</pre>" : ""); }, function (t) { return "x" + (openCul[t.no] ? " open" : ""); }],
-    ["Session", function (t) { return "<span class='muted'>" + esc(t.session) + "</span>"; }],
-  ], list.slice(0, 400), function (t) { return " class='click' data-task='" + esc(t.no) + "'"; });
-}
-$("c-t").addEventListener("click", function (e) { var r = e.target.closest("tr[data-task]"); if (!r) return; openCul[r.dataset.task] = !openCul[r.dataset.task]; renderCultures(); });
-["c-q", "c-st"].forEach(function (id) { $(id).addEventListener("input", renderCultures); });
-$("c-play").addEventListener("click", function () { PF_B = PC_B; PF_TITLE = "PIXEL CULTURES"; PF_KEEP = "pc_code"; PF_DB = null; pfMeta = null; showTab("play"); });
+["t-q", "t-st", "t-code", "t-prj"].forEach(function (id) { $(id).addEventListener("input", renderTasks); });
+$("t-prj").addEventListener("input", function () { if (this.value === "cultures") loadLazy("cultures"); });
 
 // ── telemetry ──
 var KINDS = [
@@ -1561,7 +1541,19 @@ $("files").addEventListener("click", function (e) {
 var PF_B = (function (b) { var home = "https://rodwan-ux.github.io/play/";   // 1485: another build only under the play repo
   return b && b.indexOf(home) === 0 && /^([\w.-]+\/)*$/.test(b.slice(home.length)) && b.indexOf("..") < 0 ? b : home; })(new URLSearchParams(location.search).get("b"));
 // 1598: PIXEL CULTURES' sealed build (its own Pages repo, the owner's code only); its PLAY keeps its own code and store
-var PC_B = "https://rodwan-ux.github.io/cultures/", PF_KEEP = "pf_code";
+var PC_B = "https://rodwan-ux.github.io/cultures/", PF_KEEP = "pf_code", PF_HOME = PF_B;
+// 1605: PLAY / FORMATION and PLAY / CULTURES - the owner's two games; everyone else has PLAY alone
+function pfPick(p) {
+  if (pfBusy) return;
+  var cul = p === "cultures";
+  PF_B = cul ? PC_B : PF_HOME; PF_TITLE = cul ? "PIXEL CULTURES" : "PIXEL FORMATION"; PF_KEEP = cul ? "pc_code" : "pf_code"; PF_DB = null; pfMeta = null;
+  document.querySelectorAll("#pf-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pf === p)); });
+  $("pf-tc").setAttribute("aria-label", PF_TITLE);
+  $("pf-code").value = ""; $("pf-code").hidden = false; $("pf-run").hidden = true; pfSay("");
+  pfLit = 0; pfTitle();
+  if (D && D.playstats) renderPlayStats(); else pfKnown(cul ? "" : (D && D.mine || [])[0]);
+}
+$("pf-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-pf]"); if (b) { pfPick(b.dataset.pf); logUse("PLAY / " + b.textContent); } });
 var PF_TD = (new URLSearchParams(location.search).get("td") || "").replace(/[^a-z0-9_ =,-]/g, "");   // 1419: a test drive plan + its options
 var pfB64 = function (s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); };
 var pfHex = function (buf) { return Array.from(new Uint8Array(buf), function (x) { return x.toString(16).padStart(2, "0"); }).join(""); };
