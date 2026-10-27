@@ -310,7 +310,7 @@ var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
 function ldDraw() {
   var n = ldParts.length, d = ldParts.filter(function (p) { return got[p]; }).length, next = ldParts.filter(function (p) { return !got[p]; })[0];
   $("ld").hidden = false; $("ld").classList.toggle("idle", !next);
-  var tw = $("ld-fill").parentNode.clientWidth || 0, f = n ? d / n : 1;
+  var tw = $("ld").querySelector(".ld-track").clientWidth || 0, f = n ? d / n : 1;
   $("ld-fill").style.width = f >= 1 || !tw ? "100%" : Math.round(tw * f / 4) * 4 + "px";
   $("ld-txt").innerHTML = esc(next ? PART_LABEL[next] + "..." : "All aboard") + "<b>" + d + " / " + n + "</b>";
   $("ld").title = ldParts.filter(function (p) { return partMs[p] != null; }).map(function (p) { return PART_LABEL[p] + "  " + (partMs[p] / 1000).toFixed(1) + " s" + (D && D.errors && D.errors[p] ? "  (did not load)" : ""); }).join("\n");
