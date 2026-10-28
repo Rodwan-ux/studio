@@ -219,8 +219,9 @@ if (typeof PRESET_KEY === "string" && PRESET_KEY) saveKey(PRESET_KEY);
 // 1184.8: the page on GitHub Pages (SITE) takes the key from its link, SITE?k=KEY, the link TEAM LINKS gives out.
 var SITE = "https://rodwan-ux.github.io/studio/";
 (function () { var m = location.search.match(/[?&]k=([\w-]+)/); if (m && location.protocol !== "file:") { saveKey(m[1]); history.replaceState(null, "", location.pathname + location.hash); } })();
-// 1616: SITE#doc=NAME opens DOCS straight on that doc
-var DC_LINK = decodeURIComponent((location.hash.match(/^#doc=(.+)$/) || [])[1] || "");
+// 1616: SITE#doc=NAME opens DOCS straight on that doc - on opening and on an open page alike (its address changes alone)
+var dcLink = function () { return decodeURIComponent((location.hash.match(/^#doc=(.+)$/) || [])[1] || ""); }, DC_LINK = dcLink();
+window.addEventListener("hashchange", function () { DC_LINK = dcLink(); if (DC_LINK && D && D.tabs) dcThen(render); });
 function saveKey(k) { KEY = k; try { if (k) localStorage.setItem("studio_key", k); else localStorage.removeItem("studio_key"); } catch (e) {} }
 function apiGet(params) {
   return fetch((params.api === "download" || GOOGLE_PARTS[params.part] ? GAPI : API) + "?" + new URLSearchParams(params), { credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
@@ -419,7 +420,7 @@ function render() {
   $("viewbar").hidden = !D.viewAs; $("viewbar-cat").textContent = D.viewAs || "";
   var fresh = !ldParts.some(function (p) { return !got[p]; });
   $("status").textContent = (fresh ? "loaded " + new Date().toLocaleTimeString() : "saved view from " + hm(savedAt) + ", updating") + (errs.length ? ". Did not load: " + errs.join(", ") : "");
-  var t0 = curTab; if (!t0 && DC_LINK) { t0 = "docs"; dcCur = DC_LINK; DC_LINK = ""; } if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} if (t0 === "play") t0 = ""; }   // 1520.11: PLAY is not reopened from the last visit; 1605: an open PLAY stays open through a refresh
+  var t0 = curTab; if (DC_LINK && allowed("docs")) { t0 = "docs"; dcCur = DC_LINK; dcBase = -1; DC_LINK = ""; } if (!t0) { try { t0 = localStorage.getItem("tab"); } catch (e) {} if (t0 === "play") t0 = ""; }   // 1520.11: PLAY is not reopened from the last visit; 1605: an open PLAY stays open through a refresh
   showTab(t0 || D.tabs[0]);
   if (allowed("changelog")) renderOverview();
   if (allowed("bugs")) renderBugs();
