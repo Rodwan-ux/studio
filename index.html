@@ -250,7 +250,8 @@ var STUDIO_SUB = ["calendar", "files", "backup"];
 // 1598 / 1605: PIXEL CULTURES - the owner's own project, never in a VIEW AS; a project in TASKS and a game in PLAY
 // 1609: and Jakub Czajczynski's - his own category stays, PLAY with both games comes on top (CULTURES opens with the
 // owner's code he was given)
-var playBoth = function () { return (D && D.name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().indexOf("jakub czajczy") === 0; };
+// (the studio names a person by the nick when the people list has one - his is Czaja)
+var playBoth = function () { var n = (D && D.name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); return n === "czaja" || n.indexOf("jakub czajczy") === 0; };
 var culturesOk = function () { return !!(D && !D.viewAs && (D.isOwner || playBoth())); };
 var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : allowed(t) || (t === "play" && culturesOk()); };
 function showTab(t) {
