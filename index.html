@@ -162,7 +162,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <details class="fold" id="cl-bld-fold" open><summary>BUILDS <span class="muted" id="cl-bld-n"></span></summary><div class="bld" id="cl-bld"></div></details>
 <div id="mx-tip" hidden></div></section>
 <section class="panel" data-pane="collaborate" hidden>
-<nav id="st-tabs"><button data-st="calendar" aria-selected="true">CALENDAR</button><button data-st="files" aria-selected="false">FILES</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
+<nav id="st-tabs"><button data-st="calendar" aria-selected="true">CALENDAR</button><button data-st="files" aria-selected="false">FILES</button><button data-st="docs" aria-selected="false">DOCS</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
 <div data-stp="calendar">
 <nav id="cal-tabs"><button data-c="grid" aria-selected="true">CALENDAR</button><button data-c="timeline" aria-selected="false">TIMELINE</button><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener" style="align-self:center">OPEN GOOGLE CALENDAR</a></nav>
 <div class="cal-day" id="cal-day" hidden></div>
@@ -170,6 +170,12 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div data-cp="timeline" hidden><div class="bar"><button id="tl2-out">Zoom out</button><button id="tl2-in">Zoom in</button><button id="tl2-today">Today</button><span class="muted" id="tl2-scale"></span></div><div id="tl2"></div></div>
 </div>
 <div data-stp="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></div>
+<div data-stp="docs" hidden><div class="bar"><select id="dc-pick" aria-label="Doc"></select><button id="dc-new" hidden>New doc</button><button id="dc-save" hidden>Save</button><button id="dc-reload">Reload</button><span class="muted" id="dc-info"></span></div>
+<div id="dc-msg" class="msg" hidden></div>
+<div class="bar" id="dc-ed" hidden><label for="dc-eds">Editors</label><input id="dc-eds" style="flex:1;min-width:200px" placeholder="NAMES FROM PEOPLE, COMMA BETWEEN"><button id="dc-eds-go">Set</button></div>
+<div id="dc-body" hidden><textarea id="dc-text" spellcheck="false" aria-label="Doc text" style="width:100%;min-height:55vh;resize:vertical"></textarea>
+<div class="cols"><div class="panel"><h2>History</h2><div class="scroll"><table id="dc-hist"></table></div></div>
+<div class="panel"><h2>Comments</h2><div id="dc-com"></div><div class="bar" id="dc-com-bar"><input id="dc-com-in" style="flex:1;min-width:200px" placeholder="YOUR COMMENT"><button id="dc-com-go">Comment</button></div></div></div></div></div>
 <div data-stp="backup" hidden><div class="bar"><span class="muted" id="bk-upd"></span></div><div id="bk-disks"></div><div class="panel"><h2>Copies</h2><div class="scroll"><table id="bk-t"></table></div></div></div></section>
 <section class="panel" data-pane="play" hidden><nav id="pf-tabs" hidden><button data-pf="formation" aria-selected="true">FORMATION</button><button data-pf="cultures" aria-selected="false">CULTURES</button></nav><div class="pf" id="pf">
 <div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
@@ -245,8 +251,8 @@ function nameTag(name) { return "<span class='nm' style='color:" + personColor(n
 function who(code) { return nameTag(nameOf(code)); }
 
 // tabs (the last one picked is remembered in this browser)
-// 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files and backup (one view each)
-var STUDIO_SUB = ["calendar", "files", "backup"];
+// 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files, docs and backup (one view each)
+var STUDIO_SUB = ["calendar", "files", "docs", "backup"];
 // 1598 / 1605: PIXEL CULTURES - the owner's own project, never in a VIEW AS; a project in TASKS and a game in PLAY
 // 1609: and Jakub Czajczynski's - his own category stays, PLAY with both games comes on top (CULTURES opens with the
 // owner's code he was given)
@@ -301,10 +307,10 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
-var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players", "youtube"], play: ["playstats"], backup: ["backups"], cultures: ["cultures"] };
+var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar"], files: ["files"], community: ["players", "youtube"], play: ["playstats"], docs: ["docs"], backup: ["backups"], cultures: ["cultures"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
-  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", packages: "Opening the shares", cultures: "Sorting the cultures' orders" };
+  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", docs: "Unrolling the scrolls", packages: "Opening the shares", cultures: "Sorting the cultures' orders" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
 // 1578: the bar as the RODWAN PIXELS logo - one row of 4 px squares side by side, each a shade of the logo's six at random;
 // it grows square by square and stays faded when all is in
@@ -403,6 +409,7 @@ function render() {
   if (D.playstats) renderPlayStats();
   if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
   if (allowed("files") && (got.files || D.files)) renderFiles();
+  if (allowed("docs") && (got.docs || D.docs)) renderDocs();
   if (allowed("backup") && (got.backups || D.backups)) renderBackups();
 }
 
@@ -1525,6 +1532,72 @@ function renderBackups() {
     ["Size", function (x) { return gb(x.size); }, "num"], ["Files", function (x) { return x.files == null ? "" : String(x.files); }, "num"],
     ["Path", function (x) { return esc(x.path); }, "x muted"], ["", function (x) { return x.status ? "<span style='color:var(--bad,#e55)'>" + esc(x.status) + "</span>" : ""; }]], B.items);
 }
+// 1612: DOCS - the studio's docs on the server, for whoever has the right docs (OWNER and TEAM): pick one, edit, SAVE.
+// The server refuses a save made on an older version, so nobody writes over another's change; HISTORY opens any saved
+// version in the editor (SAVE makes it the current one); everyone with the right comments; the OWNER makes docs and
+// names the people who may save each.
+var dcCur = "", dcBase = -1, dcDirty = false;
+var dcDoc = function () { return (D.docs || []).filter(function (d) { return d.name === dcCur; })[0]; };
+var dcCan = function (d) { var me = String(D.name || "").toLowerCase(); return !D.viewAs && (D.category === "OWNER" || d.editors.some(function (e) { return e.toLowerCase() === me; })); };
+function dcSay(t, err) { var m = $("dc-msg"); m.hidden = !t; m.className = err ? "msg err" : "msg"; m.textContent = t || ""; }
+function docsPost(body) {
+  body.k = KEY;
+  return fetch(API, { method: "POST", body: JSON.stringify(body), credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
+    if (t.indexOf("ERROR") === 0 || t === "NO") throw new Error(t.replace(/^ERROR\s*/, "") || "No access");
+    D.docs = JSON.parse(t).docs; cacheWrite(); renderDocs();
+  });
+}
+function renderDocs() {
+  var docs = D.docs || [], own = D.category === "OWNER" && !D.viewAs;
+  if (!dcDoc()) { dcCur = docs.length ? docs[0].name : ""; dcBase = -1; dcDirty = false; }
+  var d = dcDoc();
+  $("dc-new").hidden = !own; $("dc-pick").hidden = !d; $("dc-body").hidden = !d; $("dc-ed").hidden = !d || !own;
+  $("dc-pick").innerHTML = docs.map(function (x) { return "<option>" + esc(x.name) + "</option>"; }).join(""); $("dc-pick").value = dcCur;
+  if (!d) { $("dc-save").hidden = true; $("dc-info").textContent = ""; if (!$("dc-msg").classList.contains("err")) dcSay(D.errors.docs || (own ? "No docs yet. NEW DOC makes the first." : "No docs yet.")); return; }
+  if (!$("dc-msg").classList.contains("err")) dcSay("");
+  var can = dcCan(d), last = d.history[d.history.length - 1];
+  if (dcBase !== d.version && !dcDirty) { $("dc-text").value = d.text; dcBase = d.version; }
+  $("dc-text").readOnly = !can; $("dc-save").hidden = !can; $("dc-com-bar").hidden = !!D.viewAs;
+  $("dc-info").textContent = (last ? "VERSION " + d.version + " BY " + last.by + ", " + day(last.time) + " " + hm(last.time) : "EMPTY") + (can ? "" : " - READ ONLY") + (dcDirty ? " - NOT SAVED" : "");
+  if (document.activeElement !== $("dc-eds")) $("dc-eds").value = d.editors.join(", ");
+  $("dc-hist").innerHTML = grid([["Version", function (h) { return "<b>" + h.version + "</b>"; }, "num"], ["By", function (h) { return esc(h.by); }],
+    ["When", function (h) { return esc(day(h.time) + " " + hm(h.time)); }, "muted"], ["", function (h) { return "<button data-dv='" + h.version + "'>Open</button>"; }]], d.history.slice().reverse());
+  $("dc-com").innerHTML = d.comments.length ? d.comments.map(function (c) { return "<div><b>" + esc(c.by) + "</b> <span class='muted'>" + esc(day(c.time) + " " + hm(c.time)) + "</span><div style='white-space:pre-wrap'>" + esc(c.text) + "</div></div>"; }).join("") : "<div class='muted'>No comments yet.</div>";
+}
+function dcBusy(b, p) { b.disabled = true; dcSay(""); p.catch(function (e) { dcSay(String(e && e.message || e), true); }).then(function () { b.disabled = false; }); }
+$("dc-pick").addEventListener("change", function () {
+  if (dcDirty && !confirm("Drop the changes not saved?")) { this.value = dcCur; return; }
+  dcCur = this.value; dcBase = -1; dcDirty = false; dcSay(""); renderDocs();
+});
+$("dc-text").addEventListener("input", function () { if (!dcDirty) { dcDirty = true; renderDocs(); } });
+$("dc-save").addEventListener("click", function () {
+  var d = dcDoc(); if (!d) return;
+  dcBusy(this, docsPost({ action: "doc_save", name: d.name, text: $("dc-text").value, version: dcBase }).then(function () { dcDirty = false; dcBase = -1; renderDocs(); }));
+});
+$("dc-reload").addEventListener("click", function () {
+  if (dcDirty && !confirm("Drop the changes not saved?")) return;
+  var q = { api: "data", k: KEY, part: "docs" }; if (VIEW_AS) q.as = VIEW_AS;
+  dcDirty = false; dcBase = -1;
+  dcBusy(this, apiGet(q).then(function (j) { D.docs = j.docs || []; cacheWrite(); renderDocs(); }));
+});
+$("dc-new").addEventListener("click", function () {
+  var n = (prompt("Name of the new doc") || "").trim(); if (!n) return;
+  if (dcDirty && !confirm("Drop the changes not saved?")) return;
+  dcBusy(this, docsPost({ action: "doc_new", name: n }).then(function () { dcCur = n; dcBase = -1; dcDirty = false; renderDocs(); }));
+});
+$("dc-eds-go").addEventListener("click", function () { var d = dcDoc(); if (d) dcBusy(this, docsPost({ action: "doc_editors", name: d.name, editors: $("dc-eds").value })); });
+$("dc-com-go").addEventListener("click", function () {
+  var d = dcDoc(), t = $("dc-com-in").value.trim(); if (!d || !t) return;
+  dcBusy(this, docsPost({ action: "doc_comment", name: d.name, text: t }).then(function () { $("dc-com-in").value = ""; }));
+});
+$("dc-com-in").addEventListener("keydown", function (e) { if (e.key === "Enter") $("dc-com-go").click(); });
+$("dc-hist").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-dv]"), d = dcDoc(); if (!b || !d) return;
+  var h = d.history.filter(function (x) { return String(x.version) === b.dataset.dv; })[0]; if (!h) return;
+  if (dcDirty && !confirm("Drop the changes not saved?")) return;
+  $("dc-text").value = h.text; dcDirty = h.version !== d.version; renderDocs();
+  dcSay(dcDirty ? "Version " + h.version + " opened" + (dcCan(d) ? " - SAVE makes it the current one." : ".") : "");
+});
 $("files").addEventListener("click", function (e) {
   var b = e.target.closest("button[data-f]"); if (!b) return;
   b.disabled = true; b.textContent = "Getting...";
