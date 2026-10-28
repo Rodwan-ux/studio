@@ -1,0 +1,39 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/rules_start.sh\"" }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "[ \"$CLAUDE_CODE_REMOTE\" != true ] || python3 \"$HOME/.claude/hooks/edit_guard.py\" save" }
+        ]
+      },
+      {
+        "hooks": [
+          { "type": "command", "command": "[ \"$CLAUDE_CODE_REMOTE\" != true ] || python3 \"$HOME/.claude/hooks/task_log.py\"" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit|Bash",
+        "hooks": [
+          { "type": "command", "command": "[ \"$CLAUDE_CODE_REMOTE\" != true ] || python3 \"$HOME/.claude/hooks/edit_guard.py\" check" },
+          { "type": "command", "command": "[ \"$CLAUDE_CODE_REMOTE\" != true ] || python3 \"$HOME/.claude/hooks/plan_guard.py\"" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "[ \"$CLAUDE_CODE_REMOTE\" != true ] || python3 \"$HOME/.claude/hooks/reply_guard.py\"" }
+        ]
+      }
+    ]
+  }
+}
