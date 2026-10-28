@@ -87,6 +87,18 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 #pf-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;z-index:10;opacity:0}#pf-canvas.on{opacity:1}
 .cols>.panel{align-content:start}
 [hidden]{display:none!important}
+/* 1612.2: DOCS - structure | editor (Quill, its snow theme on the studio colours) | comments of the chapter */
+.dc-grid{display:grid;grid-template-columns:230px minmax(0,1fr) 280px;gap:8px;align-items:start}.dc-grid.fold{grid-template-columns:44px minmax(0,1fr) 280px}
+.dc-grid.fold #dc-toc,.dc-grid.fold .dc-toc h3{display:none}@media (max-width:900px){.dc-grid,.dc-grid.fold{grid-template-columns:1fr}}
+.dc-toc{position:sticky;top:8px;max-height:85vh;overflow:auto}#dc-toc a{display:flex;gap:6px;padding:2px 4px;color:var(--fg);text-decoration:none;cursor:pointer}#dc-toc a:hover,#dc-toc a.on{color:var(--cyan)}
+#dc-toc a.l2{padding-left:14px}#dc-toc a.l3{padding-left:26px;color:var(--dim)}#dc-toc a i{margin-left:auto;font-style:normal;color:var(--amber)}
+.dc-main .ql-toolbar.ql-snow,.dc-main .ql-container.ql-snow{border:2px solid var(--line);background:var(--panel)}.dc-main .ql-toolbar.ql-snow{border-bottom:none;position:sticky;top:0;z-index:1}
+.dc-main .ql-snow .ql-stroke{stroke:var(--fg)}.dc-main .ql-snow .ql-fill{fill:var(--fg)}.dc-main .ql-snow .ql-picker{color:var(--fg)}.dc-main .ql-snow .ql-picker-options{background:var(--panel);border-color:var(--line)}
+.dc-main .ql-snow button:hover .ql-stroke,.dc-main .ql-snow .ql-active .ql-stroke{stroke:var(--cyan)}.dc-main .ql-snow button:hover .ql-fill,.dc-main .ql-snow .ql-active .ql-fill{fill:var(--cyan)}.dc-main .ql-snow .ql-picker-label:hover,.dc-main .ql-snow .ql-active{color:var(--cyan)}
+.dc-main .ql-snow button{border:none;padding:3px 5px}.dc-main .ql-editor{min-height:65vh;font:15px/1.6 system-ui,sans-serif;color:var(--fg)}.dc-main .ql-editor h1,.dc-main .ql-editor h2,.dc-main .ql-editor h3{font-family:var(--head);letter-spacing:.06em;color:var(--beige)}
+.dc-main .ql-editor h1{font-size:2.2em}.dc-main .ql-editor h2{font-size:1.6em;margin-top:.8em}.dc-main .ql-editor h3{font-size:1.25em;margin-top:.6em}.dc-main .ql-editor blockquote{border-left:4px solid var(--plum);padding-left:10px;color:var(--dim)}
+.dc-main .ql-editor a{color:var(--cyan)}.dc-main .ql-snow .ql-tooltip{background:var(--panel);color:var(--fg);border-color:var(--line);box-shadow:none}
+#dc-com>div{border-bottom:1px solid var(--line);padding:6px 0}
 </style></head><body><div class="wrap">
 <header><span class="hello" id="hello"></span><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAM0AAAAUCAYAAAAujbmOAAAByklEQVR42u2aP0tDMRTFE3FRcBDExS8g/QDq5ljQQUEHJ4tzCy466KDooCCuTg5ip4IKOjzBpaCT1k2w6CZIB6cODh3j/E4hl0vS955wflua3Jc/74ac81Lbbd8642G8tGyNAnyeFB/av7a/2OPNu30MpHfw89VNlacXNqxmzLHrpRyJnRPIkCGEqOCmIYSbhpDBMow/nGw3TIjexPiP+wvn08NS/9p4Le+tjkrfbtbOVeuDfkBq/3T1lntS4DuYmykZjefJuj60vfSOedIQQnlGCDcNIcX2NKj/KtWy0eg75DhpWNDDqjsAjK9Uyy5Ev0oeYmJyVKWPd7dWg/Sz5Bnz8DRSDny+fgc9/+j0OlW+Ozh0vnqJy7OHqPPHHF+Zn02Vl/b3LE8aQijPCOGmIeT/3NOgXkQNX28mXj2IevXm8cUM8ps56mHp3ii2npbuMCTP1+n9Ot96ZwF6ludWOygeQY+AOSHlGNK35knY/wtxfAjmDE8aQijPCOGmIaRYngY1uqS5kXozSbWfGhlzvnrtN3cpvq++Zrz9r/cWg8aH67Nj1pzGc2nXLwvQw+ActfEIehjtnLX3Mtr2Wt/Nk4YQyjNCuGkIKRR/dGkmxi2aFWgAAAAASUVORK5CYII="></header>
 <div class="ld" id="ld" hidden><span id="ld-txt"></span><div class="ld-track"><i id="ld-fill"></i></div></div>
@@ -170,12 +182,12 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div data-cp="timeline" hidden><div class="bar"><button id="tl2-out">Zoom out</button><button id="tl2-in">Zoom in</button><button id="tl2-today">Today</button><span class="muted" id="tl2-scale"></span></div><div id="tl2"></div></div>
 </div>
 <div data-stp="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></div>
-<div data-stp="docs" hidden><div class="bar"><select id="dc-pick" aria-label="Doc"></select><button id="dc-new" hidden>New doc</button><button id="dc-save" hidden>Save</button><button id="dc-reload">Reload</button><span class="muted" id="dc-info"></span></div>
+<div data-stp="docs" hidden><div class="bar"><select id="dc-pick" aria-label="Doc"></select><button id="dc-new" hidden>New doc</button><button id="dc-save" hidden>Save</button><button id="dc-hist-go" aria-expanded="false">History</button><button id="dc-reload">Reload</button><span class="muted" id="dc-info"></span></div>
 <div id="dc-msg" class="msg" hidden></div>
-<div class="bar" id="dc-ed" hidden><label for="dc-eds">Editors</label><input id="dc-eds" style="flex:1;min-width:200px" placeholder="NAMES FROM PEOPLE, COMMA BETWEEN"><button id="dc-eds-go">Set</button></div>
-<div id="dc-body" hidden><textarea id="dc-text" spellcheck="false" aria-label="Doc text" style="width:100%;min-height:55vh;resize:vertical"></textarea>
-<div class="cols"><div class="panel"><h2>History</h2><div class="scroll"><table id="dc-hist"></table></div></div>
-<div class="panel"><h2>Comments</h2><div id="dc-com"></div><div class="bar" id="dc-com-bar"><input id="dc-com-in" style="flex:1;min-width:200px" placeholder="YOUR COMMENT"><button id="dc-com-go">Comment</button></div></div></div></div></div>
+<div class="panel" id="dc-hist-box" hidden><div class="bar" id="dc-ed" hidden><label for="dc-eds">Editors</label><input id="dc-eds" style="flex:1;min-width:200px" placeholder="NAMES FROM PEOPLE, COMMA BETWEEN"><button id="dc-eds-go">Set</button></div><div class="scroll"><table id="dc-hist"></table></div></div>
+<div class="dc-grid" id="dc-body" hidden><aside class="panel dc-toc" id="dc-toc-box"><div class="bar"><h3>Structure</h3><span class="spacer"></span><button id="dc-fold" aria-expanded="true" aria-label="Fold the structure">&lt;</button></div><div id="dc-toc"></div></aside>
+<div class="dc-main"><div id="dc-ed-box"></div></div>
+<aside class="panel"><h3 id="dc-com-h">Comments</h3><div id="dc-com"></div><div class="bar" id="dc-com-bar"><input id="dc-com-in" style="flex:1;min-width:140px" placeholder="YOUR COMMENT"><button id="dc-com-go">Comment</button></div></aside></div></div>
 <div data-stp="backup" hidden><div class="bar"><span class="muted" id="bk-upd"></span></div><div id="bk-disks"></div><div class="panel"><h2>Copies</h2><div class="scroll"><table id="bk-t"></table></div></div></div></section>
 <section class="panel" data-pane="play" hidden><nav id="pf-tabs" hidden><button data-pf="formation" aria-selected="true">FORMATION</button><button data-pf="cultures" aria-selected="false">CULTURES</button></nav><div class="pf" id="pf">
 <div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
@@ -1534,12 +1546,62 @@ function renderBackups() {
 }
 // 1612: DOCS - the studio's docs on the server, for whoever has the right docs (OWNER and TEAM): pick one, edit, SAVE.
 // The server refuses a save made on an older version, so nobody writes over another's change; HISTORY opens any saved
-// version in the editor (SAVE makes it the current one); everyone with the right comments; the OWNER makes docs and
-// names the people who may save each.
-var dcCur = "", dcBase = -1, dcDirty = false;
+// version in the editor (SAVE makes it the current one); the OWNER makes docs and names the people who may save each.
+// 1612.2: the editor is Quill (loaded on the first DOCS view), a doc kept as its ops - only the formats below get in, so
+// no page code rides in a doc; the titles make the STRUCTURE on the left, a comment belongs to the chapter it was
+// written in (its title), the right column shows the comments of the chapter under the cursor. A doc saved before
+// 1612.2 (plain text) opens as plain paragraphs.
+var QUILL = "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/";
+var DC_FORMATS = ["header", "size", "bold", "italic", "underline", "list", "blockquote", "link"];
+var dcCur = "", dcBase = -1, dcDirty = false, dcQ = null, dcLoading = false, dcSec = "";
 var dcDoc = function () { return (D.docs || []).filter(function (d) { return d.name === dcCur; })[0]; };
 var dcCan = function (d) { var me = String(D.name || "").toLowerCase(); return !D.viewAs && (D.category === "OWNER" || d.editors.some(function (e) { return e.toLowerCase() === me; })); };
+var dcOps = function (t) { if (/^\{"ops"/.test(t || "")) try { return JSON.parse(t); } catch (e) {} return { ops: [{ insert: (t || "") + (/\n$/.test(t || "") ? "" : "\n") }] }; };
 function dcSay(t, err) { var m = $("dc-msg"); m.hidden = !t; m.className = err ? "msg err" : "msg"; m.textContent = t || ""; }
+// a new doc: its name as the title, then OVERVIEW, one chapter with a section and NOTES
+function dcTemplate(name) {
+  var h = function (t, l) { return [{ insert: t }, { insert: "\n", attributes: { header: l } }]; }, p = function (t) { return [{ insert: t + "\n" }]; };
+  return JSON.stringify({ ops: [].concat(h(name, 1), p("What this doc covers and who it is for."), h("OVERVIEW", 2), p(""), h("CHAPTER 1", 2), h("1.1 SECTION", 3), p(""), h("NOTES", 2), p("")) });
+}
+function dcLib(cb) {
+  if (window.Quill) return cb();
+  if (dcLoading) return; dcLoading = true;
+  var l = document.createElement("link"); l.rel = "stylesheet"; l.href = QUILL + "quill.snow.css"; document.head.appendChild(l);
+  var s = document.createElement("script"); s.src = QUILL + "quill.js";
+  s.onload = function () { dcLoading = false; cb(); }; s.onerror = function () { dcLoading = false; dcSay("The editor did not load - check the connection and RELOAD.", true); };
+  document.head.appendChild(s);
+}
+function dcMake() {
+  if (dcQ) return;
+  dcQ = new Quill("#dc-ed-box", { theme: "snow", formats: DC_FORMATS, placeholder: "Write here...", modules: { toolbar: [[{ header: [1, 2, 3, false] }], [{ size: ["small", false, "large", "huge"] }],
+    ["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }], ["blockquote", "link"], ["clean"]] } });
+  dcQ.on("text-change", function (_d, _o, src) { if (src === "user" && !dcDirty) { dcDirty = true; dcInfo(); } dcToc(); });
+  dcQ.on("selection-change", function (r) { if (r) dcPickSec(dcSecAt(r.index)); });
+}
+// the titles of the editor: [{ title, level, index, node }]
+function dcHeads() {
+  return dcQ ? dcQ.getLines().map(function (l) { return { level: l.formats().header || 0, title: l.domNode.textContent.trim(), index: dcQ.getIndex(l), node: l.domNode }; }).filter(function (h) { return h.level && h.title; }) : [];
+}
+function dcSecAt(i) { var hs = dcHeads().filter(function (h) { return h.index <= i; }); return hs.length ? hs[hs.length - 1].title : ""; }
+function dcComs(d, sec) { var titles = dcHeads().map(function (h) { return h.title; }); return d.comments.filter(function (c) { var s = c.sec || ""; return sec ? s === sec : !s || titles.indexOf(s) < 0; }); }
+function dcToc() {
+  var d = dcDoc(); if (!d) return;
+  var hs = dcHeads();
+  $("dc-toc").innerHTML = hs.length ? hs.map(function (h, i) { var n = d.comments.filter(function (c) { return c.sec === h.title; }).length;
+    return "<a class='l" + h.level + (h.title === dcSec ? " on" : "") + "' data-h='" + i + "'><span>" + esc(h.title) + "</span>" + (n ? "<i>" + n + "</i>" : "") + "</a>"; }).join("") : "<div class='muted'>Titles make the structure.</div>";
+}
+function dcPickSec(sec) {
+  dcSec = sec; dcToc();
+  var d = dcDoc(); if (!d) return;
+  $("dc-com-h").textContent = "Comments - " + (sec || "the doc");
+  var cs = dcComs(d, sec);
+  $("dc-com").innerHTML = cs.length ? cs.map(function (c) { return "<div><b>" + esc(c.by) + "</b> <span class='muted'>" + esc(day(c.time) + " " + hm(c.time)) + (c.sec && c.sec !== sec ? " - on " + esc(c.sec) : "") + "</span><div style='white-space:pre-wrap'>" + esc(c.text) + "</div></div>"; }).join("") : "<div class='muted'>No comments here yet.</div>";
+}
+function dcInfo() {
+  var d = dcDoc(); if (!d) { $("dc-info").textContent = ""; return; }
+  var last = d.history[d.history.length - 1];
+  $("dc-info").textContent = (last ? "VERSION " + d.version + " BY " + last.by + ", " + day(last.time) + " " + hm(last.time) : "EMPTY") + (dcCan(d) ? "" : " - READ ONLY") + (dcDirty ? " - NOT SAVED" : "");
+}
 function docsPost(body) {
   body.k = KEY;
   return fetch(API, { method: "POST", body: JSON.stringify(body), credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
@@ -1551,51 +1613,59 @@ function renderDocs() {
   var docs = D.docs || [], own = D.category === "OWNER" && !D.viewAs;
   if (!dcDoc()) { dcCur = docs.length ? docs[0].name : ""; dcBase = -1; dcDirty = false; }
   var d = dcDoc();
-  $("dc-new").hidden = !own; $("dc-pick").hidden = !d; $("dc-body").hidden = !d; $("dc-ed").hidden = !d || !own;
+  $("dc-new").hidden = !own; $("dc-pick").hidden = !d; $("dc-body").hidden = !d; $("dc-hist-go").hidden = !d; $("dc-ed").hidden = !d || !own;
+  if (!d) $("dc-hist-box").hidden = true;
   $("dc-pick").innerHTML = docs.map(function (x) { return "<option>" + esc(x.name) + "</option>"; }).join(""); $("dc-pick").value = dcCur;
   if (!d) { $("dc-save").hidden = true; $("dc-info").textContent = ""; if (!$("dc-msg").classList.contains("err")) dcSay(D.errors.docs || (own ? "No docs yet. NEW DOC makes the first." : "No docs yet.")); return; }
   if (!$("dc-msg").classList.contains("err")) dcSay("");
-  var can = dcCan(d), last = d.history[d.history.length - 1];
-  if (dcBase !== d.version && !dcDirty) { $("dc-text").value = d.text; dcBase = d.version; }
-  $("dc-text").readOnly = !can; $("dc-save").hidden = !can; $("dc-com-bar").hidden = !!D.viewAs;
-  $("dc-info").textContent = (last ? "VERSION " + d.version + " BY " + last.by + ", " + day(last.time) + " " + hm(last.time) : "EMPTY") + (can ? "" : " - READ ONLY") + (dcDirty ? " - NOT SAVED" : "");
+  dcLib(function () {
+    dcMake();
+    var d = dcDoc(); if (!d) return;
+    var can = dcCan(d);
+    if (dcBase !== d.version && !dcDirty) { dcQ.setContents(dcOps(d.text), "silent"); dcBase = d.version; }
+    dcQ.enable(can); $("dc-ed-box").previousElementSibling.hidden = !can; $("dc-save").hidden = !can; $("dc-com-bar").hidden = !!D.viewAs;
+    dcInfo(); dcPickSec(dcSec);
+  });
   if (document.activeElement !== $("dc-eds")) $("dc-eds").value = d.editors.join(", ");
   $("dc-hist").innerHTML = grid([["Version", function (h) { return "<b>" + h.version + "</b>"; }, "num"], ["By", function (h) { return esc(h.by); }],
     ["When", function (h) { return esc(day(h.time) + " " + hm(h.time)); }, "muted"], ["", function (h) { return "<button data-dv='" + h.version + "'>Open</button>"; }]], d.history.slice().reverse());
-  $("dc-com").innerHTML = d.comments.length ? d.comments.map(function (c) { return "<div><b>" + esc(c.by) + "</b> <span class='muted'>" + esc(day(c.time) + " " + hm(c.time)) + "</span><div style='white-space:pre-wrap'>" + esc(c.text) + "</div></div>"; }).join("") : "<div class='muted'>No comments yet.</div>";
 }
 function dcBusy(b, p) { b.disabled = true; dcSay(""); p.catch(function (e) { dcSay(String(e && e.message || e), true); }).then(function () { b.disabled = false; }); }
+var dcDrop = function () { return !dcDirty || confirm("Drop the changes not saved?"); };
 $("dc-pick").addEventListener("change", function () {
-  if (dcDirty && !confirm("Drop the changes not saved?")) { this.value = dcCur; return; }
-  dcCur = this.value; dcBase = -1; dcDirty = false; dcSay(""); renderDocs();
+  if (!dcDrop()) { this.value = dcCur; return; }
+  dcCur = this.value; dcBase = -1; dcDirty = false; dcSec = ""; dcSay(""); renderDocs();
 });
-$("dc-text").addEventListener("input", function () { if (!dcDirty) { dcDirty = true; renderDocs(); } });
 $("dc-save").addEventListener("click", function () {
-  var d = dcDoc(); if (!d) return;
-  dcBusy(this, docsPost({ action: "doc_save", name: d.name, text: $("dc-text").value, version: dcBase }).then(function () { dcDirty = false; dcBase = -1; renderDocs(); }));
+  var d = dcDoc(); if (!d || !dcQ) return;
+  dcBusy(this, docsPost({ action: "doc_save", name: d.name, text: JSON.stringify(dcQ.getContents()), version: dcBase }).then(function () { dcDirty = false; dcBase = -1; renderDocs(); }));
 });
 $("dc-reload").addEventListener("click", function () {
-  if (dcDirty && !confirm("Drop the changes not saved?")) return;
+  if (!dcDrop()) return;
   var q = { api: "data", k: KEY, part: "docs" }; if (VIEW_AS) q.as = VIEW_AS;
   dcDirty = false; dcBase = -1;
   dcBusy(this, apiGet(q).then(function (j) { D.docs = j.docs || []; cacheWrite(); renderDocs(); }));
 });
 $("dc-new").addEventListener("click", function () {
-  var n = (prompt("Name of the new doc") || "").trim(); if (!n) return;
-  if (dcDirty && !confirm("Drop the changes not saved?")) return;
-  dcBusy(this, docsPost({ action: "doc_new", name: n }).then(function () { dcCur = n; dcBase = -1; dcDirty = false; renderDocs(); }));
+  var n = (prompt("Name of the new doc") || "").trim(); if (!n || !dcDrop()) return;
+  dcBusy(this, docsPost({ action: "doc_new", name: n, text: dcTemplate(n) }).then(function () { dcCur = n; dcBase = -1; dcDirty = false; dcSec = ""; renderDocs(); }));
+});
+$("dc-hist-go").addEventListener("click", function () { var b = $("dc-hist-box"); b.hidden = !b.hidden; this.setAttribute("aria-expanded", String(!b.hidden)); });
+$("dc-fold").addEventListener("click", function () { var f = $("dc-body").classList.toggle("fold"); this.textContent = f ? ">" : "<"; this.setAttribute("aria-expanded", String(!f)); });
+$("dc-toc").addEventListener("click", function (e) {
+  var a = e.target.closest("a[data-h]"), h = a && dcHeads()[+a.dataset.h]; if (!h) return;
+  dcQ.setSelection(h.index, 0); h.node.scrollIntoView({ block: "start", behavior: "smooth" }); dcPickSec(h.title);
 });
 $("dc-eds-go").addEventListener("click", function () { var d = dcDoc(); if (d) dcBusy(this, docsPost({ action: "doc_editors", name: d.name, editors: $("dc-eds").value })); });
 $("dc-com-go").addEventListener("click", function () {
   var d = dcDoc(), t = $("dc-com-in").value.trim(); if (!d || !t) return;
-  dcBusy(this, docsPost({ action: "doc_comment", name: d.name, text: t }).then(function () { $("dc-com-in").value = ""; }));
+  dcBusy(this, docsPost({ action: "doc_comment", name: d.name, text: t, sec: dcSec }).then(function () { $("dc-com-in").value = ""; }));
 });
 $("dc-com-in").addEventListener("keydown", function (e) { if (e.key === "Enter") $("dc-com-go").click(); });
 $("dc-hist").addEventListener("click", function (e) {
-  var b = e.target.closest("button[data-dv]"), d = dcDoc(); if (!b || !d) return;
-  var h = d.history.filter(function (x) { return String(x.version) === b.dataset.dv; })[0]; if (!h) return;
-  if (dcDirty && !confirm("Drop the changes not saved?")) return;
-  $("dc-text").value = h.text; dcDirty = h.version !== d.version; renderDocs();
+  var b = e.target.closest("button[data-dv]"), d = dcDoc(); if (!b || !d || !dcQ) return;
+  var h = d.history.filter(function (x) { return String(x.version) === b.dataset.dv; })[0]; if (!h || !dcDrop()) return;
+  dcQ.setContents(dcOps(h.text), "silent"); dcDirty = h.version !== d.version; dcInfo(); dcPickSec(dcSec);
   dcSay(dcDirty ? "Version " + h.version + " opened" + (dcCan(d) ? " - SAVE makes it the current one." : ".") : "");
 });
 $("files").addEventListener("click", function (e) {
