@@ -53,9 +53,10 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .tl2-row.months span{position:absolute;top:0;bottom:0;padding:2px 6px;font:600 12px var(--head);letter-spacing:.1em;color:var(--beige);white-space:nowrap;overflow:hidden}
 .tl2-row.days span{position:absolute;top:0;bottom:0;font-size:10px;color:var(--dim);padding:2px 0;text-align:center;white-space:nowrap;overflow:hidden}.tl2-row.days span.td{color:var(--cyan);font-weight:600}
 /* 1620.3: an entry is a square (one day) or a bar (a span) in its lane colour: the studio schedule filled, a Google calendar entry framed */
-.tl2-ev,.tl2-mk{position:absolute;height:18px;display:flex;align-items:center;gap:6px;white-space:nowrap;touch-action:none;z-index:2}.tl2-ev{cursor:pointer}.tl2-mk.own{cursor:grab}.tl2-mk.drag{cursor:grabbing;z-index:3}
-.tl2-ev i,.tl2-mk i{flex:none;position:relative;height:18px;background:var(--c)}.tl2-ev i::after,.tl2-mk i::after{content:'';position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:var(--bg)}
-.tl2-ev span,.tl2-mk span{font:600 12px var(--head);letter-spacing:.06em;color:var(--fg);overflow:hidden;text-overflow:ellipsis}
+.tl2-ev,.tl2-mk{position:absolute;height:var(--s);display:flex;align-items:center;gap:6px;white-space:nowrap;touch-action:none;z-index:2}.tl2-ev{cursor:pointer}.tl2-mk.own{cursor:grab}.tl2-mk.drag{cursor:grabbing;z-index:3}
+.tl2-ev i,.tl2-mk i{flex:none;position:relative;width:var(--s);height:var(--s);background:var(--c)}.tl2-ev i::after,.tl2-mk i::after{content:'';position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:var(--bg)}
+.tl2-wrap.small .tl2-labels>div,.tl2-wrap.small .tl2-ev span,.tl2-wrap.small .tl2-mk span{font-size:10px}
+.tl2-ev span,.tl2-mk span{font:600 12px var(--head);line-height:var(--s);letter-spacing:.06em;color:var(--fg);overflow:hidden;text-overflow:ellipsis}
 .tl2-mk.bar,.tl2-ev.bar{padding:0 6px;background:var(--c)}.tl2-mk.bar span,.tl2-ev.bar span{color:var(--bg)}.tl2-mk.bar i{display:none}
 .tl2-rs{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize}.tl2-labels>div{position:relative}.tl2-lh{position:absolute;left:0;right:0;bottom:-3px;height:6px;cursor:ns-resize;z-index:2}
 .tl2-ln .bar{flex-wrap:nowrap}.tl2-ln input{flex:1}.tl2-ln select{padding:2px 4px}
@@ -1474,8 +1475,8 @@ $("cal-day").addEventListener("click", function (e) { if (e.target.id === "cal-x
 // a double click on a lane adds a mark and opens it; the Google entries stay read only.
 // 1620.4: day names over the days, the weeks in two alternating tones, every lane as high as the fullest one, the word
 // DEADLINE left out of the names in its own lane, a Google deadline drawing the red line too.
-var TL2_W = [8, 16, 32, 64], tl2Zoom = 1, tl2Center = null, TL2_S = 18, TL2_ROW = 20;
-try { var tz0 = +localStorage.getItem("tl2_zoom3"); if (localStorage.getItem("tl2_zoom3") !== null && tz0 >= 0 && tz0 < TL2_W.length) tl2Zoom = tz0; } catch (e) {}
+var TL2_W = [12, 16, 24, 32], tl2Zoom = 1, tl2Center = null, TL2_ROW = 16;   // 1620.10: a lane row as high as a day is wide, the marks square
+try { var tz0 = +localStorage.getItem("tl2_zoom4"); if (localStorage.getItem("tl2_zoom4") !== null && tz0 >= 0 && tz0 < TL2_W.length) tl2Zoom = tz0; } catch (e) {}
 // 1620.7: the lanes come with the schedule (a name, a colour, a height in rows), these until it has its own
 var TL2_BASE = [{ id: "deadline", name: "DEADLINES", color: "red", rows: 1 }, { id: "build", name: "BUILDS", color: "beige", rows: 1 }, { id: "playtest", name: "PUBLIC TESTS", color: "amber", rows: 1 },
   { id: "teamtest", name: "TEAM TESTS", color: "green", rows: 1 }, { id: "meeting", name: "MEETINGS", color: "violet", rows: 1 }, { id: "event", name: "EVENTS", color: "rose", rows: 1 }];
@@ -1497,15 +1498,15 @@ var tl2Lane = function (e) { return /deadline/i.test(e.title) ? "deadline" : (e.
 // 1620.9: two kinds, both on the day edges - a range is a bar over its days, a point a box of exactly one day with a
 // hole in its middle (a release, a meeting, an event); [html, the pixels it takes]
 function tl2Item(cls, attrs, a, b, W, color, name) {
-  var own = /\bown\b/.test(cls), x = Math.max(a, 0) * W + 1;
-  if (b - a > 1) { var w = Math.max(W * (b - Math.max(a, 0)) - 2, W - 2); return [function (top) { return "<div class='" + cls + " bar' " + attrs + " style='left:" + x + "px;width:" + w + "px;top:" + top + "px;--c:" + color + "'><span>" + esc(name) + "</span>" + (own ? "<b class='tl2-rs' style='right:-3px'></b>" : "") + "</div>"; }, x, x + w]; }
-  var lab = name && W >= 8;
-  return [function (top) { return "<div class='" + cls + "' " + attrs + " style='left:" + x + "px;top:" + top + "px;--c:" + color + "'><i style='width:" + (W - 2) + "px'></i>" + (own ? "<b class='tl2-rs' style='left:" + (W - 6) + "px'></b>" : "") + (lab ? "<span>" + esc(name) + "</span>" : "") + "</div>"; }, x, x + W - 2 + (lab ? 8 + name.length * 7 : 0)];
+  var own = /\bown\b/.test(cls), x = Math.max(a, 0) * W + 1, sz = ";--s:" + (W - 2) + "px";
+  if (b - a > 1) { var w = Math.max(W * (b - Math.max(a, 0)) - 2, W - 2); return [function (top) { return "<div class='" + cls + " bar' " + attrs + " style='left:" + x + "px;width:" + w + "px;top:" + top + "px;--c:" + color + sz + "'><span>" + esc(name) + "</span>" + (own ? "<b class='tl2-rs' style='right:-3px'></b>" : "") + "</div>"; }, x, x + w]; }
+  var lab = !!name;
+  return [function (top) { return "<div class='" + cls + "' " + attrs + " style='left:" + x + "px;top:" + top + "px;--c:" + color + sz + "'><i></i>" + (own ? "<b class='tl2-rs' style='left:" + (W - 6) + "px'></b>" : "") + (lab ? "<span>" + esc(name) + "</span>" : "") + "</div>"; }, x, x + W - 2 + (lab ? 8 + name.length * 7 : 0)];
 }
 function renderTimeline() {
   var box = $("tl2");
   if (!box || !D || (!D.calendar && !D.schedule) || $("tl2").closest("[data-stp]").hidden) return;
-  var W = TL2_W[tl2Zoom], DAYS = 366;
+  var W = TL2_W[tl2Zoom], DAYS = 366; TL2_ROW = W;
   var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var start = new Date(today); tl2Start = start.getTime();   // 1620.9: from today, nothing that ended before
   var days = [];
@@ -1546,12 +1547,12 @@ function renderTimeline() {
     var ends = [], html = "";
     per[l[0]].sort(function (p, q) { return p[1] - q[1]; }).forEach(function (it) {
       var r = 0; while (r < l[3] - 1 && ends[r] !== undefined && ends[r] > it[1] - 4) r++;
-      ends[r] = Math.max(ends[r] || 0, it[2]); html += it[0](1 + r * TL2_ROW);
+      ends[r] = Math.max(ends[r] || 0, it[2]); html += it[0](r * TL2_ROW + 1);
     });
     lanes[l[0]] = html; heights[l[0]] = l[3] * TL2_ROW;
   });
   var hdW = W >= 32 ? 18 : 16;
-  box.innerHTML = "<div class='tl2-wrap'><div class='tl2-labels'><div style='height:20px'></div><div style='height:" + hdW + "px'></div>" +
+  box.innerHTML = "<div class='tl2-wrap" + (W < 16 ? " small" : "") + "'><div class='tl2-labels'><div style='height:20px'></div><div style='height:" + hdW + "px'></div>" +
     LN.map(function (l) { return "<div style='height:" + heights[l[0]] + "px;color:" + l[2] + "'>" + esc(l[1]) + (tl2Own() ? "<b class='tl2-lh' data-lane='" + l[0] + "' title='Drag to set the height'></b>" : "") + "</div>"; }).join("") + "</div>" +
     "<div class='tl2-scroll' data-w='" + W + "'><div class='tl2-inner' style='width:" + total + "px'><div class='tl2-cols'>" + cols + "</div>" + lines +
     "<div class='tl2-row months' style='height:20px'>" + months + "</div><div class='tl2-row days' style='height:" + hdW + "px'>" + wlab + "</div>" +
@@ -1563,7 +1564,7 @@ function renderTimeline() {
   tl2Center = null;
   sc.scrollLeft = Math.max(0, center * W - sc.clientWidth / 2);
 }
-function tl2SetZoom(z) { tl2Zoom = Math.max(0, Math.min(TL2_W.length - 1, z)); try { localStorage.setItem("tl2_zoom3", tl2Zoom); } catch (e) {} renderTimeline(); }
+function tl2SetZoom(z) { tl2Zoom = Math.max(0, Math.min(TL2_W.length - 1, z)); try { localStorage.setItem("tl2_zoom4", tl2Zoom); } catch (e) {} renderTimeline(); }
 $("tl2-out").addEventListener("click", function () { tl2SetZoom(tl2Zoom - 1); });
 $("tl2-in").addEventListener("click", function () { tl2SetZoom(tl2Zoom + 1); });
 var tl2Drag = null, tl2Q = [], tl2Busy = false, tl2Open = "";
@@ -1593,7 +1594,7 @@ $("tl2").addEventListener("pointermove", function (e) {
   g.n = n;
   if (g.size) {
     var end = tl2Shift(m.end || m.date, n); if (end < m.date) end = m.date;
-    g.el.classList.add("bar"); g.el.style.width = Math.max((Math.round((tl2Day(end) - tl2Day(m.date)) / 864e5) + 1) * g.W - 2, TL2_S) + "px";
+    g.el.classList.add("bar"); g.el.style.width = Math.max((Math.round((tl2Day(end) - tl2Day(m.date)) / 864e5) + 1) * g.W - 2, g.W - 2) + "px";
     g.el.dataset.w = tl2When({ lane: m.lane, date: m.date, end: end > m.date ? end : "", time: m.time });
   } else {
     g.el.style.left = (g.left + n * g.W) + "px"; g.el.dataset.w = tl2When({ lane: m.lane, date: tl2Shift(m.date, n), end: m.end && tl2Shift(m.end, n), time: m.time });
