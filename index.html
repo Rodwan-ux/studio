@@ -51,9 +51,11 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .tl2-row{position:relative;border-bottom:2px solid var(--hover)}
 .tl2-row.months span{position:absolute;top:0;bottom:0;padding:3px 6px;font:600 12px var(--head);letter-spacing:.1em;color:var(--beige);white-space:nowrap;overflow:hidden}
 .tl2-row.days span{position:absolute;top:0;bottom:0;font-size:10px;color:var(--dim);text-align:center;line-height:1.25;padding-top:3px;overflow:hidden}.tl2-row.days span.td{color:var(--cyan);font-weight:600}
-.tl2-ev{position:absolute;height:18px;font-size:10px;line-height:16px;padding:0 4px;background:var(--hover);border:2px solid;border-left-width:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--fg);box-sizing:border-box}
-.tl2-ev:hover{background:var(--line)}
-.tl2-mk{position:absolute;height:18px;font-size:10px;line-height:14px;padding:0 4px;color:var(--fg);background:color-mix(in srgb,var(--c) 35%,transparent);border:2px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;touch-action:none}.tl2-mk.own{cursor:grab}.tl2-mk.drag{cursor:grabbing;z-index:2;box-shadow:0 0 0 2px var(--fg)}
+/* 1620.2: TIMELINE entries as squares in the lane colour (as the CHANGELOG squares): a schedule marker filled, a Google calendar entry framed */
+.tl2-ev,.tl2-mk{position:absolute;height:var(--s);touch-action:none}.tl2-ev{cursor:pointer}.tl2-mk.own{cursor:grab}.tl2-mk.drag{cursor:grabbing;z-index:2}
+.tl2-ev i,.tl2-mk i{position:absolute;top:0;width:var(--s);height:var(--s);background:var(--c)}.tl2-ev i{background:none;box-shadow:inset 0 0 0 2px var(--c)}
+.tl2-ev:hover i,.tl2-mk:hover i,.tl2-mk.drag i{background:rgb(100,255,255)}
+.tl2-ev span,.tl2-mk span{position:absolute;top:0;font-size:10px;line-height:var(--s);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg)}
 .card[draggable=true]{cursor:grab}.col.drop{border-color:var(--cyan);background:#16232a}
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:2px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
 .hello{font:700 30px/1 var(--head);letter-spacing:.06em;color:var(--fg)}
@@ -109,7 +111,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 .dc-main .ql-editor h3{font-size:1.2em;margin-top:.6em;counter-increment:dch3}.dc-main .ql-editor h3::before{content:counter(dch1) "." counter(dch2) "." counter(dch3) "  ";color:var(--rose)}
 .dc-main .ql-editor blockquote{border-left:4px solid var(--plum);padding-left:10px;color:var(--dim)}
 .dc-main .ql-editor a{color:var(--cyan)}.dc-main .ql-snow .ql-tooltip{background:var(--panel);color:var(--fg);border-color:var(--line);box-shadow:none}
-</style></head><body><div class="wrap">
+</style></head><body><div id="mx-tip" hidden></div><div class="wrap">
 <header><span class="hello" id="hello"></span><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAM0AAAAUCAYAAAAujbmOAAAByklEQVR42u2aP0tDMRTFE3FRcBDExS8g/QDq5ljQQUEHJ4tzCy466KDooCCuTg5ip4IKOjzBpaCT1k2w6CZIB6cODh3j/E4hl0vS955wflua3Jc/74ac81Lbbd8642G8tGyNAnyeFB/av7a/2OPNu30MpHfw89VNlacXNqxmzLHrpRyJnRPIkCGEqOCmIYSbhpDBMow/nGw3TIjexPiP+wvn08NS/9p4Le+tjkrfbtbOVeuDfkBq/3T1lntS4DuYmykZjefJuj60vfSOedIQQnlGCDcNIcX2NKj/KtWy0eg75DhpWNDDqjsAjK9Uyy5Ev0oeYmJyVKWPd7dWg/Sz5Bnz8DRSDny+fgc9/+j0OlW+Ozh0vnqJy7OHqPPHHF+Zn02Vl/b3LE8aQijPCOGmIeT/3NOgXkQNX28mXj2IevXm8cUM8ps56mHp3ii2npbuMCTP1+n9Ot96ZwF6ludWOygeQY+AOSHlGNK35knY/wtxfAjmDE8aQijPCOGmIaRYngY1uqS5kXozSbWfGhlzvnrtN3cpvq++Zrz9r/cWg8aH67Nj1pzGc2nXLwvQw+ActfEIehjtnLX3Mtr2Wt/Nk4YQyjNCuGkIKRR/dGkmxi2aFWgAAAAASUVORK5CYII="></header>
 <div class="ld" id="ld" hidden><span id="ld-txt"></span><div class="ld-track"><i id="ld-fill"></i></div></div>
 <div class="viewbar" id="viewbar" hidden>VIEWING AS <b id="viewbar-cat"></b><span class="muted">what this category sees; status changes are off</span><span class="spacer"></span><button id="viewbar-back">Back to owner</button></div>
@@ -182,7 +184,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <details class="fold" open><summary>MECHANICS <span class="muted" id="cl-mech-n"></span></summary><div class="mx-h muted">GAME</div><div class="mx" id="cl-mech"></div><div class="mx-h muted">CONTENT</div><div class="mx" id="cl-mech2"></div><div class="mx-leg" id="cl-mech-leg"></div></details>
 <details class="fold" id="cl-next-fold" open><summary>NEXT BUILD</summary><div id="cl-next"></div></details>
 <details class="fold" id="cl-bld-fold" open><summary>BUILDS <span class="muted" id="cl-bld-n"></span></summary><div class="bld" id="cl-bld"></div></details>
-<div id="mx-tip" hidden></div></section>
+</section>
 <section class="panel" data-pane="collaborate" hidden>
 <nav id="st-tabs"><button data-st="calendar" aria-selected="true">CALENDAR</button><button data-st="files" aria-selected="false">FILES</button><button data-st="docs" aria-selected="false">DOCS</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
 <div data-stp="calendar">
@@ -1415,7 +1417,7 @@ function renderGameStats() {
     ["Battles fought", g.battles], ["Battles won", g.won], ["Battles lost", g.lost], ["Men fallen", g.fallen], ["Enemies slain", g.slain], ["Quests done", g.quests]]);
 }
 // a square's name in a box beside the cursor, at once (no browser tooltip)
-["cl-mech", "cl-mech2", "pl-game"].forEach(function (id) {
+["cl-mech", "cl-mech2", "pl-game", "tl2"].forEach(function (id) {
   $(id).addEventListener("mousemove", function (e) {
     var t = e.target.closest("[data-t]"), tip = $("mx-tip");
     if (!t) { tip.hidden = true; return; }
@@ -1489,7 +1491,14 @@ var tl2Own = function () { return !!D && D.category === "OWNER" && !D.viewAs; };
 var tl2Day = function (s) { var p = String(s).split("-"); return new Date(+p[0], p[1] - 1, +p[2]).getTime(); };
 var tl2Key = function (t) { var x = new Date(t); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
 var tl2Shift = function (s, n) { var t = new Date(tl2Day(s)); t.setDate(t.getDate() + n); return tl2Key(t); };
-var tl2Tip = function (m) { return m.title + "  " + day(tl2Day(m.date)) + (m.end ? " - " + day(tl2Day(m.end)) : "") + (m.time ? "  " + m.time : ""); };
+var tl2When = function (m) { return day(tl2Day(m.date)) + (m.end ? " - " + day(tl2Day(m.end)) : "") + (m.time ? ", " + m.time : ""); };
+// one entry: a square per day it spans, its name after the last square while the days are wide enough
+function tl2Tiles(cls, attrs, a, b, W, row, color, name) {
+  var S = Math.max(3, Math.min(W - 4, 14)), off = (W - S) / 2, sq = "";
+  for (var j = Math.max(a, 0); j < b; j++) sq += "<i style='left:" + ((j - a) * W + off) + "px'></i>";
+  var lab = W >= 16 && name ? "<span style='left:" + ((b - a - 1) * W + off + S + 4) + "px;max-width:" + (W * 6) + "px'>" + esc(name) + "</span>" : "";
+  return "<div class='" + cls + "' " + attrs + " style='left:" + a * W + "px;top:" + (6 + row * (S + 5)) + "px;--s:" + S + "px;--c:" + color + "'>" + sq + lab + "</div>";
+}
 var tl2Mark = function (id) { return (D.schedule && D.schedule.items || []).filter(function (x) { return x.id === id; })[0]; };
 var tl2Lane = function (e) { return /deadline/i.test(e.title) ? "deadline" : (e.guests && e.guests.length) || /meeting/i.test(e.title) ? "meeting" : "event"; };
 function renderTimeline() {
@@ -1521,14 +1530,13 @@ function renderTimeline() {
     if (b <= 0 || a >= DAYS) return;
     var ln = tl2Lane(e), lane = TL2_LANES.filter(function (l) { return l[0] === ln; })[0], s = calSplit(e.title);
     var k = ln + a, row = used[k] || 0; used[k] = row + 1;
-    var label = W >= 64 ? (e.allDay ? "" : tzTime(e.start, "Europe/Warsaw") + " ") + s[0] : W * (b - a) >= 32 ? s[0] : "";
-    lanes[ln] += "<div class='tl2-ev' data-day='" + calKey(new Date(e.start)) + "' title='" + esc(day(e.start) + "  " + (e.allDay ? "" : tzTime(e.start, "Europe/Warsaw") + " ") + e.title) + "' style='left:" + (Math.max(a, 0) * W + 1) + "px;width:" + Math.max(W * (b - Math.max(a, 0)) - 2, 6) + "px;top:" + (6 + row * 21) + "px;border-color:" + lane[2] + "'>" + esc(label) + "</div>";
+    lanes[ln] += tl2Tiles("tl2-ev", "data-day='" + calKey(new Date(e.start)) + "' data-t='" + esc(e.title) + "' data-w='" + esc(day(e.start) + (e.allDay ? "" : ", " + tzTime(e.start, "Europe/Warsaw"))) + "'", a, b, W, row, lane[2], s[0]);
   });
   (D.schedule && D.schedule.items || []).forEach(function (m) {
     var a = idx(tl2Day(m.date)), b = m.end ? idx(tl2Day(m.end)) + 1 : a + 1, lane = TL2_LANES.filter(function (l) { return l[0] === m.lane; })[0];
     if (!lane || b <= 0 || a >= DAYS) return;
     var k = m.lane + a, row = used[k] || 0; used[k] = row + 1;
-    lanes[m.lane] += "<div class='tl2-mk" + (tl2Own() ? " own" : "") + "' data-id='" + esc(m.id) + "' title='" + esc(tl2Tip(m)) + "' style='left:" + (a * W + 1) + "px;width:" + Math.max(W * (b - a) - 2, 10) + "px;top:" + (6 + row * 21) + "px;--c:" + lane[2] + "'>" + esc(W * (b - a) >= 40 ? m.title : "") + "</div>";
+    lanes[m.lane] += tl2Tiles("tl2-mk" + (tl2Own() ? " own" : ""), "data-id='" + esc(m.id) + "' data-t='" + esc(m.title) + "' data-w='" + esc(tl2When(m)) + "'", a, b, W, row, lane[2], m.title);
   });
   box.innerHTML = "<div class='tl2-wrap'><div class='tl2-labels'><div style='height:22px'></div><div style='height:" + dayH + "px'></div>" +
     TL2_LANES.map(function (l) { return "<div style='height:" + laneH + "px;color:" + l[2] + "'>" + l[1] + "</div>"; }).join("") + "</div>" +
@@ -1564,7 +1572,8 @@ $("tl2").addEventListener("pointermove", function (e) {
   var g = tl2Drag; if (!g) return;
   var n = Math.round((e.clientX - g.x) / g.W), m = tl2Mark(g.el.dataset.id);
   if (n === g.n || !m) return;
-  g.n = n; g.el.style.left = (g.left + n * g.W) + "px"; g.el.title = tl2Tip({ title: m.title, date: tl2Shift(m.date, n), end: m.end && tl2Shift(m.end, n), time: m.time });
+  g.n = n; g.el.style.left = (g.left + n * g.W) + "px"; g.el.dataset.w = tl2When({ date: tl2Shift(m.date, n), end: m.end && tl2Shift(m.end, n), time: m.time });
+  var tip = $("mx-tip"); if (!tip.hidden) tip.innerHTML = "<b>" + esc(m.title) + "</b>" + esc(g.el.dataset.w);
 });
 function tl2Drop() {
   var g = tl2Drag; if (!g) return; tl2Drag = null; g.el.classList.remove("drag");
