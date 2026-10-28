@@ -47,21 +47,21 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .tl2-labels>div{font:600 12px var(--head);letter-spacing:.1em;color:var(--dim);padding:0 8px;display:flex;align-items:center;border-bottom:2px solid var(--hover);text-transform:uppercase}
 .tl2-scroll{overflow-x:auto;overflow-y:hidden}.tl2-inner{position:relative}
 .tl2-cols{position:absolute;left:0;top:0;bottom:0;display:flex;pointer-events:none}.tl2-cols>div{flex:none;height:100%;border-left:1px solid transparent}
-.tl2-cols .wk{background:#241b22}.tl2-cols .mon{border-left-color:#2a2027}.tl2-cols .m1{border-left-color:#4a3a44}.tl2-cols .past{opacity:.5;background:var(--sunk)}
+.tl2-cols .wk{background:#241b22}.tl2-cols .mon{border-left-color:#2a2027}.tl2-cols .m1{border-left-color:#4a3a44}
 .tl2-line{position:absolute;top:0;bottom:0;width:2px;pointer-events:none;z-index:1;opacity:.8}
 .tl2-row{position:relative;border-bottom:2px solid var(--hover)}
 .tl2-row.months span{position:absolute;top:0;bottom:0;padding:2px 6px;font:600 12px var(--head);letter-spacing:.1em;color:var(--beige);white-space:nowrap;overflow:hidden}
 .tl2-row.days span{position:absolute;top:0;bottom:0;font-size:10px;color:var(--dim);padding:2px 0;text-align:center;white-space:nowrap;overflow:hidden}.tl2-row.days span.td{color:var(--cyan);font-weight:600}
 /* 1620.3: an entry is a square (one day) or a bar (a span) in its lane colour: the studio schedule filled, a Google calendar entry framed */
 .tl2-ev,.tl2-mk{position:absolute;height:18px;display:flex;align-items:center;gap:6px;white-space:nowrap;touch-action:none;z-index:2}.tl2-ev{cursor:pointer}.tl2-mk.own{cursor:grab}.tl2-mk.drag{cursor:grabbing;z-index:3}
-.tl2-ev i,.tl2-mk i{flex:none;width:18px;height:18px;background:var(--c)}.tl2-ev i{background:none;box-shadow:inset 0 0 0 2px var(--c)}
+.tl2-ev i,.tl2-mk i{flex:none;position:relative;height:18px;background:var(--c)}.tl2-ev i::after,.tl2-mk i::after{content:'';position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:var(--bg)}
 .tl2-ev span,.tl2-mk span{font:600 12px var(--head);letter-spacing:.06em;color:var(--fg);overflow:hidden;text-overflow:ellipsis}
-.tl2-mk.bar,.tl2-ev.bar{padding:0 6px;background:var(--c)}.tl2-ev.bar{background:none;box-shadow:inset 0 0 0 2px var(--c)}.tl2-mk.bar span{color:var(--bg)}
+.tl2-mk.bar,.tl2-ev.bar{padding:0 6px;background:var(--c)}.tl2-mk.bar span,.tl2-ev.bar span{color:var(--bg)}.tl2-mk.bar i{display:none}
 .tl2-rs{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize}.tl2-labels>div{position:relative}.tl2-lh{position:absolute;left:0;right:0;bottom:-3px;height:6px;cursor:ns-resize;z-index:2}
 .tl2-ln .bar{flex-wrap:nowrap}.tl2-ln input{flex:1}.tl2-ln select{padding:2px 4px}
 .tl2-ed{position:fixed;width:290px;z-index:20}.tl2-ed input{min-width:0}.tl2-ed label{font:600 12px var(--head);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
 .tl2-sw{display:flex;gap:4px}.tl2-sw button{width:22px;height:22px;padding:0;border:2px solid var(--line);background:var(--c);font-size:10px;color:var(--bg)}.tl2-sw button[aria-pressed=true]{border-color:var(--fg)}
-.tl2-ev:hover i,.tl2-mk:hover i,.tl2-mk.drag i,.tl2-mk.bar:hover,.tl2-mk.bar.drag{background:rgb(100,255,255)}.tl2-ev.bar:hover{box-shadow:inset 0 0 0 2px rgb(100,255,255)}
+.tl2-ev:hover i,.tl2-mk:hover i,.tl2-mk.drag i,.tl2-mk.bar:hover,.tl2-mk.bar.drag,.tl2-ev.bar:hover{background:rgb(100,255,255)}
 .card[draggable=true]{cursor:grab}.col.drop{border-color:var(--cyan);background:#16232a}
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:2px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
 .hello{font:700 30px/1 var(--head);letter-spacing:.06em;color:var(--fg)}
@@ -1494,17 +1494,20 @@ var tl2Week = function (d) { var t = new Date(Date.UTC(d.getFullYear(), d.getMon
 var tl2Mark = function (id) { return (D.schedule && D.schedule.items || []).filter(function (x) { return x.id === id; })[0]; };
 var tl2Lane = function (e) { return /deadline/i.test(e.title) ? "deadline" : (e.guests && e.guests.length) || /meeting/i.test(e.title) ? "meeting" : "event"; };
 // one entry: a bar for a span, a square and its name for one day; [html, the pixels it takes]
+// 1620.9: two kinds, both on the day edges - a range is a bar over its days, a point a box of exactly one day with a
+// hole in its middle (a release, a meeting, an event); [html, the pixels it takes]
 function tl2Item(cls, attrs, a, b, W, color, name) {
-  if (b - a > 1) { var w = Math.max(W * (b - a) - 2, TL2_S); return [function (top) { return "<div class='" + cls + " bar' " + attrs + " style='left:" + (a * W + 1) + "px;width:" + w + "px;top:" + top + "px;--c:" + color + "'><span>" + esc(name) + "</span>" + (/\bown\b/.test(cls) ? "<b class='tl2-rs' style='right:-3px'></b>" : "") + "</div>"; }, a * W, a * W + w]; }
-  var x = a * W + (W - TL2_S) / 2, lab = name && W >= 8;
-  return [function (top) { return "<div class='" + cls + "' " + attrs + " style='left:" + x + "px;top:" + top + "px;--c:" + color + "'><i></i>" + (/\bown\b/.test(cls) ? "<b class='tl2-rs' style='left:" + (TL2_S - 4) + "px'></b>" : "") + (lab ? "<span>" + esc(name) + "</span>" : "") + "</div>"; }, x, x + TL2_S + (lab ? 8 + name.length * 7 : 0)];
+  var own = /\bown\b/.test(cls), x = Math.max(a, 0) * W + 1;
+  if (b - a > 1) { var w = Math.max(W * (b - Math.max(a, 0)) - 2, W - 2); return [function (top) { return "<div class='" + cls + " bar' " + attrs + " style='left:" + x + "px;width:" + w + "px;top:" + top + "px;--c:" + color + "'><span>" + esc(name) + "</span>" + (own ? "<b class='tl2-rs' style='right:-3px'></b>" : "") + "</div>"; }, x, x + w]; }
+  var lab = name && W >= 8;
+  return [function (top) { return "<div class='" + cls + "' " + attrs + " style='left:" + x + "px;top:" + top + "px;--c:" + color + "'><i style='width:" + (W - 2) + "px'></i>" + (own ? "<b class='tl2-rs' style='left:" + (W - 6) + "px'></b>" : "") + (lab ? "<span>" + esc(name) + "</span>" : "") + "</div>"; }, x, x + W - 2 + (lab ? 8 + name.length * 7 : 0)];
 }
 function renderTimeline() {
   var box = $("tl2");
   if (!box || !D || (!D.calendar && !D.schedule) || $("tl2").closest("[data-stp]").hidden) return;
-  var W = TL2_W[tl2Zoom], DAYS = 396;
+  var W = TL2_W[tl2Zoom], DAYS = 366;
   var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  var start = new Date(today); start.setDate(start.getDate() - 30); tl2Start = start.getTime();
+  var start = new Date(today); tl2Start = start.getTime();   // 1620.9: from today, nothing that ended before
   var days = [];
   for (var i = 0, d = new Date(start); i < DAYS; i++, d.setDate(d.getDate() + 1)) days.push(new Date(d));
   var idx = function (ms) { var x = new Date(ms); return Math.round((new Date(x.getFullYear(), x.getMonth(), x.getDate()) - start) / 864e5); };
@@ -1514,7 +1517,7 @@ function renderTimeline() {
   // columns, months, weeks (or days when zoomed in)
   var cols = "", months = "", wlab = "", mStart = 0;
   days.forEach(function (x, i) {
-    var cls = [tl2Week(x) % 2 ? "wk" : "", x.getDay() === 1 ? "mon" : "", x.getDate() === 1 ? "m1" : "", i < tIdx ? "past" : ""].join(" ");
+    var cls = [tl2Week(x) % 2 ? "wk" : "", x.getDay() === 1 ? "mon" : "", x.getDate() === 1 ? "m1" : ""].join(" ");
     cols += "<div class='" + cls + "' style='width:" + W + "px'></div>";
     wlab += "<span class='" + (i === tIdx ? "td" : "") + "' style='left:" + i * W + "px;width:" + W + "px'>" + (W >= 16 ? ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] : ["S", "M", "T", "W", "T", "F", "S"])[x.getDay()] + (W >= 32 ? " " + x.getDate() : "") + "</span>";
     if (i === DAYS - 1 || days[i + 1].getDate() === 1) { months += "<span style='left:" + mStart * W + "px;width:" + (i - mStart + 1) * W + "px'>" + MONTHS[x.getMonth()] + (W * (i - mStart + 1) > 70 ? " " + x.getFullYear() : "") + "</span>"; mStart = i + 1; }
