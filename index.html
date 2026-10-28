@@ -90,7 +90,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 /* 1612.3: DOCS - one panel (docs and the open doc's chapters) | the editor (Quill, its snow theme on the studio colours) */
 .dc-grid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:8px;align-items:start}.dc-grid.fold{grid-template-columns:44px minmax(0,1fr)}
 .dc-grid.fold #dc-docs,.dc-grid.fold #dc-proj,.dc-grid.fold #dc-set,.dc-grid.fold #dc-set-go{display:none}@media (max-width:760px){.dc-grid,.dc-grid.fold{grid-template-columns:1fr}}
-.dc-toc{position:sticky;top:8px;max-height:90vh;overflow:auto;padding:8px}.dc-ico{padding:0 7px;font-size:15px;line-height:22px}
+.dc-toc{position:sticky;top:8px;max-height:90vh;overflow:auto;padding:8px;grid-template-columns:minmax(0,1fr)}.dc-ico{padding:0 7px;font-size:15px;line-height:22px}
 #dc-docs a{display:block;padding:2px 4px;color:var(--fg);text-decoration:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dc-docs a:hover{color:var(--cyan)}
 #dc-docs a.doc{font:600 15px var(--head);letter-spacing:.08em;color:var(--dim);margin-top:4px}#dc-docs a.doc.on{color:var(--beige)}
 #dc-docs a.l1{padding-left:10px}#dc-docs a.l2{padding-left:22px;color:var(--dim)}#dc-docs a.l3{padding-left:34px;color:var(--dim);font-size:12px}#dc-docs a b{color:var(--rose);font-weight:600}#dc-docs a.doc i,#dc-meta i{font:400 11px var(--mono);font-style:normal;color:var(--dim);letter-spacing:0;margin-left:8px}#dc-proj{margin-bottom:6px}#dc-proj button{font-size:14px;padding:3px 10px}#dc-meta{font:600 16px var(--head);letter-spacing:.08em;color:var(--beige);margin-right:auto}
