@@ -1461,8 +1461,8 @@ var tl2Shift = function (s, n) { var t = new Date(tl2Day(s)); t.setDate(t.getDat
 var tl2Lanes = function (id) { return tl2LaneList().filter(function (l) { return l[0] === id; })[0] || [id, id.toUpperCase(), "var(--dim)", 1]; };
 // the hover line: the lane, the days, the time, the length of a span
 var tl2When = function (m) { var n = m.end ? Math.round((tl2Day(m.end) - tl2Day(m.date)) / 864e5) + 1 : 0; return tl2Lanes(m.lane)[1] + " · " + day(tl2Day(m.date)) + (m.end ? " - " + day(tl2Day(m.end)) : "") + (m.time ? " · " + m.time : "") + (n > 1 ? " · " + n + " DAYS" : ""); };
-// the name shown in a lane: without the lane's own word, none in MEETINGS (the hover keeps the full name)
-var tl2Short = function (lane, t) { if (lane === "meeting") return ""; var w = { deadline: "deadline", build: "build", playtest: "playtest", event: "event" }[lane]; return String(t).replace(new RegExp("\\s*\\b" + w + "\\b\\s*[—–:-]?\\s*", "ig"), " ").trim(); };
+// the name shown in a lane: without the lane's own word (1620.13: MEETINGS alike), the hover keeps the full name
+var tl2Short = function (lane, t) { var w = { deadline: "deadline", build: "build", playtest: "playtest", meeting: "meeting", event: "event" }[lane]; if (!w) return String(t); return String(t).replace(new RegExp("\\s*\\b" + w + "\\b\\s*[—–:-]?\\s*", "ig"), " ").trim(); };
 var tl2Week = function (d) { var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7)); return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7); };
 var tl2Mark = function (id) { return (D.schedule && D.schedule.items || []).filter(function (x) { return x.id === id; })[0]; };
 var tl2Lane = function (e) { return /deadline/i.test(e.title) ? "deadline" : (e.guests && e.guests.length) || /meeting/i.test(e.title) ? "meeting" : "event"; };
