@@ -168,7 +168,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div class="bar" id="p-cols" hidden></div>
 <div class="scroll"><table id="p-t" class="tight"></table></div></div>
 <div data-ppn="visitors" hidden><div class="bar"><label for="db-who">Person</label><select id="db-who"></select></div><div id="db-msg" class="msg" hidden></div><div class="tiles" id="db-tiles"></div>
-<div class="cols"><div class="panel"><h2>By person</h2><div class="scroll"><table id="db-p"></table></div></div><div class="panel"><h2>By tab</h2><div class="scroll"><table id="db-t"></table></div></div></div>
+<div class="panel"><h2>By person</h2><div class="scroll"><table id="db-p"></table></div></div>
 <div class="panel"><h2>Latest</h2><div class="scroll"><table id="db-l"></table></div></div></div>
 <div data-ppn="settings" hidden><div class="bar"><input id="r-new" maxlength="20" placeholder="NEW ROLE" style="width:160px"><button id="r-add">Add role</button><span class="muted" id="r-msg"></span><span class="spacer"></span><label for="view-as">View as</label><select id="view-as" hidden aria-label="View as"></select></div>
 <div class="scroll"><table id="r-t" class="tight"></table></div></div></section>
@@ -744,20 +744,16 @@ function renderDashboard() {
   $("db-tiles").innerHTML = [["Visits this week", week.filter(function (r) { return r._v; }).length], ["People this week", new Set(week.map(function (r) { return r.NAME; })).size],
     ["Tabs opened this week", week.length], ["Top tab this week", top(week)], ["Visits in all", rows.filter(function (r) { return r._v; }).length]]
     .map(function (t) { return "<div class='tile'><span>" + esc(t[0]) + "</span><b>" + esc(t[1]) + "</b></div>"; }).join("");
-  var n = function (x) { return x ? String(x) : ""; }, by = {}, tabs = {};
+  var n = function (x) { return x ? String(x) : ""; }, by = {};
   rows.forEach(function (r) {
     var p = by[r.NAME] || (by[r.NAME] = { name: r.NAME, cat: r.CATEGORY, visits: 0, opens: 0, first: r.TIME, last: "", list: [] });
     p.visits += r._v ? 1 : 0; p.opens++; p.last = r.TIME; p.cat = r.CATEGORY; p.list.push(r);
-    var t = tabs[r.TAB] || (tabs[r.TAB] = { tab: r.TAB, opens: 0, who: {}, last: "" }); t.opens++; t.who[r.NAME] = 1; t.last = r.TIME;
   });
   $("db-p").innerHTML = grid([
     ["Who", function (p) { return nameTag(p.name); }], ["Category", function (p) { return "<span class='chip' style='color:" + catColor(p.cat) + "'>" + esc(p.cat) + "</span>"; }],
     ["Visits", function (p) { return n(p.visits); }, "num"], ["Tabs", function (p) { return n(p.opens); }, "num"], ["Top tab", function (p) { return esc(top(p.list)); }],
     ["First", function (p) { return esc(short(p.first)); }], ["Last", function (p) { return esc(short(p.last)); }],
   ], Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return String(b.last).localeCompare(String(a.last)); }));
-  $("db-t").innerHTML = grid([
-    ["Tab", function (t) { return esc(t.tab); }], ["Opened", function (t) { return n(t.opens); }, "num"], ["People", function (t) { return n(Object.keys(t.who).length); }, "num"], ["Last", function (t) { return esc(short(t.last)); }],
-  ], Object.keys(tabs).map(function (k) { return tabs[k]; }).sort(function (a, b) { return b.opens - a.opens; }));
   $("db-l").innerHTML = grid([
     ["Time", function (r) { return esc(short(r.TIME)); }], ["Who", function (r) { return nameTag(r.NAME); }], ["Tab", function (r) { return esc(r.TAB); }],
     ["", function (r) { return r._v ? "<span class='muted'>NEW VISIT</span>" : ""; }],
@@ -1042,7 +1038,7 @@ function renderPeople() {
   s.innerHTML = "<option value=''>ALL</option>" + catOrder().concat(["NO PANEL"]).map(function (x) { return "<option>" + x + "</option>"; }).join(""); s.value = v;
   // 1380: the tags in use (TAGS column of PEOPLE) - a filter and an ON / OFF column each
   // 1621: the two playtest groups always have their switch
-  var tags = ["PLAYTEST TEAM", "PLAYTEST EXTERNAL"]; rows.forEach(function (r) { pTags(r).forEach(function (x) { if (tags.indexOf(x) < 0) tags.push(x); }); }); tags.sort();
+  var tags = ["PLAYTEST TEAM", "PLAYTEST PUBLIC"]; rows.forEach(function (r) { pTags(r).forEach(function (x) { if (tags.indexOf(x) < 0) tags.push(x); }); }); tags.sort();
   var tg = $("p-tag"), tv = tg.value;
   tg.innerHTML = "<option value=''>ALL</option>" + tags.map(function (x) { return "<option>" + esc(x) + "</option>"; }).join(""); tg.value = tags.indexOf(tv) >= 0 ? tv : "";
   var q = $("p-q").value.trim().toLowerCase();
