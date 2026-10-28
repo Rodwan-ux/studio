@@ -93,15 +93,15 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 .dc-toc{position:sticky;top:8px;max-height:90vh;overflow:auto;padding:8px}.dc-ico{padding:0 7px;font-size:15px;line-height:22px}
 #dc-docs a{display:block;padding:2px 4px;color:var(--fg);text-decoration:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dc-docs a:hover{color:var(--cyan)}
 #dc-docs a.doc{font:600 15px var(--head);letter-spacing:.08em;color:var(--dim);margin-top:4px}#dc-docs a.doc.on{color:var(--beige)}
-#dc-docs a.l1{padding-left:10px}#dc-docs a.l2{padding-left:22px;color:var(--dim)}#dc-docs a.l3{padding-left:34px;color:var(--dim);font-size:12px}#dc-docs a b{color:var(--rose);font-weight:600}
-.dc-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;min-height:28px}
-#dc-ed-wrap{position:relative}.dc-pop{position:absolute;z-index:3;background:var(--panel);border:2px solid var(--cyan);padding:6px 8px;max-width:340px;display:grid;gap:4px}#dc-tip button{padding:0 6px;float:right}
+#dc-docs a.l1{padding-left:10px}#dc-docs a.l2{padding-left:22px;color:var(--dim)}#dc-docs a.l3{padding-left:34px;color:var(--dim);font-size:12px}#dc-docs a b{color:var(--rose);font-weight:600}#dc-docs a.doc i,#dc-meta i{font:400 11px var(--mono);font-style:normal;color:var(--dim);letter-spacing:0;margin-right:6px}#dc-meta{font:600 16px var(--head);letter-spacing:.08em;color:var(--beige);margin-right:auto}
+.dc-top{display:flex;align-items:center;gap:8px;min-height:28px}
+#dc-ed-wrap{position:relative}.dc-pop{position:absolute;z-index:3;background:var(--panel);border:2px solid var(--violet);padding:6px 8px;max-width:340px;display:grid;gap:4px}#dc-tip .dc-x{border:none;background:none;padding:0 3px;font-size:12px;line-height:1;color:var(--dim)}#dc-tip .dc-x:hover{color:var(--red)}
 .dc-main .ql-toolbar.ql-snow,.dc-main .ql-container.ql-snow{border:2px solid var(--line);background:var(--panel)}.dc-main .ql-toolbar.ql-snow{border-bottom:none;position:sticky;top:0;z-index:2}
 .dc-main.dc-ro .ql-toolbar .ql-formats:not(.dc-cmt-g){display:none}
 .dc-main .ql-snow .ql-stroke{stroke:var(--fg)}.dc-main .ql-snow .ql-fill{fill:var(--fg)}.dc-main .ql-snow .ql-picker{color:var(--fg)}.dc-main .ql-snow .ql-picker-options{background:var(--panel);border-color:var(--line)}
 .dc-main .ql-snow button:hover .ql-stroke,.dc-main .ql-snow .ql-active .ql-stroke{stroke:var(--cyan)}.dc-main .ql-snow button:hover .ql-fill,.dc-main .ql-snow .ql-active .ql-fill{fill:var(--cyan)}.dc-main .ql-snow .ql-picker-label:hover,.dc-main .ql-snow .ql-active{color:var(--cyan)}
 .dc-main .ql-snow button{border:none;padding:3px 5px}.dc-main .ql-cmt svg path{fill:none;stroke-width:1.5}
-.dc-main .ql-editor{min-height:75vh;font:15px/1.6 system-ui,sans-serif;color:var(--fg);counter-reset:dch1}.dc-main .ql-editor [data-cmt]{background:rgba(77,204,255,.3);border-bottom:2px solid var(--cyan);cursor:help}
+.dc-main .ql-editor{min-height:75vh;font:15px/1.6 system-ui,sans-serif;color:var(--fg);counter-reset:dch1}.dc-main .ql-editor [data-cmt]{background:rgba(167,150,196,.28);border-bottom:2px solid var(--violet);cursor:help}
 .dc-main .ql-editor h1,.dc-main .ql-editor h2,.dc-main .ql-editor h3{font-family:var(--head);letter-spacing:.06em;color:var(--beige)}
 .dc-main .ql-editor h1{font-size:2em;counter-reset:dch2;counter-increment:dch1}.dc-main .ql-editor h1::before{content:counter(dch1) "  ";color:var(--rose)}
 .dc-main .ql-editor h2{font-size:1.5em;margin-top:.8em;counter-reset:dch3;counter-increment:dch2}.dc-main .ql-editor h2::before{content:counter(dch1) "." counter(dch2) "  ";color:var(--rose)}
@@ -193,9 +193,9 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div data-stp="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></div>
 <div data-stp="docs" hidden><div id="dc-msg" class="msg" hidden></div>
 <div class="dc-grid" id="dc-body" hidden><aside class="panel dc-toc"><div class="bar"><button id="dc-set-go" class="dc-ico" aria-expanded="false" aria-label="Settings" title="Settings">&#9881;</button><span class="spacer"></span><button id="dc-fold" class="dc-ico" aria-expanded="true" aria-label="Fold the panel">&lt;</button></div>
-<div class="panel" id="dc-set" hidden><div class="bar"><button id="dc-new" hidden>New doc</button><button id="dc-reload">Reload</button></div><div class="bar" id="dc-ed" hidden><input id="dc-eds" style="flex:1;min-width:0" placeholder="EDITORS, COMMA BETWEEN" aria-label="Editors"><button id="dc-eds-go">Set</button></div><div class="scroll"><table id="dc-hist"></table></div></div>
+<div class="panel" id="dc-set" hidden><div class="bar"><button id="dc-new" hidden>New doc</button><button id="dc-reload">Reload</button></div><div class="bar" id="dc-num" hidden><input id="dc-no" style="flex:1;min-width:0" placeholder="NUMBER" aria-label="Doc number"><button id="dc-no-go">Set</button></div><div class="bar" id="dc-ed" hidden><input id="dc-eds" style="flex:1;min-width:0" placeholder="EDITORS, COMMA BETWEEN" aria-label="Editors"><button id="dc-eds-go">Set</button></div><div class="scroll"><table id="dc-hist"></table></div></div>
 <div id="dc-docs"></div></aside>
-<div class="dc-main" id="dc-main"><div class="dc-top"><span class="muted" id="dc-state"></span><button id="dc-pub" hidden>Publish</button></div><div id="dc-ed-wrap"><div id="dc-ed-box"></div>
+<div class="dc-main" id="dc-main"><div class="dc-top"><span id="dc-meta"></span><span class="muted" id="dc-state"></span><button id="dc-pub" hidden>Publish</button></div><div id="dc-ed-wrap"><div id="dc-ed-box"></div>
 <div class="dc-pop" id="dc-ask" hidden><input id="dc-ask-in" placeholder="COMMENT, ENTER TO ADD" aria-label="Comment"></div><div class="dc-pop" id="dc-tip" hidden></div></div></div></div></div>
 <div data-stp="backup" hidden><div class="bar"><span class="muted" id="bk-upd"></span></div><div id="bk-disks"></div><div class="panel"><h2>Copies</h2><div class="scroll"><table id="bk-t"></table></div></div></div></section>
 <section class="panel" data-pane="play" hidden><nav id="pf-tabs" hidden><button data-pf="formation" aria-selected="true">FORMATION</button><button data-pf="cultures" aria-selected="false">CULTURES</button></nav><div class="pf" id="pf">
@@ -1562,6 +1562,7 @@ function renderBackups() {
 // it to the readers. A comment = the toolbar icon on a marked fragment: the fragment turns cyan, the hover shows the
 // comment; the comments are not in the text, each finds its fragment again by its quote. The settings icon keeps the
 // rest: NEW DOC, RELOAD, EDITORS and the published versions.
+// 1612.4: each doc shows its number beside its name (the OWNER sets it in the settings); the comment mark is violet.
 var QUILL = "https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/";
 var DC_FORMATS = ["header", "size", "bold", "italic", "underline", "list", "blockquote", "link", "cmt"];
 var DC_ICON = "<svg viewBox='0 0 18 18'><path class='ql-stroke' d='M3 4h12v8H8l-3 3v-3H3z'/></svg>";
@@ -1600,7 +1601,7 @@ function dcHeads() {
 function dcPanel() {
   var d = dcDoc(), hs = dcHeads();
   $("dc-docs").innerHTML = (D.docs || []).map(function (x) {
-    return "<a class='doc" + (x.name === dcCur ? " on" : "") + "' data-doc='" + esc(x.name) + "'>" + esc(x.name) + "</a>" + (x.name === dcCur && d ? hs.map(function (h, i) {
+    return "<a class='doc" + (x.name === dcCur ? " on" : "") + "' data-doc='" + esc(x.name) + "'><i>" + esc(x.no) + "</i>" + esc(x.name) + "</a>" + (x.name === dcCur && d ? hs.map(function (h, i) {
       return "<a class='l" + h.level + "' data-h='" + i + "'><b>" + h.no + "</b> " + esc(h.title) + "</a>"; }).join("") : "");
   }).join("");
 }
@@ -1643,7 +1644,7 @@ function renderDocs() {
   var docs = D.docs || [], own = D.category === "OWNER" && !D.viewAs;
   if (!dcDoc()) { dcCur = docs.length ? docs[0].name : ""; dcBase = -1; dcDirty = false; }
   var d = dcDoc();
-  $("dc-new").hidden = !own; $("dc-ed").hidden = !d || !own; $("dc-body").hidden = !docs.length && !own;
+  $("dc-new").hidden = !own; $("dc-ed").hidden = $("dc-num").hidden = !d || !own; $("dc-body").hidden = !docs.length && !own;
   $("dc-main").hidden = !d;
   if (!d) { dcPanel(); dcSay(D.errors.docs || (own ? "No docs yet. NEW DOC in the settings makes the first." : "No docs yet.")); return; }
   dcLib(function () {
@@ -1655,6 +1656,8 @@ function renderDocs() {
     dcMarks(); dcPanel(); dcState();
   });
   if (document.activeElement !== $("dc-eds")) $("dc-eds").value = d.editors.join(", ");
+  if (document.activeElement !== $("dc-no")) $("dc-no").value = d.no;
+  $("dc-meta").innerHTML = "<i>" + esc(d.no) + "</i>" + esc(d.name);
   $("dc-hist").innerHTML = d.history.length ? grid([["Version", function (h) { return "<b>" + h.version + "</b>"; }, "num"], ["By", function (h) { return esc(h.by); }],
     ["Published", function (h) { return esc(day(h.time) + " " + hm(h.time)); }, "muted"], ["", function (h) { return dcCan(d) ? "<button data-dv='" + h.version + "'>Restore</button>" : ""; }]], d.history.slice().reverse()) : "";
 }
@@ -1683,6 +1686,7 @@ $("dc-new").addEventListener("click", function () {
   var b = this, n = (prompt("Name of the new doc") || "").trim(); if (!n) return;
   dcThen(function () { dcBusy(b, docsPost({ action: "doc_new", name: n, text: dcTemplate() }).then(function () { dcCur = n; dcBase = -1; renderDocs(); })); });
 });
+$("dc-no-go").addEventListener("click", function () { var d = dcDoc(); if (d) dcBusy(this, docsPost({ action: "doc_number", name: d.name, no: $("dc-no").value }).then(renderDocs)); });
 $("dc-eds-go").addEventListener("click", function () { var d = dcDoc(); if (d) dcBusy(this, docsPost({ action: "doc_editors", name: d.name, editors: $("dc-eds").value }).then(renderDocs)); });
 $("dc-hist").addEventListener("click", function (e) {
   var b = e.target.closest("button[data-dv]"), d = dcDoc(); if (!b || !d || !dcQ) return;
@@ -1713,7 +1717,7 @@ $("dc-ed-wrap").addEventListener("mouseover", function (e) {
   var d = dcDoc(), c = d && d.comments.filter(function (x) { return x.id === m.getAttribute("data-cmt"); })[0]; if (!c) return;
   clearTimeout(dcTipT);
   var tip = $("dc-tip"), w = $("dc-ed-wrap").getBoundingClientRect(), r = m.getBoundingClientRect();
-  tip.innerHTML = "<b>" + esc(c.by) + "</b> <span class='muted'>" + esc(day(c.time) + " " + hm(c.time)) + "</span>" + ((!D.viewAs && (D.category === "OWNER" || c.by === D.name)) ? " <button data-uc='" + esc(c.id) + "' aria-label='Clear the comment'>x</button>" : "") + "<div>" + esc(c.text) + "</div>";
+  tip.innerHTML = "<div><b>" + esc(c.by) + "</b>" + ((!D.viewAs && (D.category === "OWNER" || c.by === D.name)) ? "<button class='dc-x' data-uc='" + esc(c.id) + "' aria-label='Clear the comment' title='Clear'>&#215;</button>" : "") + " <span class='muted'>" + esc(day(c.time) + " " + hm(c.time)) + "</span></div><div>" + esc(c.text) + "</div>";
   tip.style.left = (r.left - w.left) + "px"; tip.style.top = (r.bottom - w.top + 4) + "px"; tip.hidden = false;
 });
 $("dc-ed-wrap").addEventListener("mouseout", function (e) { if (e.target.closest("[data-cmt],#dc-tip")) { clearTimeout(dcTipT); dcTipT = setTimeout(function () { $("dc-tip").hidden = true; }, 400); } });
