@@ -57,6 +57,9 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .tl2-ev i,.tl2-mk i{flex:none;width:18px;height:18px;background:var(--c)}.tl2-ev i{background:none;box-shadow:inset 0 0 0 2px var(--c)}
 .tl2-ev span,.tl2-mk span{font:600 12px var(--head);letter-spacing:.06em;color:var(--fg);overflow:hidden;text-overflow:ellipsis}
 .tl2-mk.bar,.tl2-ev.bar{padding:0 6px;background:var(--c)}.tl2-ev.bar{background:none;box-shadow:inset 0 0 0 2px var(--c)}.tl2-mk.bar span{color:var(--bg)}
+.tl2-rs{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize}
+.tl2-ed{position:fixed;width:290px;z-index:20}.tl2-ed input{min-width:0}.tl2-ed label{font:600 12px var(--head);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.tl2-sw{display:flex;gap:4px}.tl2-sw button{width:22px;height:22px;padding:0;border:2px solid var(--line);background:var(--c);font-size:10px;color:var(--bg)}.tl2-sw button[aria-pressed=true]{border-color:var(--fg)}
 .tl2-ev:hover i,.tl2-mk:hover i,.tl2-mk.drag i,.tl2-mk.bar:hover,.tl2-mk.bar.drag{background:rgb(100,255,255)}.tl2-ev.bar:hover{box-shadow:inset 0 0 0 2px rgb(100,255,255)}
 .card[draggable=true]{cursor:grab}.col.drop{border-color:var(--cyan);background:#16232a}
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:2px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
@@ -191,7 +194,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <nav id="st-tabs"><button data-st="calendar" aria-selected="true">TIMELINE</button><button data-st="files" aria-selected="false">FILES</button><button data-st="docs" aria-selected="false">DOCS</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
 <div data-stp="calendar">
 <div class="cal-day" id="cal-day" hidden></div>
-<div class="bar"><button id="tl2-out" class="dc-ico" aria-label="Zoom out" title="Zoom out">&#8722;</button><button id="tl2-in" class="dc-ico" aria-label="Zoom in" title="Zoom in">+</button><span class="muted" id="tl2-msg"></span><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div><div id="tl2"></div>
+<div class="bar"><button id="tl2-out" class="dc-ico" aria-label="Zoom out" title="Zoom out">&#8722;</button><button id="tl2-in" class="dc-ico" aria-label="Zoom in" title="Zoom in">+</button><span class="muted" id="tl2-msg"></span><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div><div id="tl2"></div><div class="dc-pop tl2-ed" id="tl2-ed" hidden></div>
 </div>
 <div data-stp="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></div>
 <div data-stp="docs" hidden><div id="dc-msg" class="msg" hidden></div>
@@ -1464,6 +1467,8 @@ $("cal-day").addEventListener("click", function (e) { if (e.target.id === "cal-x
 // is filled, Google calendar entries are framed; the OWNER drags a marker along the days, a double click on a lane adds
 // one, on a marker renames it (empty removes it); the hover box beside the cursor names it with its day; a click on a
 // Google entry opens its day.
+// 1620.6: a click on a schedule mark opens its editor (name, colour, days, time, DELETE), its right edge drags its length,
+// a double click on a lane adds a mark and opens it; the Google entries stay read only.
 // 1620.4: day names over the days, the weeks in two alternating tones, every lane as high as the fullest one, the word
 // DEADLINE left out of the names in its own lane, a Google deadline drawing the red line too.
 var TL2_W = [8, 16, 32, 64], tl2Zoom = 1, tl2Center = null, TL2_S = 18, TL2_ROW = 24;
@@ -1484,9 +1489,9 @@ var tl2Mark = function (id) { return (D.schedule && D.schedule.items || []).filt
 var tl2Lane = function (e) { return /deadline/i.test(e.title) ? "deadline" : (e.guests && e.guests.length) || /meeting/i.test(e.title) ? "meeting" : "event"; };
 // one entry: a bar for a span, a square and its name for one day; [html, the pixels it takes]
 function tl2Item(cls, attrs, a, b, W, color, name) {
-  if (b - a > 1) { var w = Math.max(W * (b - a) - 2, TL2_S); return [function (top) { return "<div class='" + cls + " bar' " + attrs + " style='left:" + (a * W + 1) + "px;width:" + w + "px;top:" + top + "px;--c:" + color + "'><span>" + esc(name) + "</span></div>"; }, a * W, a * W + w]; }
+  if (b - a > 1) { var w = Math.max(W * (b - a) - 2, TL2_S); return [function (top) { return "<div class='" + cls + " bar' " + attrs + " style='left:" + (a * W + 1) + "px;width:" + w + "px;top:" + top + "px;--c:" + color + "'><span>" + esc(name) + "</span>" + (/\bown\b/.test(cls) ? "<b class='tl2-rs' style='right:-3px'></b>" : "") + "</div>"; }, a * W, a * W + w]; }
   var x = a * W + (W - TL2_S) / 2, lab = name && W >= 8;
-  return [function (top) { return "<div class='" + cls + "' " + attrs + " style='left:" + x + "px;top:" + top + "px;--c:" + color + "'><i></i>" + (lab ? "<span>" + esc(name) + "</span>" : "") + "</div>"; }, x, x + TL2_S + (lab ? 8 + name.length * 7 : 0)];
+  return [function (top) { return "<div class='" + cls + "' " + attrs + " style='left:" + x + "px;top:" + top + "px;--c:" + color + "'><i></i>" + (/\bown\b/.test(cls) ? "<b class='tl2-rs' style='left:" + (TL2_S - 4) + "px'></b>" : "") + (lab ? "<span>" + esc(name) + "</span>" : "") + "</div>"; }, x, x + TL2_S + (lab ? 8 + name.length * 7 : 0)];
 }
 function renderTimeline() {
   var box = $("tl2");
@@ -1521,7 +1526,7 @@ function renderTimeline() {
   (D.schedule && D.schedule.items || []).forEach(function (m) {
     var a = idx(tl2Day(m.date)), b = m.end ? idx(tl2Day(m.end)) + 1 : a + 1, lane = TL2_LANES.filter(function (l) { return l[0] === m.lane; })[0];
     if (!lane || b <= 0 || a >= DAYS) return;
-    per[m.lane].push(tl2Item("tl2-mk" + (tl2Own() ? " own" : ""), "data-id='" + esc(m.id) + "' data-t='" + esc(m.title) + "' data-w='" + esc(tl2When(m)) + "'", a, b, W, lane[2], tl2Short(m.lane, m.title)));
+    per[m.lane].push(tl2Item("tl2-mk" + (tl2Own() ? " own" : ""), "data-id='" + esc(m.id) + "' data-t='" + esc(m.title) + "' data-w='" + esc(tl2When(m)) + "'", a, b, W, m.color ? "var(--" + m.color + ")" : lane[2], tl2Short(m.lane, m.title)));
     if (m.lane === "deadline") lines += "<i class='tl2-line' style='left:" + (a * W + W / 2 - 1) + "px;background:var(--red)'></i>";
   });
   var lanes = {}, heights = {}, most = 1;
@@ -1549,50 +1554,98 @@ function renderTimeline() {
 function tl2SetZoom(z) { tl2Zoom = Math.max(0, Math.min(TL2_W.length - 1, z)); try { localStorage.setItem("tl2_zoom3", tl2Zoom); } catch (e) {} renderTimeline(); }
 $("tl2-out").addEventListener("click", function () { tl2SetZoom(tl2Zoom - 1); });
 $("tl2-in").addEventListener("click", function () { tl2SetZoom(tl2Zoom + 1); });
-function tl2Save(change) {
+var tl2Drag = null, tl2Q = [], tl2Busy = false, tl2Open = "";
+// 1620.6: the saves go one after another, each on the schedule the last one returned
+function tl2Save(change) { tl2Q.push(change); if (!tl2Busy) tl2Next(); }
+function tl2Next() {
+  var change = tl2Q.shift(); if (!change) { tl2Busy = false; return; }
+  tl2Busy = true;
   var items = JSON.parse(JSON.stringify(D.schedule && D.schedule.items || [])); change(items);
   $("tl2-msg").textContent = "saving...";
   fetch(API, { method: "POST", body: JSON.stringify({ action: "schedule_save", k: KEY, items: items, updated: D.schedule ? D.schedule.updated : "" }), credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
     if (t.indexOf("ERROR") === 0 || t === "NO") throw new Error(t.replace(/^ERROR\s*/, "") || "No access");
-    D.schedule = JSON.parse(t).schedule; cacheWrite(); $("tl2-msg").textContent = ""; renderTimeline();
-  }).catch(function (er) { $("tl2-msg").textContent = String(er && er.message || er); renderTimeline(); });
+    D.schedule = JSON.parse(t).schedule; cacheWrite(); $("tl2-msg").textContent = ""; renderTimeline(); tl2EdFill();
+  }).catch(function (er) { tl2Q = []; $("tl2-msg").textContent = String(er && er.message || er); renderTimeline(); tl2EdFill(); }).then(tl2Next);
 }
-var tl2Drag = null;
+var tl2Set = function (id, f) { tl2Save(function (items) { items.forEach(function (x) { if (x.id === id) f(x); }); }); };
+// a mark's body moves it, its right edge sets its length; a press without a move opens its editor
 $("tl2").addEventListener("pointerdown", function (e) {
   var mk = e.target.closest(".tl2-mk.own"); if (!mk || e.button !== 0) return;
-  tl2Drag = { el: mk, x: e.clientX, left: parseFloat(mk.style.left), W: +mk.closest(".tl2-scroll").dataset.w, n: 0 };
+  tl2Drag = { el: mk, x: e.clientX, left: parseFloat(mk.style.left), w: mk.offsetWidth, W: +mk.closest(".tl2-scroll").dataset.w, n: 0, size: !!e.target.closest(".tl2-rs") };
   mk.setPointerCapture(e.pointerId); mk.classList.add("drag");
 });
 $("tl2").addEventListener("pointermove", function (e) {
   var g = tl2Drag; if (!g) return;
   var n = Math.round((e.clientX - g.x) / g.W), m = tl2Mark(g.el.dataset.id);
   if (n === g.n || !m) return;
-  g.n = n; g.el.style.left = (g.left + n * g.W) + "px"; g.el.dataset.w = tl2When({ lane: m.lane, date: tl2Shift(m.date, n), end: m.end && tl2Shift(m.end, n), time: m.time });
+  g.n = n;
+  if (g.size) {
+    var end = tl2Shift(m.end || m.date, n); if (end < m.date) end = m.date;
+    g.el.classList.add("bar"); g.el.style.width = Math.max((Math.round((tl2Day(end) - tl2Day(m.date)) / 864e5) + 1) * g.W - 2, TL2_S) + "px";
+    g.el.dataset.w = tl2When({ lane: m.lane, date: m.date, end: end > m.date ? end : "", time: m.time });
+  } else {
+    g.el.style.left = (g.left + n * g.W) + "px"; g.el.dataset.w = tl2When({ lane: m.lane, date: tl2Shift(m.date, n), end: m.end && tl2Shift(m.end, n), time: m.time });
+  }
   var tip = $("mx-tip"); if (!tip.hidden) tip.innerHTML = "<b>" + esc(m.title) + "</b>" + esc(g.el.dataset.w);
 });
 function tl2Drop() {
   var g = tl2Drag; if (!g) return; tl2Drag = null; g.el.classList.remove("drag");
-  if (!g.n) return;
   var id = g.el.dataset.id;
-  tl2Save(function (items) { items.forEach(function (x) { if (x.id === id) { x.date = tl2Shift(x.date, g.n); if (x.end) x.end = tl2Shift(x.end, g.n); } }); });
+  if (!g.n) { tl2Edit(id); return; }
+  if (g.size) tl2Set(id, function (x) { var end = tl2Shift(x.end || x.date, g.n); x.end = end > x.date ? end : ""; });
+  else tl2Set(id, function (x) { x.date = tl2Shift(x.date, g.n); if (x.end) x.end = tl2Shift(x.end, g.n); });
 }
 $("tl2").addEventListener("pointerup", tl2Drop);
 $("tl2").addEventListener("pointercancel", tl2Drop);
+// a double click on a lane adds a mark there and opens its editor
 $("tl2").addEventListener("dblclick", function (e) {
-  if (!tl2Own()) return;
-  var mk = e.target.closest(".tl2-mk");
-  if (mk) {
-    var m = tl2Mark(mk.dataset.id); if (!m) return;
-    var t = prompt("Rename the marker (empty removes it)", m.title); if (t === null) return; t = t.trim();
-    tl2Save(function (items) { for (var i = items.length - 1; i >= 0; i--) if (items[i].id === m.id) { if (t) items[i].title = t; else items.splice(i, 1); } });
-    return;
-  }
+  if (!tl2Own() || e.target.closest(".tl2-mk,.tl2-ev")) return;
   var row = e.target.closest(".tl2-row[data-lane]"); if (!row) return;
   var inner = row.parentNode, n = Math.floor((e.clientX - inner.getBoundingClientRect().left) / +inner.parentNode.dataset.w);
-  var lane = row.dataset.lane, d0 = tl2Shift(tl2Key(tl2Start), n), name = (prompt("New marker in " + lane.toUpperCase() + "S on " + day(tl2Day(d0))) || "").trim(); if (!name) return;
-  tl2Save(function (items) { items.push({ lane: lane, title: name, date: d0 }); });
+  var id = Math.random().toString(16).slice(2, 10), lane = row.dataset.lane;
+  tl2Save(function (items) { items.push({ id: id, lane: lane, title: "NEW", date: tl2Shift(tl2Key(tl2Start), n) }); });
+  tl2Open = id; tl2EdFill(true);
 });
 $("tl2").addEventListener("click", function (e) { var ev = e.target.closest(".tl2-ev"); if (!ev) return; calPicked = ev.dataset.day; renderCalDay(); $("cal-day").scrollIntoView({ block: "nearest" }); });
+// the editor of one mark: name, colour, days, time, DELETE - each change saved at once
+var TL2_COLORS = ["red", "rose", "plum", "violet", "cyan", "green", "amber", "beige"];
+function tl2Edit(id) { tl2Open = id; tl2EdFill(true); }
+function tl2EdFill(place) {
+  var box = $("tl2-ed"), m = tl2Open && tl2Mark(tl2Open);
+  if (!m) { if (!tl2Busy && !tl2Q.length) { box.hidden = true; tl2Open = ""; } return; }
+  var lane = tl2Lanes(m.lane), fresh = place || box.hidden;
+  if (fresh) {
+    box.innerHTML = "<div class='bar'><b>" + esc(lane[1]) + "</b><span class='spacer'></span><button class='dc-x' id='tl2-ed-x' aria-label='Close' title='Close'>&#215;</button></div>" +
+      "<input id='tl2-ed-t' aria-label='Name' placeholder='NAME'>" +
+      "<div class='tl2-sw'><button data-col='' title='Lane colour' style='--c:" + lane[2] + "'>L</button>" + TL2_COLORS.map(function (c) { return "<button data-col='" + c + "' title='" + c.toUpperCase() + "' style='--c:var(--" + c + ")'></button>"; }).join("") + "</div>" +
+      "<div class='bar'><label for='tl2-ed-a'>From</label><input type='date' id='tl2-ed-a'><label for='tl2-ed-b'>To</label><input type='date' id='tl2-ed-b'></div>" +
+      "<div class='bar'><label for='tl2-ed-h'>Time</label><input id='tl2-ed-h' placeholder='19:00-20:00' style='flex:1;min-width:0'><button id='tl2-ed-del'>Delete</button></div>";
+    box.hidden = false;
+    var el = $("tl2").querySelector(".tl2-mk[data-id='" + m.id + "']"), r = el ? el.getBoundingClientRect() : $("tl2").getBoundingClientRect();
+    var x = Math.min(r.left, innerWidth - 300), y = r.bottom + 8;
+    if (y + 190 > innerHeight) y = Math.max(8, r.top - 198);
+    box.style.left = Math.max(8, x) + "px"; box.style.top = y + "px";
+  }
+  var set = function (id, v) { if (document.activeElement !== $(id)) $(id).value = v; };
+  set("tl2-ed-t", m.title); set("tl2-ed-a", m.date); set("tl2-ed-b", m.end || ""); set("tl2-ed-h", m.time || "");
+  box.querySelectorAll(".tl2-sw button").forEach(function (b) { b.setAttribute("aria-pressed", String((m.color || "") === b.dataset.col)); });
+  if (fresh && m.title === "NEW") { $("tl2-ed-t").focus(); $("tl2-ed-t").select(); }
+}
+$("tl2-ed").addEventListener("change", function (e) {
+  var id = tl2Open, v = e.target.value.trim(); if (!id) return;
+  if (e.target.id === "tl2-ed-t" && v) tl2Set(id, function (x) { x.title = v; });
+  if (e.target.id === "tl2-ed-a" && v) tl2Set(id, function (x) { var n = Math.round((tl2Day(v) - tl2Day(x.date)) / 864e5); x.date = v; if (x.end) x.end = tl2Shift(x.end, n); });
+  if (e.target.id === "tl2-ed-b") tl2Set(id, function (x) { x.end = v && v > x.date ? v : ""; });
+  if (e.target.id === "tl2-ed-h") tl2Set(id, function (x) { x.time = v; });
+});
+$("tl2-ed").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.matches("input")) e.target.blur(); if (e.key === "Escape") { $("tl2-ed").hidden = true; tl2Open = ""; } });
+$("tl2-ed").addEventListener("click", function (e) {
+  var id = tl2Open; if (!id) return;
+  if (e.target.closest("#tl2-ed-x")) { $("tl2-ed").hidden = true; tl2Open = ""; return; }
+  if (e.target.closest("#tl2-ed-del")) { $("tl2-ed").hidden = true; tl2Open = ""; tl2Save(function (items) { for (var i = items.length - 1; i >= 0; i--) if (items[i].id === id) items.splice(i, 1); }); return; }
+  var c = e.target.closest("button[data-col]"); if (c) tl2Set(id, function (x) { x.color = c.dataset.col; });
+});
+document.addEventListener("pointerdown", function (e) { if (tl2Open && !e.target.closest("#tl2-ed,.tl2-mk")) { $("tl2-ed").hidden = true; tl2Open = ""; } });
 
 function renderFiles() {
   if (!D.files) { $("files").innerHTML = "<div class='msg err'>FILES did not load: " + esc(D.errors.files || "") + "</div>"; return; }
