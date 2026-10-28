@@ -248,8 +248,11 @@ function who(code) { return nameTag(nameOf(code)); }
 // 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files and backup (one view each)
 var STUDIO_SUB = ["calendar", "files", "backup"];
 // 1598 / 1605: PIXEL CULTURES - the owner's own project, never in a VIEW AS; a project in TASKS and a game in PLAY
-var culturesOk = function () { return !!(D && D.isOwner && !D.viewAs); };
-var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : allowed(t); };
+// 1609: and Jakub Czajczynski's - his own category stays, PLAY with both games comes on top (CULTURES opens with the
+// owner's code he was given)
+var playBoth = function () { return (D && D.name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().indexOf("jakub czajczy") === 0; };
+var culturesOk = function () { return !!(D && !D.viewAs && (D.isOwner || playBoth())); };
+var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : allowed(t) || (t === "play" && culturesOk()); };
 function showTab(t) {
   if (!D || !D.tabs) return;
   if (STUDIO_SUB.indexOf(t) >= 0) { stCur = t; t = "collaborate"; }   // a tab kept from before 1520
@@ -376,7 +379,7 @@ $("key-go").addEventListener("click", function () { var k = $("key-in").value.tr
 $("key-in").addEventListener("keydown", function (e) { if (e.key === "Enter") $("key-go").click(); });
 function render() {
   document.querySelectorAll("#tabs button").forEach(function (b) { b.hidden = !topAllowed(b.dataset.tab); });
-  document.querySelector("#tabs button[data-tab=play]").disabled = !culturesOk();   // 1605: PLAY stays shut for everyone but the owner
+  document.querySelector("#tabs button[data-tab=play]").disabled = !culturesOk();   // 1605 / 1609: PLAY stays shut for everyone but the owner and Jakub
   $("tabs").hidden = document.querySelectorAll("#tabs button:not([hidden])").length < 2;
   var errs = Object.keys(D.errors || {});
   $("hello").innerHTML = D.name ? "Hello <b style='color:" + personColor(D.name) + "'>" + esc(D.name) + "</b>" : "";
