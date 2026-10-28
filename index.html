@@ -42,16 +42,16 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 var(--mon
 a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--dim)}.legend i{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
 .tl{position:relative}.tl svg{display:block;width:100%;height:auto}.tip{position:absolute;pointer-events:none;background:var(--sunk);border:2px solid var(--cyan);padding:6px 8px;max-width:360px;z-index:5;font-size:12px;white-space:pre-wrap}
 .cl-v{display:flex;gap:10px;align-items:baseline;margin-top:8px}.cl-row{padding:4px 6px;border-bottom:2px solid var(--hover);min-width:0}.cl-row.has{cursor:pointer}.cl-row.has:hover{background:var(--hover)}.cl-t{color:var(--beige)}.cl-d{display:none;color:var(--dim);margin-top:2px;overflow-wrap:anywhere}.cl-row.open .cl-d{display:block}
-.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cal-h{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}.cal-d{background:var(--bg);border:2px solid var(--line);min-height:64px;padding:3px 5px;display:block;min-width:0}.cal-d.past{opacity:.45}.cal-d.today{border-color:var(--cyan)}.cal-n{float:right;margin:0 0 2px 4px;font-size:10px;line-height:1.2;color:var(--dim)}.cal-d.today .cal-n{color:var(--cyan)}.cal-e{font-size:11px;background:var(--hover);border-left:2px solid var(--rose);padding:1px 4px;overflow-wrap:anywhere;line-height:1.3}.cal-e{display:block;margin-bottom:2px}.cal-e .tm{color:var(--dim)}.g-YES{color:var(--green)}.g-NO{color:var(--red)}.g-MAYBE{color:var(--amber)}.g-INVITED{color:var(--dim)}.cal-g{display:block;font-size:10px}.cal-join{display:inline-block;margin-top:1px;font-size:10px;padding:0 5px;border:2px solid var(--green);border-radius:3px;color:var(--green);text-decoration:none}.cal-join:hover{background:#1c2a18}.join-big{display:inline-block;padding:4px 12px;border:2px solid var(--green);border-radius:4px;color:var(--green);text-decoration:none;font:600 15px var(--head);letter-spacing:.1em}.cal-tag{display:inline-block;margin-left:4px;padding:0 4px;border:2px solid var(--cyan);border-radius:3px;color:var(--cyan);font-size:10px;white-space:nowrap}.cal-d.has{cursor:pointer}.cal-d.has:hover{border-color:var(--rose)}.cal-d.sel{border-color:var(--rose);background:#2a1e25}.cal-day{border:2px solid var(--rose);padding:10px;display:grid;gap:10px;background:var(--bg)}.cal-day .ev{display:grid;gap:3px}.cal-day .ev pre{max-height:none;color:var(--fg)}
+.cal-d.today .g-YES{color:var(--green)}.g-NO{color:var(--red)}.g-MAYBE{color:var(--amber)}.g-INVITED{color:var(--dim)}.cal-g{display:block;font-size:10px}.cal-join{display:inline-block;margin-top:1px;font-size:10px;padding:0 5px;border:2px solid var(--green);border-radius:3px;color:var(--green);text-decoration:none}.cal-join:hover{background:#1c2a18}.join-big{display:inline-block;padding:4px 12px;border:2px solid var(--green);border-radius:4px;color:var(--green);text-decoration:none;font:600 15px var(--head);letter-spacing:.1em}.cal-tag{display:inline-block;margin-left:4px;padding:0 4px;border:2px solid var(--cyan);border-radius:3px;color:var(--cyan);font-size:10px;white-space:nowrap}.cal-d.has{cursor:pointer}.cal-d.has:hover{border-color:var(--rose)}.cal-d.sel{border-color:var(--rose);background:#2a1e25}.cal-day{border:2px solid var(--rose);padding:10px;display:grid;gap:10px;background:var(--bg)}.cal-day .ev{display:grid;gap:3px}.cal-day .ev pre{max-height:none;color:var(--fg)}
 .tl2-wrap{display:grid;grid-template-columns:96px minmax(0,1fr);border:2px solid var(--line);background:var(--bg)}
 .tl2-labels>div{font:600 12px var(--head);letter-spacing:.1em;color:var(--dim);padding:0 8px;display:flex;align-items:center;border-bottom:2px solid var(--hover);text-transform:uppercase}
 .tl2-scroll{overflow-x:auto;overflow-y:hidden}.tl2-inner{position:relative}
 .tl2-cols{position:absolute;left:0;top:0;bottom:0;display:flex;pointer-events:none}.tl2-cols>div{flex:none;height:100%;border-left:1px solid transparent}
-.tl2-cols .wk{background:#1b151a}.tl2-cols .mon{border-left-color:#2a2027}.tl2-cols .m1{border-left-color:#4a3a44}.tl2-cols .past{opacity:.5;background:var(--sunk)}
+.tl2-cols .wk{background:#241b22}.tl2-cols .mon{border-left-color:#2a2027}.tl2-cols .m1{border-left-color:#4a3a44}.tl2-cols .past{opacity:.5;background:var(--sunk)}
 .tl2-line{position:absolute;top:0;bottom:0;width:2px;pointer-events:none;z-index:1;opacity:.8}
 .tl2-row{position:relative;border-bottom:2px solid var(--hover)}
 .tl2-row.months span{position:absolute;top:0;bottom:0;padding:2px 6px;font:600 12px var(--head);letter-spacing:.1em;color:var(--beige);white-space:nowrap;overflow:hidden}
-.tl2-row.days span{position:absolute;top:0;bottom:0;font-size:10px;color:var(--dim);padding:2px 4px;white-space:nowrap;overflow:hidden}.tl2-row.days span.td{color:var(--cyan);font-weight:600}
+.tl2-row.days span{position:absolute;top:0;bottom:0;font-size:10px;color:var(--dim);padding:2px 0;text-align:center;white-space:nowrap;overflow:hidden}.tl2-row.days span.td{color:var(--cyan);font-weight:600}
 /* 1620.3: an entry is a square (one day) or a bar (a span) in its lane colour: the studio schedule filled, a Google calendar entry framed */
 .tl2-ev,.tl2-mk{position:absolute;height:18px;display:flex;align-items:center;gap:6px;white-space:nowrap;touch-action:none;z-index:2}.tl2-ev{cursor:pointer}.tl2-mk.own{cursor:grab}.tl2-mk.drag{cursor:grabbing;z-index:3}
 .tl2-ev i,.tl2-mk i{flex:none;width:18px;height:18px;background:var(--c)}.tl2-ev i{background:none;box-shadow:inset 0 0 0 2px var(--c)}
@@ -188,12 +188,10 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <details class="fold" id="cl-bld-fold" open><summary>BUILDS <span class="muted" id="cl-bld-n"></span></summary><div class="bld" id="cl-bld"></div></details>
 </section>
 <section class="panel" data-pane="collaborate" hidden>
-<nav id="st-tabs"><button data-st="calendar" aria-selected="true">CALENDAR</button><button data-st="files" aria-selected="false">FILES</button><button data-st="docs" aria-selected="false">DOCS</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
+<nav id="st-tabs"><button data-st="calendar" aria-selected="true">TIMELINE</button><button data-st="files" aria-selected="false">FILES</button><button data-st="docs" aria-selected="false">DOCS</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
 <div data-stp="calendar">
-<nav id="cal-tabs"><button data-c="grid" aria-selected="true">CALENDAR</button><button data-c="timeline" aria-selected="false">TIMELINE</button><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener" style="align-self:center">OPEN GOOGLE CALENDAR</a></nav>
 <div class="cal-day" id="cal-day" hidden></div>
-<div data-cp="grid"><div id="cal"></div></div>
-<div data-cp="timeline" hidden><div class="bar"><button id="tl2-out">Zoom out</button><button id="tl2-in">Zoom in</button><button id="tl2-today">Today</button><span class="muted" id="tl2-msg"></span><span class="muted" id="tl2-scale"></span></div><div id="tl2"></div></div>
+<div class="bar"><button id="tl2-out" class="dc-ico" aria-label="Zoom out" title="Zoom out">&#8722;</button><button id="tl2-in" class="dc-ico" aria-label="Zoom in" title="Zoom in">+</button><span class="muted" id="tl2-msg"></span><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div><div id="tl2"></div>
 </div>
 <div data-stp="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></div>
 <div data-stp="docs" hidden><div id="dc-msg" class="msg" hidden></div>
@@ -313,7 +311,7 @@ function showSt(t) {
   stCur = t;
   document.querySelectorAll("#st-tabs button").forEach(function (b) { b.hidden = !allowed(b.dataset.st); b.setAttribute("aria-selected", String(b.dataset.st === t)); });
   document.querySelectorAll("[data-stp]").forEach(function (p) { p.hidden = p.dataset.stp !== t; });
-  if (t === "calendar" && D && D.calendar) renderTimeline();
+  if (t === "calendar" && D && (D.calendar || D.schedule)) renderTimeline();
 }
 $("st-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-st]"); if (b) { showSt(b.dataset.st); logUse("COLLABORATE / " + b.textContent); } });
 // 1520: BUGS / TASKS - the task list is the OWNER's working view inside BUGS
@@ -436,7 +434,7 @@ function render() {
   if (allowed("community") && (got.youtube || D.youtube || D.errors && D.errors.youtube)) renderYoutube();
   if (allowed("changelog")) renderChangelog();
   if (D.playstats) renderPlayStats();
-  if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalendar(); renderTimeline(); }
+  if (allowed("calendar") && (got.calendar || D.calendar)) { renderCalDay(); renderTimeline(); }
   if (allowed("files") && (got.files || D.files)) renderFiles();
   if (allowed("docs") && (got.docs || D.docs)) renderDocs();
   if (allowed("backup") && (got.backups || D.backups)) renderBackups();
@@ -1433,7 +1431,7 @@ function renderGameStats() {
   });
   $(id).addEventListener("mouseleave", function () { $("mx-tip").hidden = true; });
 });
-// The calendar: one tile per day, Monday to Sunday, from the week before this one to 90 days ahead; today in cyan.
+// The Google calendar: its entries go to the TIMELINE (1620.5), the month grid is gone.
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 var calPicked = "";
 var calKey = function (d) { return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); };
@@ -1445,24 +1443,11 @@ var GUEST_WORD = { YES: "yes", NO: "no", MAYBE: "maybe", INVITED: "no answer yet
 var calGuests = function (e, long) { return (e.guests || []).map(function (g) { return "<span class='g-" + esc(g.status) + "'>" + esc(guestName(g.email)) + (long ? " (" + (GUEST_WORD[g.status] || g.status.toLowerCase()) + ")" : "") + "</span>"; }).join(long ? ", " : " · "); };
 // "Team meeting PX_FRM_00" → ["Team meeting", "PX_FRM_00"]
 var calSplit = function (t) { var m = String(t).match(/^(.*?)\s*(PX_FRM_\d+)\s*(.*)$/); return m ? [(m[1] + " " + m[3]).trim(), m[2]] : [String(t), ""]; };
-function renderCalendar() {
-  if (!D.calendar) { $("cal").innerHTML = "<div class='msg err'>The calendar did not load: " + esc(D.errors.calendar || "") + "</div>"; return; }
-  var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+// 1620.5: the picked day of the TIMELINE (a click on a Google entry): every event in full - time, place, the whole note
+function renderCalDay() {
   var byDay = {};
-  D.calendar.forEach(function (e) { var k = calKey(new Date(e.start)); (byDay[k] = byDay[k] || []).push(e); });
+  (D.calendar || []).forEach(function (e) { var k = calKey(new Date(e.start)); (byDay[k] = byDay[k] || []).push(e); });
   Object.keys(byDay).forEach(function (k) { byDay[k].sort(function (a, b) { return a.start - b.start; }); });
-  var d = new Date(today); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
-  var end = new Date(today); end.setDate(end.getDate() + 90);
-  var first = true, html = "<div class='cal'>" + ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(function (x) { return "<div class='cal-h'>" + x + "</div>"; }).join("");
-  while (d <= end || d.getDay() !== 1) {
-    var k = calKey(d), evs = byDay[k] || [], t = d.getTime();
-    html += "<div class='cal-d" + (t === today.getTime() ? " today" : t < today.getTime() ? " past" : "") + (evs.length ? " has" : "") + (k === calPicked ? " sel" : "") + "' data-day='" + k + "'><span class='cal-n'>" + (first || d.getDate() === 1 ? MONTHS[d.getMonth()] + " " : "") + d.getDate() + "</span>" +
-      evs.map(function (e) { var s = calSplit(e.title); return "<div class='cal-e'><span class='tm'>" + esc(calStart(e)) + "</span> " + esc(s[0]) + (s[1] ? "<span class='cal-tag'>" + esc(s[1]) + "</span>" : "") + (e.guests && e.guests.length ? "<span class='cal-g'>" + calGuests(e, false) + "</span>" : "") + (e.meet ? "<a class='cal-join' href='" + esc(e.meet) + "' target='_blank' rel='noopener'>JOIN</a>" : "") + "</div>"; }).join("") + "</div>";
-    first = false;
-    d.setDate(d.getDate() + 1);
-  }
-  $("cal").innerHTML = html + "</div>";
-  // the picked day: every event in full (time, place, the whole note)
   var box = $("cal-day"), list = byDay[calPicked] || [];
   box.hidden = !list.length;
   if (list.length) box.innerHTML = "<div class='bar'><h2>" + esc(day(list[0].start)) + "</h2><span class='spacer'></span><button id='cal-x'>Close</button></div>" + list.map(function (e) {
@@ -1470,17 +1455,7 @@ function renderCalendar() {
     return "<div class='ev'><div><b>" + esc(s[0]) + "</b>" + (s[1] ? "<span class='cal-tag'>" + esc(s[1]) + "</span>" : "") + "</div><div class='muted'>" + esc(calStart(e)) + (e.where ? " · " + esc(e.where) : "") + "</div>" + (e.guests && e.guests.length ? "<div>Guests: " + calGuests(e, true) + "</div>" : "") + (e.meet ? "<div><a class='join-big' href='" + esc(e.meet) + "' target='_blank' rel='noopener'>JOIN MEET</a></div>" : "") + (e.note ? "<pre>" + esc(e.note) + "</pre>" : "") + "</div>";
   }).join("");
 }
-$("cal").addEventListener("click", function (e) { if (e.target.closest("a")) return; var c = e.target.closest(".cal-d.has"); if (!c) return; calPicked = calPicked === c.dataset.day ? "" : c.dataset.day; renderCalendar(); if (calPicked) $("cal-day").scrollIntoView({ block: "nearest" }); });
-$("cal-day").addEventListener("click", function (e) { if (e.target.id === "cal-x") { calPicked = ""; renderCalendar(); } });
-// CALENDAR sub-tabs: the day grid and the TIMELINE (1186)
-function showCal(t) {
-  document.querySelectorAll("#cal-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.c === t)); });
-  document.querySelectorAll("[data-cp]").forEach(function (p) { p.hidden = p.dataset.cp !== t; });
-  try { localStorage.setItem("cal_tab", t); } catch (e) {}
-  if (t === "timeline") renderTimeline();
-}
-$("cal-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-c]"); if (b) showCal(b.dataset.c); });
-try { var ct0 = localStorage.getItem("cal_tab"); if (ct0) setTimeout(function () { showCal(ct0); }, 0); } catch (e) {}
+$("cal-day").addEventListener("click", function (e) { if (e.target.id === "cal-x") { calPicked = ""; renderCalDay(); } });
 
 // TIMELINE (1620.3): a compact roadmap from 30 days back to a year ahead, scrolled sideways - weeks as the base (number
 // and Monday over the days, the days themselves when zoomed in), months above; one lane per kind in its own colour, a
@@ -1491,15 +1466,19 @@ try { var ct0 = localStorage.getItem("cal_tab"); if (ct0) setTimeout(function ()
 // Google entry opens its day.
 // 1620.4: day names over the days, the weeks in two alternating tones, every lane as high as the fullest one, the word
 // DEADLINE left out of the names in its own lane, a Google deadline drawing the red line too.
-var TL2_W = [4, 8, 16, 32, 64], tl2Zoom = 2, tl2Center = null, TL2_S = 18, TL2_ROW = 24;
-try { var tz0 = +localStorage.getItem("tl2_zoom2"); if (localStorage.getItem("tl2_zoom2") !== null && tz0 >= 0 && tz0 < TL2_W.length) tl2Zoom = tz0; } catch (e) {}
+var TL2_W = [8, 16, 32, 64], tl2Zoom = 1, tl2Center = null, TL2_S = 18, TL2_ROW = 24;
+try { var tz0 = +localStorage.getItem("tl2_zoom3"); if (localStorage.getItem("tl2_zoom3") !== null && tz0 >= 0 && tz0 < TL2_W.length) tl2Zoom = tz0; } catch (e) {}
 var TL2_LANES = [["deadline", "DEADLINES", "var(--red)"], ["build", "BUILDS", "var(--beige)"], ["playtest", "PLAYTESTS", "var(--amber)"], ["meeting", "MEETINGS", "var(--violet)"], ["event", "EVENTS", "var(--rose)"]];
 var tl2Start = 0;
 var tl2Own = function () { return !!D && D.category === "OWNER" && !D.viewAs; };
 var tl2Day = function (s) { var p = String(s).split("-"); return new Date(+p[0], p[1] - 1, +p[2]).getTime(); };
 var tl2Key = function (t) { var x = new Date(t); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
 var tl2Shift = function (s, n) { var t = new Date(tl2Day(s)); t.setDate(t.getDate() + n); return tl2Key(t); };
-var tl2When = function (m) { return day(tl2Day(m.date)) + (m.end ? " - " + day(tl2Day(m.end)) : "") + (m.time ? ", " + m.time : ""); };
+var tl2Lanes = function (id) { return TL2_LANES.filter(function (l) { return l[0] === id; })[0]; };
+// the hover line: the lane, the days, the time, the length of a span
+var tl2When = function (m) { var n = m.end ? Math.round((tl2Day(m.end) - tl2Day(m.date)) / 864e5) + 1 : 0; return tl2Lanes(m.lane)[1] + " · " + day(tl2Day(m.date)) + (m.end ? " - " + day(tl2Day(m.end)) : "") + (m.time ? " · " + m.time : "") + (n > 1 ? " · " + n + " DAYS" : ""); };
+// the name shown in a lane: without the lane's own word, none in MEETINGS (the hover keeps the full name)
+var tl2Short = function (lane, t) { if (lane === "meeting") return ""; var w = { deadline: "deadline", build: "build", playtest: "playtest", event: "event" }[lane]; return String(t).replace(new RegExp("\\s*\\b" + w + "\\b\\s*[—–:-]?\\s*", "ig"), " ").trim(); };
 var tl2Week = function (d) { var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7)); return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7); };
 var tl2Mark = function (id) { return (D.schedule && D.schedule.items || []).filter(function (x) { return x.id === id; })[0]; };
 var tl2Lane = function (e) { return /deadline/i.test(e.title) ? "deadline" : (e.guests && e.guests.length) || /meeting/i.test(e.title) ? "meeting" : "event"; };
@@ -1511,7 +1490,7 @@ function tl2Item(cls, attrs, a, b, W, color, name) {
 }
 function renderTimeline() {
   var box = $("tl2");
-  if (!box || !D || (!D.calendar && !D.schedule) || $("tl2").closest("[data-cp]").hidden) return;
+  if (!box || !D || (!D.calendar && !D.schedule) || $("tl2").closest("[data-stp]").hidden) return;
   var W = TL2_W[tl2Zoom], DAYS = 396;
   var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var start = new Date(today); start.setDate(start.getDate() - 30); tl2Start = start.getTime();
@@ -1526,8 +1505,7 @@ function renderTimeline() {
   days.forEach(function (x, i) {
     var cls = [tl2Week(x) % 2 ? "wk" : "", x.getDay() === 1 ? "mon" : "", x.getDate() === 1 ? "m1" : "", i < tIdx ? "past" : ""].join(" ");
     cols += "<div class='" + cls + "' style='width:" + W + "px'></div>";
-    if (W >= 16) wlab += "<span class='" + (i === tIdx ? "td" : "") + "' style='left:" + i * W + "px;width:" + W + "px'>" + ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][x.getDay()] + (W >= 32 ? " " + x.getDate() : "") + "</span>";
-    else if (x.getDay() === 1) wlab += "<span style='left:" + i * W + "px;width:" + 7 * W + "px'>" + x.getDate() + "</span>";
+    wlab += "<span class='" + (i === tIdx ? "td" : "") + "' style='left:" + i * W + "px;width:" + W + "px'>" + (W >= 16 ? ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] : ["S", "M", "T", "W", "T", "F", "S"])[x.getDay()] + (W >= 32 ? " " + x.getDate() : "") + "</span>";
     if (i === DAYS - 1 || days[i + 1].getDate() === 1) { months += "<span style='left:" + mStart * W + "px;width:" + (i - mStart + 1) * W + "px'>" + MONTHS[x.getMonth()] + (W * (i - mStart + 1) > 70 ? " " + x.getFullYear() : "") + "</span>"; mStart = i + 1; }
   });
   // the entries per lane, each in the first row where it overlaps nothing
@@ -1536,14 +1514,14 @@ function renderTimeline() {
   (D.calendar || []).forEach(function (e) {
     var a = idx(e.start), b = e.allDay ? Math.max(a + 1, idx(e.end)) : a + 1;
     if (b <= 0 || a >= DAYS) return;
-    var ln = tl2Lane(e), lane = TL2_LANES.filter(function (l) { return l[0] === ln; })[0], nm = ln === "deadline" ? e.title.replace(/^\s*deadline\s*[—–:-]?\s*/i, "") || e.title : e.title;
-    per[ln].push(tl2Item("tl2-ev", "data-day='" + calKey(new Date(e.start)) + "' data-t='" + esc(nm) + "' data-w='" + esc(day(e.start) + (e.allDay ? "" : ", " + tzTime(e.start, "Europe/Warsaw"))) + "'", a, b, W, lane[2], ln === "deadline" ? nm : calSplit(e.title)[0]));
+    var ln = tl2Lane(e), lane = tl2Lanes(ln), n = b - a;
+    per[ln].push(tl2Item("tl2-ev", "data-day='" + calKey(new Date(e.start)) + "' data-t='" + esc(e.title) + "' data-w='" + esc(lane[1] + " · " + day(e.start) + (e.allDay ? "" : " · " + tzTime(e.start, "Europe/Warsaw")) + (n > 1 ? " · " + n + " DAYS" : "") + " · GOOGLE CALENDAR") + "'", a, b, W, lane[2], tl2Short(ln, calSplit(e.title)[0])));
     if (ln === "deadline") lines += "<i class='tl2-line' style='left:" + (a * W + W / 2 - 1) + "px;background:var(--red)'></i>";
   });
   (D.schedule && D.schedule.items || []).forEach(function (m) {
     var a = idx(tl2Day(m.date)), b = m.end ? idx(tl2Day(m.end)) + 1 : a + 1, lane = TL2_LANES.filter(function (l) { return l[0] === m.lane; })[0];
     if (!lane || b <= 0 || a >= DAYS) return;
-    per[m.lane].push(tl2Item("tl2-mk" + (tl2Own() ? " own" : ""), "data-id='" + esc(m.id) + "' data-t='" + esc(m.title) + "' data-w='" + esc(tl2When(m)) + "'", a, b, W, lane[2], m.title));
+    per[m.lane].push(tl2Item("tl2-mk" + (tl2Own() ? " own" : ""), "data-id='" + esc(m.id) + "' data-t='" + esc(m.title) + "' data-w='" + esc(tl2When(m)) + "'", a, b, W, lane[2], tl2Short(m.lane, m.title)));
     if (m.lane === "deadline") lines += "<i class='tl2-line' style='left:" + (a * W + W / 2 - 1) + "px;background:var(--red)'></i>";
   });
   var lanes = {}, heights = {}, most = 1;
@@ -1562,17 +1540,15 @@ function renderTimeline() {
     "<div class='tl2-scroll' data-w='" + W + "'><div class='tl2-inner' style='width:" + total + "px'><div class='tl2-cols'>" + cols + "</div>" + lines +
     "<div class='tl2-row months' style='height:20px'>" + months + "</div><div class='tl2-row days' style='height:" + hdW + "px'>" + wlab + "</div>" +
     TL2_LANES.map(function (l) { return "<div class='tl2-row' data-lane='" + l[0] + "' style='height:" + heights[l[0]] + "px'>" + lanes[l[0]] + "</div>"; }).join("") + "</div></div></div>";
-  $("tl2-scale").textContent = W >= 32 ? "DAYS" : W >= 8 ? "WEEKS" : "MONTHS";
   $("tl2-out").disabled = tl2Zoom === 0; $("tl2-in").disabled = tl2Zoom === TL2_W.length - 1;
   sc = box.querySelector(".tl2-scroll");
   var center = tl2Center !== null ? tl2Center : keep !== null ? keep : tIdx + 0.35 * sc.clientWidth / W;   // today near the left, the plan ahead in view
   tl2Center = null;
   sc.scrollLeft = Math.max(0, center * W - sc.clientWidth / 2);
 }
-function tl2SetZoom(z) { tl2Zoom = Math.max(0, Math.min(TL2_W.length - 1, z)); try { localStorage.setItem("tl2_zoom2", tl2Zoom); } catch (e) {} renderTimeline(); }
+function tl2SetZoom(z) { tl2Zoom = Math.max(0, Math.min(TL2_W.length - 1, z)); try { localStorage.setItem("tl2_zoom3", tl2Zoom); } catch (e) {} renderTimeline(); }
 $("tl2-out").addEventListener("click", function () { tl2SetZoom(tl2Zoom - 1); });
 $("tl2-in").addEventListener("click", function () { tl2SetZoom(tl2Zoom + 1); });
-$("tl2-today").addEventListener("click", function () { var sc = $("tl2").querySelector(".tl2-scroll"); tl2Center = 30 + (sc ? 0.35 * sc.clientWidth / +sc.dataset.w : 0); renderTimeline(); });
 function tl2Save(change) {
   var items = JSON.parse(JSON.stringify(D.schedule && D.schedule.items || [])); change(items);
   $("tl2-msg").textContent = "saving...";
@@ -1591,7 +1567,7 @@ $("tl2").addEventListener("pointermove", function (e) {
   var g = tl2Drag; if (!g) return;
   var n = Math.round((e.clientX - g.x) / g.W), m = tl2Mark(g.el.dataset.id);
   if (n === g.n || !m) return;
-  g.n = n; g.el.style.left = (g.left + n * g.W) + "px"; g.el.dataset.w = tl2When({ date: tl2Shift(m.date, n), end: m.end && tl2Shift(m.end, n), time: m.time });
+  g.n = n; g.el.style.left = (g.left + n * g.W) + "px"; g.el.dataset.w = tl2When({ lane: m.lane, date: tl2Shift(m.date, n), end: m.end && tl2Shift(m.end, n), time: m.time });
   var tip = $("mx-tip"); if (!tip.hidden) tip.innerHTML = "<b>" + esc(m.title) + "</b>" + esc(g.el.dataset.w);
 });
 function tl2Drop() {
@@ -1616,7 +1592,7 @@ $("tl2").addEventListener("dblclick", function (e) {
   var lane = row.dataset.lane, d0 = tl2Shift(tl2Key(tl2Start), n), name = (prompt("New marker in " + lane.toUpperCase() + "S on " + day(tl2Day(d0))) || "").trim(); if (!name) return;
   tl2Save(function (items) { items.push({ lane: lane, title: name, date: d0 }); });
 });
-$("tl2").addEventListener("click", function (e) { var ev = e.target.closest(".tl2-ev"); if (!ev) return; calPicked = ev.dataset.day; renderCalendar(); $("cal-day").scrollIntoView({ block: "nearest" }); });
+$("tl2").addEventListener("click", function (e) { var ev = e.target.closest(".tl2-ev"); if (!ev) return; calPicked = ev.dataset.day; renderCalDay(); $("cal-day").scrollIntoView({ block: "nearest" }); });
 
 function renderFiles() {
   if (!D.files) { $("files").innerHTML = "<div class='msg err'>FILES did not load: " + esc(D.errors.files || "") + "</div>"; return; }
