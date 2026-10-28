@@ -998,7 +998,7 @@ var CAT_DEFAULT = ["OWNER", "TEAM", "GUEST"];
 var catOrder = function () { return D && D.roles ? Object.keys(D.roles) : CAT_DEFAULT; };
 function peopleRows() {
   var low = function (s) { return String(s || "").trim().toLowerCase(); };
-  var codes = table(D.people).rows.filter(function (c) { return c.CODE; }), play = table(D.codes).rows, bugs = D.bugs ? bugRows() : [];
+  var codes = table(D.people).rows.filter(function (c) { return c.CODE; });
   var by = {}, order = [];
   var get = function (name) { var k = low(name); if (!by[k]) { by[k] = { name: name, mail: "", codes: [], t: null, note: "" }; order.push(k); } return by[k]; };
   var addCode = function (p, c) { if (c && p.codes.indexOf(c) < 0) p.codes.push(c); };
@@ -1006,20 +1006,7 @@ function peopleRows() {
     p.nick = t.nick || ""; t.codes.forEach(function (c) { addCode(p, c); }); });
   codes.forEach(function (c) { if (!c.NAME) return; addCode(get(c.NAME), low(c.CODE)); });
   var roleOrder = catOrder(), rank = function (p) { var i = p.t ? roleOrder.indexOf(p.t.category) : -1; return i < 0 ? roleOrder.length : i; };
-  return order.map(function (k) {
-    var p = by[k];
-    p.first = ""; p.last = ""; p.min = 0; p.bugs = 0;
-    p.codes.forEach(function (lc) {
-      var pl = play.find(function (x) { return low(x.CODE) === lc; });
-      if (pl) {
-        if (pl["FIRST START"] && (!p.first || pl["FIRST START"] < p.first)) p.first = pl["FIRST START"];
-        if (String(pl["LAST SEEN"]) > p.last) p.last = String(pl["LAST SEEN"]);
-        p.min += +pl["PLAY MINUTES"] || 0;
-      }
-      p.bugs += bugs.filter(function (b) { return low(b.CODE) === lc; }).length;
-    });
-    return p;
-  }).sort(function (a, b) { return rank(a) - rank(b) || b.last.localeCompare(a.last) || a.name.localeCompare(b.name); });
+  return order.map(function (k) { return by[k]; }).sort(function (a, b) { return rank(a) - rank(b) || a.name.localeCompare(b.name); });
 }
 var CAT_COLOR = { OWNER: "var(--rose)", TEAM: "var(--cyan)", GUEST: "var(--dim)" };
 var catColor = function (c) { return CAT_COLOR[c] || (c ? personColor(c) : "var(--dim)"); };
@@ -1058,9 +1045,6 @@ function renderPeople() {
     ["Role", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + catColor(c) + "'>" + [""].concat(catOrder()).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
   ].concat(tags.map(function (n) { return [n, function (r) { return swBtn("data-tag='" + esc(n) + "'", pTags(r).indexOf(n) >= 0, false, n); }, "sw-c"]; })).concat(pkgSw).concat([
     ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return esc(r.codes.join(", ")); }, "x"],
-    ["Seen", function (r) { return r.last ? "<span title='first " + esc(short(r.first)) + "'>" + esc(short(r.last)) + "</span>" : ""; }],
-    ["Min", function (r) { return r.min ? String(r.min) : ""; }, "num"], ["Bugs", function (r) { return r.bugs ? String(r.bugs) : ""; }, "num"],
-    ["Link", function (r) { return r.t && r.t.key ? "<button data-copy='" + esc(SITE + "?k=" + r.t.key) + "' title='" + esc(SITE + "?k=" + r.t.key) + "'>Copy</button>" : ""; }],
     ["Note", function (r) { return esc(r.note); }, "x muted"],
     ["", function (r) { var st = pStatus[pId(r)]; return st ? "<span style='color:" + st.c + "'>" + esc(st.t) + "</span>" : ""; }],
   ]);
@@ -1190,13 +1174,6 @@ $("p-t").addEventListener("click", function (e) {
     var p = w.dataset.pkg, have = pPkgs(r); pChange(r, "PACKAGES", (have.indexOf(p) >= 0 ? have.filter(function (x) { return x !== p; }) : have.concat([p])).join(", "));
     return;
   }
-  var b = e.target.closest("button[data-copy]"); if (!b) return;
-  var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1500); };
-  var inp = document.createElement("input"); inp.value = b.dataset.copy; document.body.appendChild(inp); inp.select();
-  var ok = false; try { ok = document.execCommand("copy"); } catch (err) {}
-  inp.remove();
-  if (ok) { done(); return; }
-  if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy).then(done, function () { b.textContent = "Not copied"; });
 });
 // ── players (1268, OWNER only): who reacts to the X posts, from the sheet the X collection fills ──
 // POSTS: DATE, TEXT, URL, LIKES, REPLIES · USERS (1268.3, one row per account, its totals): HANDLE, NAME, LIKES, REPLIES, LAST REPLY
