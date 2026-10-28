@@ -57,7 +57,8 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .tl2-ev i,.tl2-mk i{flex:none;width:18px;height:18px;background:var(--c)}.tl2-ev i{background:none;box-shadow:inset 0 0 0 2px var(--c)}
 .tl2-ev span,.tl2-mk span{font:600 12px var(--head);letter-spacing:.06em;color:var(--fg);overflow:hidden;text-overflow:ellipsis}
 .tl2-mk.bar,.tl2-ev.bar{padding:0 6px;background:var(--c)}.tl2-ev.bar{background:none;box-shadow:inset 0 0 0 2px var(--c)}.tl2-mk.bar span{color:var(--bg)}
-.tl2-rs{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize}
+.tl2-rs{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize}.tl2-labels>div{position:relative}.tl2-lh{position:absolute;left:0;right:0;bottom:-3px;height:6px;cursor:ns-resize;z-index:2}
+.tl2-ln .bar{flex-wrap:nowrap}.tl2-ln input{flex:1}.tl2-ln select{padding:2px 4px}
 .tl2-ed{position:fixed;width:290px;z-index:20}.tl2-ed input{min-width:0}.tl2-ed label{font:600 12px var(--head);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
 .tl2-sw{display:flex;gap:4px}.tl2-sw button{width:22px;height:22px;padding:0;border:2px solid var(--line);background:var(--c);font-size:10px;color:var(--bg)}.tl2-sw button[aria-pressed=true]{border-color:var(--fg)}
 .tl2-ev:hover i,.tl2-mk:hover i,.tl2-mk.drag i,.tl2-mk.bar:hover,.tl2-mk.bar.drag{background:rgb(100,255,255)}.tl2-ev.bar:hover{box-shadow:inset 0 0 0 2px rgb(100,255,255)}
@@ -194,7 +195,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <nav id="st-tabs"><button data-st="calendar" aria-selected="true">TIMELINE</button><button data-st="files" aria-selected="false">FILES</button><button data-st="docs" aria-selected="false">DOCS</button><button data-st="backup" aria-selected="false">BACKUP</button></nav>
 <div data-stp="calendar">
 <div class="cal-day" id="cal-day" hidden></div>
-<div class="bar"><button id="tl2-out" class="dc-ico" aria-label="Zoom out" title="Zoom out">&#8722;</button><button id="tl2-in" class="dc-ico" aria-label="Zoom in" title="Zoom in">+</button><span class="muted" id="tl2-msg"></span><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div><div id="tl2"></div><div class="dc-pop tl2-ed" id="tl2-ed" hidden></div>
+<div class="bar"><button id="tl2-out" class="dc-ico" aria-label="Zoom out" title="Zoom out">&#8722;</button><button id="tl2-in" class="dc-ico" aria-label="Zoom in" title="Zoom in">+</button><button id="tl2-opt" class="dc-ico" aria-label="Lanes" title="Lanes" hidden>&#9881;</button><span class="muted" id="tl2-msg"></span><span class="spacer"></span><a href="https://calendar.google.com" target="_blank" rel="noopener">OPEN GOOGLE CALENDAR</a></div><div id="tl2"></div><div class="dc-pop tl2-ed" id="tl2-ed" hidden></div><div class="dc-pop tl2-ed tl2-ln" id="tl2-ln" hidden></div>
 </div>
 <div data-stp="files" hidden><div class="bar" id="f-bar" hidden><a id="f-open" target="_blank" rel="noopener">OPEN THE SHARES FOLDER</a><span class="muted">A sub-folder = a package; its name in someone's PACKAGES (PEOPLE tab) gives it to them.</span></div><div id="files"></div></div>
 <div data-stp="docs" hidden><div id="dc-msg" class="msg" hidden></div>
@@ -1467,19 +1468,24 @@ $("cal-day").addEventListener("click", function (e) { if (e.target.id === "cal-x
 // is filled, Google calendar entries are framed; the OWNER drags a marker along the days, a double click on a lane adds
 // one, on a marker renames it (empty removes it); the hover box beside the cursor names it with its day; a click on a
 // Google entry opens its day.
+// 1620.7: lanes one row high unless made higher by dragging the bottom of a lane name, the options icon by the zoom
+// opens the lanes (name, colour, + LANE, the delete of an empty lane added by hand); PUBLIC TESTS and TEAM TESTS.
 // 1620.6: a click on a schedule mark opens its editor (name, colour, days, time, DELETE), its right edge drags its length,
 // a double click on a lane adds a mark and opens it; the Google entries stay read only.
 // 1620.4: day names over the days, the weeks in two alternating tones, every lane as high as the fullest one, the word
 // DEADLINE left out of the names in its own lane, a Google deadline drawing the red line too.
 var TL2_W = [8, 16, 32, 64], tl2Zoom = 1, tl2Center = null, TL2_S = 18, TL2_ROW = 24;
 try { var tz0 = +localStorage.getItem("tl2_zoom3"); if (localStorage.getItem("tl2_zoom3") !== null && tz0 >= 0 && tz0 < TL2_W.length) tl2Zoom = tz0; } catch (e) {}
-var TL2_LANES = [["deadline", "DEADLINES", "var(--red)"], ["build", "BUILDS", "var(--beige)"], ["playtest", "PLAYTESTS", "var(--amber)"], ["meeting", "MEETINGS", "var(--violet)"], ["event", "EVENTS", "var(--rose)"]];
+// 1620.7: the lanes come with the schedule (a name, a colour, a height in rows), these until it has its own
+var TL2_BASE = [{ id: "deadline", name: "DEADLINES", color: "red", rows: 1 }, { id: "build", name: "BUILDS", color: "beige", rows: 1 }, { id: "playtest", name: "PUBLIC TESTS", color: "amber", rows: 1 },
+  { id: "teamtest", name: "TEAM TESTS", color: "green", rows: 1 }, { id: "meeting", name: "MEETINGS", color: "violet", rows: 1 }, { id: "event", name: "EVENTS", color: "rose", rows: 1 }];
+var tl2LaneList = function () { return (D && D.schedule && D.schedule.lanes || TL2_BASE).map(function (l) { return [l.id, l.name, "var(--" + l.color + ")", l.rows || 1]; }); };
 var tl2Start = 0;
 var tl2Own = function () { return !!D && D.category === "OWNER" && !D.viewAs; };
 var tl2Day = function (s) { var p = String(s).split("-"); return new Date(+p[0], p[1] - 1, +p[2]).getTime(); };
 var tl2Key = function (t) { var x = new Date(t); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
 var tl2Shift = function (s, n) { var t = new Date(tl2Day(s)); t.setDate(t.getDate() + n); return tl2Key(t); };
-var tl2Lanes = function (id) { return TL2_LANES.filter(function (l) { return l[0] === id; })[0]; };
+var tl2Lanes = function (id) { return tl2LaneList().filter(function (l) { return l[0] === id; })[0] || [id, id.toUpperCase(), "var(--dim)", 1]; };
 // the hover line: the lane, the days, the time, the length of a span
 var tl2When = function (m) { var n = m.end ? Math.round((tl2Day(m.end) - tl2Day(m.date)) / 864e5) + 1 : 0; return tl2Lanes(m.lane)[1] + " · " + day(tl2Day(m.date)) + (m.end ? " - " + day(tl2Day(m.end)) : "") + (m.time ? " · " + m.time : "") + (n > 1 ? " · " + n + " DAYS" : ""); };
 // the name shown in a lane: without the lane's own word, none in MEETINGS (the hover keeps the full name)
@@ -1515,36 +1521,39 @@ function renderTimeline() {
   });
   // the entries per lane, each in the first row where it overlaps nothing
   var per = {}, lines = "<i class='tl2-line' style='left:" + (tIdx * W + W / 2 - 1) + "px;background:var(--cyan)'></i>";
-  TL2_LANES.forEach(function (l) { per[l[0]] = []; });
+  var LN = tl2LaneList();
+  LN.forEach(function (l) { per[l[0]] = []; });
   (D.calendar || []).forEach(function (e) {
     var a = idx(e.start), b = e.allDay ? Math.max(a + 1, idx(e.end)) : a + 1;
     if (b <= 0 || a >= DAYS) return;
     var ln = tl2Lane(e), lane = tl2Lanes(ln), n = b - a;
+    if (!per[ln]) return;
     per[ln].push(tl2Item("tl2-ev", "data-day='" + calKey(new Date(e.start)) + "' data-t='" + esc(e.title) + "' data-w='" + esc(lane[1] + " · " + day(e.start) + (e.allDay ? "" : " · " + tzTime(e.start, "Europe/Warsaw")) + (n > 1 ? " · " + n + " DAYS" : "") + " · GOOGLE CALENDAR") + "'", a, b, W, lane[2], tl2Short(ln, calSplit(e.title)[0])));
     if (ln === "deadline") lines += "<i class='tl2-line' style='left:" + (a * W + W / 2 - 1) + "px;background:var(--red)'></i>";
   });
   (D.schedule && D.schedule.items || []).forEach(function (m) {
-    var a = idx(tl2Day(m.date)), b = m.end ? idx(tl2Day(m.end)) + 1 : a + 1, lane = TL2_LANES.filter(function (l) { return l[0] === m.lane; })[0];
+    var a = idx(tl2Day(m.date)), b = m.end ? idx(tl2Day(m.end)) + 1 : a + 1, lane = LN.filter(function (l) { return l[0] === m.lane; })[0];
     if (!lane || b <= 0 || a >= DAYS) return;
     per[m.lane].push(tl2Item("tl2-mk" + (tl2Own() ? " own" : ""), "data-id='" + esc(m.id) + "' data-t='" + esc(m.title) + "' data-w='" + esc(tl2When(m)) + "'", a, b, W, m.color ? "var(--" + m.color + ")" : lane[2], tl2Short(m.lane, m.title)));
     if (m.lane === "deadline") lines += "<i class='tl2-line' style='left:" + (a * W + W / 2 - 1) + "px;background:var(--red)'></i>";
   });
-  var lanes = {}, heights = {}, most = 1;
-  TL2_LANES.forEach(function (l) {
+  // a mark takes the first of its lane's rows where it overlaps nothing, the last row when none is free
+  var lanes = {}, heights = {};
+  LN.forEach(function (l) {
     var ends = [], html = "";
     per[l[0]].sort(function (p, q) { return p[1] - q[1]; }).forEach(function (it) {
-      var r = 0; while (ends[r] !== undefined && ends[r] > it[1] - 4) r++;
-      ends[r] = it[2]; html += it[0](3 + r * TL2_ROW);
+      var r = 0; while (r < l[3] - 1 && ends[r] !== undefined && ends[r] > it[1] - 4) r++;
+      ends[r] = Math.max(ends[r] || 0, it[2]); html += it[0](3 + r * TL2_ROW);
     });
-    lanes[l[0]] = html; most = Math.max(most, ends.length);
+    lanes[l[0]] = html; heights[l[0]] = l[3] * TL2_ROW + 4;
   });
-  TL2_LANES.forEach(function (l) { heights[l[0]] = most * TL2_ROW + 4; });
   var hdW = W >= 32 ? 18 : 16;
   box.innerHTML = "<div class='tl2-wrap'><div class='tl2-labels'><div style='height:20px'></div><div style='height:" + hdW + "px'></div>" +
-    TL2_LANES.map(function (l) { return "<div style='height:" + heights[l[0]] + "px;color:" + l[2] + "'>" + l[1] + "</div>"; }).join("") + "</div>" +
+    LN.map(function (l) { return "<div style='height:" + heights[l[0]] + "px;color:" + l[2] + "'>" + esc(l[1]) + (tl2Own() ? "<b class='tl2-lh' data-lane='" + l[0] + "' title='Drag to set the height'></b>" : "") + "</div>"; }).join("") + "</div>" +
     "<div class='tl2-scroll' data-w='" + W + "'><div class='tl2-inner' style='width:" + total + "px'><div class='tl2-cols'>" + cols + "</div>" + lines +
     "<div class='tl2-row months' style='height:20px'>" + months + "</div><div class='tl2-row days' style='height:" + hdW + "px'>" + wlab + "</div>" +
-    TL2_LANES.map(function (l) { return "<div class='tl2-row' data-lane='" + l[0] + "' style='height:" + heights[l[0]] + "px'>" + lanes[l[0]] + "</div>"; }).join("") + "</div></div></div>";
+    LN.map(function (l) { return "<div class='tl2-row' data-lane='" + l[0] + "' style='height:" + heights[l[0]] + "px'>" + lanes[l[0]] + "</div>"; }).join("") + "</div></div></div>";
+  $("tl2-opt").hidden = !tl2Own();
   $("tl2-out").disabled = tl2Zoom === 0; $("tl2-in").disabled = tl2Zoom === TL2_W.length - 1;
   sc = box.querySelector(".tl2-scroll");
   var center = tl2Center !== null ? tl2Center : keep !== null ? keep : tIdx + 0.35 * sc.clientWidth / W;   // today near the left, the plan ahead in view
@@ -1560,12 +1569,12 @@ function tl2Save(change) { tl2Q.push(change); if (!tl2Busy) tl2Next(); }
 function tl2Next() {
   var change = tl2Q.shift(); if (!change) { tl2Busy = false; return; }
   tl2Busy = true;
-  var items = JSON.parse(JSON.stringify(D.schedule && D.schedule.items || [])); change(items);
+  var items = JSON.parse(JSON.stringify(D.schedule && D.schedule.items || [])), lanes = JSON.parse(JSON.stringify(D.schedule && D.schedule.lanes || TL2_BASE)); change(items, lanes);
   $("tl2-msg").textContent = "saving...";
-  fetch(API, { method: "POST", body: JSON.stringify({ action: "schedule_save", k: KEY, items: items, updated: D.schedule ? D.schedule.updated : "" }), credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
+  fetch(API, { method: "POST", body: JSON.stringify({ action: "schedule_save", k: KEY, items: items, lanes: lanes, updated: D.schedule ? D.schedule.updated : "" }), credentials: "omit" }).then(function (r) { return r.text(); }).then(function (t) {
     if (t.indexOf("ERROR") === 0 || t === "NO") throw new Error(t.replace(/^ERROR\s*/, "") || "No access");
-    D.schedule = JSON.parse(t).schedule; cacheWrite(); $("tl2-msg").textContent = ""; renderTimeline(); tl2EdFill();
-  }).catch(function (er) { tl2Q = []; $("tl2-msg").textContent = String(er && er.message || er); renderTimeline(); tl2EdFill(); }).then(tl2Next);
+    D.schedule = JSON.parse(t).schedule; cacheWrite(); $("tl2-msg").textContent = ""; renderTimeline(); tl2EdFill(); tl2LnFill();
+  }).catch(function (er) { tl2Q = []; $("tl2-msg").textContent = String(er && er.message || er); renderTimeline(); tl2EdFill(); tl2LnFill(); }).then(tl2Next);
 }
 var tl2Set = function (id, f) { tl2Save(function (items) { items.forEach(function (x) { if (x.id === id) f(x); }); }); };
 // a mark's body moves it, its right edge sets its length; a press without a move opens its editor
@@ -1645,7 +1654,55 @@ $("tl2-ed").addEventListener("click", function (e) {
   if (e.target.closest("#tl2-ed-del")) { $("tl2-ed").hidden = true; tl2Open = ""; tl2Save(function (items) { for (var i = items.length - 1; i >= 0; i--) if (items[i].id === id) items.splice(i, 1); }); return; }
   var c = e.target.closest("button[data-col]"); if (c) tl2Set(id, function (x) { x.color = c.dataset.col; });
 });
-document.addEventListener("pointerdown", function (e) { if (tl2Open && !e.target.closest("#tl2-ed,.tl2-mk")) { $("tl2-ed").hidden = true; tl2Open = ""; } });
+document.addEventListener("pointerdown", function (e) {
+  if (tl2Open && !e.target.closest("#tl2-ed,.tl2-mk")) { $("tl2-ed").hidden = true; tl2Open = ""; }
+  if (!$("tl2-ln").hidden && !e.target.closest("#tl2-ln,#tl2-opt")) $("tl2-ln").hidden = true;
+});
+// 1620.7: a lane's height by dragging the bottom edge of its name, in whole rows
+var tl2Lh = null;
+$("tl2").addEventListener("pointerdown", function (e) {
+  var h = e.target.closest(".tl2-lh"); if (!h || e.button !== 0) return;
+  var id = h.dataset.lane, lab = h.parentNode, row = $("tl2").querySelector(".tl2-row[data-lane='" + id + "']");
+  tl2Lh = { id: id, y: e.clientY, rows: tl2Lanes(id)[3], n: tl2Lanes(id)[3], lab: lab, row: row };
+  h.setPointerCapture(e.pointerId); e.stopPropagation();
+}, true);
+$("tl2").addEventListener("pointermove", function (e) {
+  var g = tl2Lh; if (!g) return;
+  var n = Math.max(1, g.rows + Math.round((e.clientY - g.y) / TL2_ROW));
+  if (n !== g.n) { g.n = n; g.lab.style.height = g.row.style.height = (n * TL2_ROW + 4) + "px"; }
+});
+$("tl2").addEventListener("pointerup", function () {
+  var g = tl2Lh; if (!g) return; tl2Lh = null;
+  if (g.n !== g.rows) tl2Save(function (items, lanes) { lanes.forEach(function (l) { if (l.id === g.id) l.rows = g.n; }); });
+});
+// the lanes window of the options icon: each lane's name and colour, + LANE, the delete of an empty lane added by hand
+var TL2_FIXED = TL2_BASE.map(function (l) { return l.id; });
+function tl2LnFill() {
+  var box = $("tl2-ln"); if (box.hidden) return;
+  var used = {}; (D.schedule && D.schedule.items || []).forEach(function (m) { used[m.lane] = 1; });
+  var ls = D.schedule && D.schedule.lanes || TL2_BASE, focus = document.activeElement && document.activeElement.closest("#tl2-ln") ? document.activeElement.dataset.ln : null;
+  box.innerHTML = "<div class='bar'><b>LANES</b><span class='spacer'></span><button class='dc-x' id='tl2-ln-x' aria-label='Close' title='Close'>&#215;</button></div>" + ls.map(function (l) {
+    return "<div class='bar'><input data-ln='" + l.id + "' value='" + esc(l.name) + "' aria-label='Lane name'><select data-lc='" + l.id + "' aria-label='Lane colour' style='color:var(--" + l.color + ")'>" +
+      TL2_COLORS.map(function (c) { return "<option value='" + c + "'" + (c === l.color ? " selected" : "") + " style='color:var(--" + c + ")'>" + c.toUpperCase() + "</option>"; }).join("") + "</select>" +
+      (TL2_FIXED.indexOf(l.id) < 0 && !used[l.id] ? "<button class='dc-x' data-ld='" + l.id + "' aria-label='Delete the lane' title='Delete'>&#215;</button>" : "") + "</div>";
+  }).join("") + "<div class='bar'><button id='tl2-ln-add'>+ Lane</button></div>";
+  if (focus) { var f = box.querySelector("[data-ln='" + focus + "']"); if (f) f.focus(); }
+}
+$("tl2-opt").addEventListener("click", function () {
+  var box = $("tl2-ln"); box.hidden = !box.hidden; if (box.hidden) return;
+  var r = this.getBoundingClientRect(); box.style.left = Math.max(8, Math.min(r.left, innerWidth - 300)) + "px"; box.style.top = (r.bottom + 6) + "px"; tl2LnFill();
+});
+$("tl2-ln").addEventListener("change", function (e) {
+  var t = e.target, v = t.value.trim();
+  if (t.dataset.ln && v) tl2Save(function (items, lanes) { lanes.forEach(function (l) { if (l.id === t.dataset.ln) l.name = v.toUpperCase(); }); });
+  if (t.dataset.lc) tl2Save(function (items, lanes) { lanes.forEach(function (l) { if (l.id === t.dataset.lc) l.color = v; }); });
+});
+$("tl2-ln").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.matches("input")) e.target.blur(); if (e.key === "Escape") $("tl2-ln").hidden = true; });
+$("tl2-ln").addEventListener("click", function (e) {
+  if (e.target.closest("#tl2-ln-x")) { $("tl2-ln").hidden = true; return; }
+  if (e.target.closest("#tl2-ln-add")) { var id = "l" + Math.random().toString(16).slice(2, 9); tl2Save(function (items, lanes) { lanes.push({ id: id, name: "NEW LANE", color: "cyan", rows: 1 }); }); return; }
+  var d = e.target.closest("button[data-ld]"); if (d) tl2Save(function (items, lanes) { for (var i = lanes.length - 1; i >= 0; i--) if (lanes[i].id === d.dataset.ld) lanes.splice(i, 1); });
+});
 
 function renderFiles() {
   if (!D.files) { $("files").innerHTML = "<div class='msg err'>FILES did not load: " + esc(D.errors.files || "") + "</div>"; return; }
