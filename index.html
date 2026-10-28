@@ -47,7 +47,7 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .tl2-labels>div{font:600 12px var(--head);letter-spacing:.1em;color:var(--dim);padding:0 8px;display:flex;align-items:center;border-bottom:2px solid var(--hover);text-transform:uppercase}
 .tl2-scroll{overflow-x:auto;overflow-y:hidden}.tl2-inner{position:relative}
 .tl2-cols{position:absolute;left:0;top:0;bottom:0;display:flex;pointer-events:none}.tl2-cols>div{flex:none;height:100%;border-left:1px solid transparent}
-.tl2-cols .we{background:var(--sunk)}.tl2-cols .mon{border-left-color:#2a2027}.tl2-cols .m1{border-left-color:#4a3a44}.tl2-cols .past{opacity:.5;background:var(--sunk)}
+.tl2-cols .wk{background:#1b151a}.tl2-cols .mon{border-left-color:#2a2027}.tl2-cols .m1{border-left-color:#4a3a44}.tl2-cols .past{opacity:.5;background:var(--sunk)}
 .tl2-line{position:absolute;top:0;bottom:0;width:2px;pointer-events:none;z-index:1;opacity:.8}
 .tl2-row{position:relative;border-bottom:2px solid var(--hover)}
 .tl2-row.months span{position:absolute;top:0;bottom:0;padding:2px 6px;font:600 12px var(--head);letter-spacing:.1em;color:var(--beige);white-space:nowrap;overflow:hidden}
@@ -1489,6 +1489,8 @@ try { var ct0 = localStorage.getItem("cal_tab"); if (ct0) setTimeout(function ()
 // is filled, Google calendar entries are framed; the OWNER drags a marker along the days, a double click on a lane adds
 // one, on a marker renames it (empty removes it); the hover box beside the cursor names it with its day; a click on a
 // Google entry opens its day.
+// 1620.4: day names over the days, the weeks in two alternating tones, every lane as high as the fullest one, the word
+// DEADLINE left out of the names in its own lane, a Google deadline drawing the red line too.
 var TL2_W = [4, 8, 16, 32, 64], tl2Zoom = 2, tl2Center = null, TL2_S = 18, TL2_ROW = 24;
 try { var tz0 = +localStorage.getItem("tl2_zoom2"); if (localStorage.getItem("tl2_zoom2") !== null && tz0 >= 0 && tz0 < TL2_W.length) tl2Zoom = tz0; } catch (e) {}
 var TL2_LANES = [["deadline", "DEADLINES", "var(--red)"], ["build", "BUILDS", "var(--beige)"], ["playtest", "PLAYTESTS", "var(--amber)"], ["meeting", "MEETINGS", "var(--violet)"], ["event", "EVENTS", "var(--rose)"]];
@@ -1522,10 +1524,10 @@ function renderTimeline() {
   // columns, months, weeks (or days when zoomed in)
   var cols = "", months = "", wlab = "", mStart = 0;
   days.forEach(function (x, i) {
-    var cls = [W >= 16 && (x.getDay() === 0 || x.getDay() === 6) ? "we" : "", x.getDay() === 1 ? "mon" : "", x.getDate() === 1 ? "m1" : "", i < tIdx ? "past" : ""].join(" ");
+    var cls = [tl2Week(x) % 2 ? "wk" : "", x.getDay() === 1 ? "mon" : "", x.getDate() === 1 ? "m1" : "", i < tIdx ? "past" : ""].join(" ");
     cols += "<div class='" + cls + "' style='width:" + W + "px'></div>";
-    if (W >= 32) wlab += "<span class='" + (i === tIdx ? "td" : "") + "' style='left:" + i * W + "px;width:" + W + "px'>" + (W >= 64 ? ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][x.getDay()] + " " : "") + x.getDate() + "</span>";
-    else if (x.getDay() === 1) wlab += "<span style='left:" + i * W + "px;width:" + 7 * W + "px'>" + (7 * W >= 50 ? "W" + tl2Week(x) + " · " : "") + x.getDate() + "</span>";
+    if (W >= 16) wlab += "<span class='" + (i === tIdx ? "td" : "") + "' style='left:" + i * W + "px;width:" + W + "px'>" + ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][x.getDay()] + (W >= 32 ? " " + x.getDate() : "") + "</span>";
+    else if (x.getDay() === 1) wlab += "<span style='left:" + i * W + "px;width:" + 7 * W + "px'>" + x.getDate() + "</span>";
     if (i === DAYS - 1 || days[i + 1].getDate() === 1) { months += "<span style='left:" + mStart * W + "px;width:" + (i - mStart + 1) * W + "px'>" + MONTHS[x.getMonth()] + (W * (i - mStart + 1) > 70 ? " " + x.getFullYear() : "") + "</span>"; mStart = i + 1; }
   });
   // the entries per lane, each in the first row where it overlaps nothing
@@ -1534,8 +1536,9 @@ function renderTimeline() {
   (D.calendar || []).forEach(function (e) {
     var a = idx(e.start), b = e.allDay ? Math.max(a + 1, idx(e.end)) : a + 1;
     if (b <= 0 || a >= DAYS) return;
-    var ln = tl2Lane(e), lane = TL2_LANES.filter(function (l) { return l[0] === ln; })[0];
-    per[ln].push(tl2Item("tl2-ev", "data-day='" + calKey(new Date(e.start)) + "' data-t='" + esc(e.title) + "' data-w='" + esc(day(e.start) + (e.allDay ? "" : ", " + tzTime(e.start, "Europe/Warsaw"))) + "'", a, b, W, lane[2], calSplit(e.title)[0]));
+    var ln = tl2Lane(e), lane = TL2_LANES.filter(function (l) { return l[0] === ln; })[0], nm = ln === "deadline" ? e.title.replace(/^\s*deadline\s*[—–:-]?\s*/i, "") || e.title : e.title;
+    per[ln].push(tl2Item("tl2-ev", "data-day='" + calKey(new Date(e.start)) + "' data-t='" + esc(nm) + "' data-w='" + esc(day(e.start) + (e.allDay ? "" : ", " + tzTime(e.start, "Europe/Warsaw"))) + "'", a, b, W, lane[2], ln === "deadline" ? nm : calSplit(e.title)[0]));
+    if (ln === "deadline") lines += "<i class='tl2-line' style='left:" + (a * W + W / 2 - 1) + "px;background:var(--red)'></i>";
   });
   (D.schedule && D.schedule.items || []).forEach(function (m) {
     var a = idx(tl2Day(m.date)), b = m.end ? idx(tl2Day(m.end)) + 1 : a + 1, lane = TL2_LANES.filter(function (l) { return l[0] === m.lane; })[0];
@@ -1543,15 +1546,16 @@ function renderTimeline() {
     per[m.lane].push(tl2Item("tl2-mk" + (tl2Own() ? " own" : ""), "data-id='" + esc(m.id) + "' data-t='" + esc(m.title) + "' data-w='" + esc(tl2When(m)) + "'", a, b, W, lane[2], m.title));
     if (m.lane === "deadline") lines += "<i class='tl2-line' style='left:" + (a * W + W / 2 - 1) + "px;background:var(--red)'></i>";
   });
-  var lanes = {}, heights = {};
+  var lanes = {}, heights = {}, most = 1;
   TL2_LANES.forEach(function (l) {
     var ends = [], html = "";
     per[l[0]].sort(function (p, q) { return p[1] - q[1]; }).forEach(function (it) {
       var r = 0; while (ends[r] !== undefined && ends[r] > it[1] - 4) r++;
       ends[r] = it[2]; html += it[0](3 + r * TL2_ROW);
     });
-    lanes[l[0]] = html; heights[l[0]] = Math.max(1, ends.length) * TL2_ROW + 4;
+    lanes[l[0]] = html; most = Math.max(most, ends.length);
   });
+  TL2_LANES.forEach(function (l) { heights[l[0]] = most * TL2_ROW + 4; });
   var hdW = W >= 32 ? 18 : 16;
   box.innerHTML = "<div class='tl2-wrap'><div class='tl2-labels'><div style='height:20px'></div><div style='height:" + hdW + "px'></div>" +
     TL2_LANES.map(function (l) { return "<div style='height:" + heights[l[0]] + "px;color:" + l[2] + "'>" + l[1] + "</div>"; }).join("") + "</div>" +
