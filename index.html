@@ -1592,6 +1592,7 @@ function dcMake() {
   Quill.register({ "formats/cmt": new P.Attributor("cmt", "data-cmt", { scope: P.Scope.INLINE }) }, true);
   dcQ = new Quill("#dc-ed-box", { theme: "snow", formats: DC_FORMATS, placeholder: "Write here...", modules: { toolbar: { container: [[{ header: [1, 2, 3, false] }], [{ size: ["small", false, "large", "huge"] }],
     ["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }], ["blockquote", "link"], ["clean"], ["cmt"]], handlers: { cmt: dcAsk } } } });
+  dcQ.root.spellcheck = false;   // 1616.4: no browser spell check on the EN text
   var b = document.querySelector(".dc-main .ql-cmt"); b.innerHTML = DC_ICON; b.title = "Comment on the marked text"; b.parentNode.classList.add("dc-cmt-g");
   dcQ.on("text-change", function (_d, _o, src) { if (src !== "user") return; dcEdits++; dcDirty = true; dcState(); dcPanel(); clearTimeout(dcTimer); dcTimer = setTimeout(dcSave, 1200); });
 }
