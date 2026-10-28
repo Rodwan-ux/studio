@@ -1500,7 +1500,8 @@ function tl2Item(cls, attrs, a, b, W, color, name) {
   var own = /\bown\b/.test(cls), x = Math.max(a, 0) * W + 1, sz = ";--w:" + (W - 2) + "px";
   if (b - a > 1) { var w = Math.max(W * (b - Math.max(a, 0)) - 2, W - 2); return [function (top) { return "<div class='" + cls + " bar' " + attrs + " style='left:" + x + "px;width:" + w + "px;top:" + top + "px;--c:" + color + sz + "'><span>" + esc(name) + "</span>" + (own ? "<b class='tl2-rs' style='right:-3px'></b>" : "") + "</div>"; }, x, x + w]; }
   var lab = !!name;
-  return [function (top) { return "<div class='" + cls + "' " + attrs + " style='left:" + x + "px;top:" + top + "px;--c:" + color + sz + "'><i></i>" + (own ? "<b class='tl2-rs' style='left:" + (W - 6) + "px'></b>" : "") + (lab ? "<span>" + esc(name) + "</span>" : "") + "</div>"; }, x, x + W - 2 + (lab ? 8 + name.length * 7 : 0)];
+  // 1620.12: room = the pixels up to the next mark of the row; the name is cut with dots there, none when it has no room
+  return [function (top, room) { var fit = room == null ? null : room - (W - 2) - 6; return "<div class='" + cls + "' " + attrs + " style='left:" + x + "px;top:" + top + "px;--c:" + color + sz + "'><i></i>" + (own ? "<b class='tl2-rs' style='left:" + (W - 6) + "px'></b>" : "") + (lab && (fit == null || fit >= 12) ? "<span" + (fit != null ? " style='max-width:" + fit + "px'" : "") + ">" + esc(name) + "</span>" : "") + "</div>"; }, x, x + W - 2 + (lab ? 8 + name.length * 7 : 0)];
 }
 function renderTimeline() {
   var box = $("tl2");
@@ -1543,11 +1544,12 @@ function renderTimeline() {
   // a mark takes the first of its lane's rows where it overlaps nothing, the last row when none is free
   var lanes = {}, heights = {};
   LN.forEach(function (l) {
-    var ends = [], html = "";
+    var ends = [], html = "", rows = [];
     per[l[0]].sort(function (p, q) { return p[1] - q[1]; }).forEach(function (it) {
       var r = 0; while (r < l[3] - 1 && ends[r] !== undefined && ends[r] > it[1] - 4) r++;
-      ends[r] = Math.max(ends[r] || 0, it[2]); html += it[0](r * TL2_ROW + 1);
+      ends[r] = Math.max(ends[r] || 0, it[2]); (rows[r] = rows[r] || []).push(it);
     });
+    rows.forEach(function (row, r) { row.forEach(function (it, j) { html += it[0](r * TL2_ROW + 1, row[j + 1] ? row[j + 1][1] - it[1] - 4 : null); }); });
     lanes[l[0]] = html; heights[l[0]] = l[3] * TL2_ROW;
   });
   var hdW = W >= 32 ? 18 : 16;
