@@ -7,7 +7,7 @@ mkdir -p "$HOME/.claude/hooks"
 curl -fsS "https://pvvslmxgzgjuszsoatvp.supabase.co/functions/v1/studio?api=rules&k=$STUDIO_OWNER_KEY" | python3 -c '
 import json, os, sys
 home = os.path.join(os.path.expanduser("~"), ".claude")
-for name, text in json.load(sys.stdin).items():
+for name, text in json.loads(sys.stdin.buffer.read().decode("utf-8")).items():
     with open(os.path.join(home, name), "w", encoding="utf-8") as f:
         f.write(text)
 ' || echo "rules not loaded - is STUDIO_OWNER_KEY set in the cloud environment?" >&2
