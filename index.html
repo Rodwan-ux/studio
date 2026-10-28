@@ -1474,7 +1474,7 @@ $("cal-day").addEventListener("click", function (e) { if (e.target.id === "cal-x
 // a double click on a lane adds a mark and opens it; the Google entries stay read only.
 // 1620.4: day names over the days, the weeks in two alternating tones, every lane as high as the fullest one, the word
 // DEADLINE left out of the names in its own lane, a Google deadline drawing the red line too.
-var TL2_W = [8, 16, 32, 64], tl2Zoom = 1, tl2Center = null, TL2_S = 18, TL2_ROW = 24;
+var TL2_W = [8, 16, 32, 64], tl2Zoom = 1, tl2Center = null, TL2_S = 18, TL2_ROW = 20;
 try { var tz0 = +localStorage.getItem("tl2_zoom3"); if (localStorage.getItem("tl2_zoom3") !== null && tz0 >= 0 && tz0 < TL2_W.length) tl2Zoom = tz0; } catch (e) {}
 // 1620.7: the lanes come with the schedule (a name, a colour, a height in rows), these until it has its own
 var TL2_BASE = [{ id: "deadline", name: "DEADLINES", color: "red", rows: 1 }, { id: "build", name: "BUILDS", color: "beige", rows: 1 }, { id: "playtest", name: "PUBLIC TESTS", color: "amber", rows: 1 },
@@ -1543,9 +1543,9 @@ function renderTimeline() {
     var ends = [], html = "";
     per[l[0]].sort(function (p, q) { return p[1] - q[1]; }).forEach(function (it) {
       var r = 0; while (r < l[3] - 1 && ends[r] !== undefined && ends[r] > it[1] - 4) r++;
-      ends[r] = Math.max(ends[r] || 0, it[2]); html += it[0](3 + r * TL2_ROW);
+      ends[r] = Math.max(ends[r] || 0, it[2]); html += it[0](1 + r * TL2_ROW);
     });
-    lanes[l[0]] = html; heights[l[0]] = l[3] * TL2_ROW + 4;
+    lanes[l[0]] = html; heights[l[0]] = l[3] * TL2_ROW;
   });
   var hdW = W >= 32 ? 18 : 16;
   box.innerHTML = "<div class='tl2-wrap'><div class='tl2-labels'><div style='height:20px'></div><div style='height:" + hdW + "px'></div>" +
@@ -1669,7 +1669,7 @@ $("tl2").addEventListener("pointerdown", function (e) {
 $("tl2").addEventListener("pointermove", function (e) {
   var g = tl2Lh; if (!g) return;
   var n = Math.max(1, g.rows + Math.round((e.clientY - g.y) / TL2_ROW));
-  if (n !== g.n) { g.n = n; g.lab.style.height = g.row.style.height = (n * TL2_ROW + 4) + "px"; }
+  if (n !== g.n) { g.n = n; g.lab.style.height = g.row.style.height = (n * TL2_ROW) + "px"; }
 });
 $("tl2").addEventListener("pointerup", function () {
   var g = tl2Lh; if (!g) return; tl2Lh = null;
