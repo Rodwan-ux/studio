@@ -142,7 +142,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></div></section>
 
 <section class="panel" data-pane="players" hidden>
-<div class="cols"><div class="panel"><h2>The game so far</h2><div class="mx" id="pl-game"></div></div>
+<div class="cols" id="pl-top"><div class="panel"><h2>The game so far</h2><div class="mx" id="pl-game"></div></div>
 <div class="panel"><h2>Latest sessions</h2><div id="ov-sess"></div></div></div>
 <nav id="tel-tabs"><button data-t="sessions" aria-selected="true">SESSIONS</button><button data-t="timeline" aria-selected="false">TIMELINE</button><button data-t="events" aria-selected="false">EVENTS</button><button data-t="feedback" aria-selected="false">FEEDBACK</button><button data-t="performance" aria-selected="false">PERFORMANCE</button><button data-t="runs" aria-selected="false">OPTIMIZATION RUNS</button></nav>
 <div data-tp="feedback" hidden><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
@@ -585,6 +585,9 @@ function events() {
     out.push({ code: r.CODE, session: sessKey(r), seq: +r.SEQ || 0, time: r.TIME, sec: +r.SEC || 0, mode: r.MODE, day: r.DAY, event: r.EVENT, values: r.VALUES, count: +r.COUNT || 1, kind: kindOf(r.EVENT) }); });
   return evCache = out;
 }
+// 1656: a role below TEAM gets the sessions worked out by the server instead of the events - PLAYERS is then their table alone
+var plOnly = function () { return !!(D && D.sessions && !D.events); };
+var srvSessions = function () { return D.sessions.map(function (x) { var md = {}; x.modes.forEach(function (m) { md[m] = 1; }); return { id: x.code + "|" + x.session, code: x.code, start: x.start, end: x.start, len: x.len, n: x.n, battles: x.battles, deaths: x.deaths, bugs: x.bugs, clicks: x.clicks, modes: md }; }); };
 function sessions(evs) {
   var m = {};
   evs.forEach(function (e) { var s = m[e.session]; if (!s) s = m[e.session] = { id: e.session, code: e.code, start: e.time, end: e.time, len: 0, n: 0, battles: 0, deaths: 0, bugs: 0, clicks: 0, modes: {} };
@@ -632,7 +635,8 @@ function sessSorted(mode, rows) {
 function renderTelemetry() {
   evCache = null;
   renderFeedback();
-  var evs = events(), ss = sessions(evs), mode = $("s-mode").value;
+  var evs = events(), ss = plOnly() ? srvSessions() : sessions(evs), mode = $("s-mode").value;
+  $("pl-top").hidden = $("tel-tabs").hidden = plOnly(); if (plOnly()) showTel("sessions");
   var sel = $("s-code"), names = Array.from(new Set(ss.map(function (s) { return nameOf(s.code); }))).sort();
   if (sessPerson) { sel.dataset.v = sessPerson; sessPerson = ""; } else sel.dataset.v = sel.value;
   sel.innerHTML = "<option value=''>ALL</option>" + names.map(function (n) { return "<option value='" + esc(n) + "'>" + esc(n) + "</option>"; }).join("");
@@ -654,7 +658,7 @@ function renderTelemetry() {
     ], sessSorted("person", Object.keys(by).map(function (k) { return by[k]; })),
     function (p) { return " class='click' data-person='" + esc(p.name) + "'"; });
   } else {
-    $("s-hint").textContent = "Click a session for its time line.";
+    $("s-hint").textContent = plOnly() ? "" : "Click a session for its time line.";
     $("sess-t").innerHTML = grid([
       ["Start", function (s) { return esc(short(s.start)); }], ["Who", function (s) { return who(s.code); }], ["Length", function (s) { return fmtSec(s.len); }, "num"],
       ["Modes", function (s) { return Object.keys(s.modes).map(function (m) { return "<span class='chip'>" + esc(m) + "</span>"; }).join(" "); }],
@@ -684,7 +688,7 @@ $("sess-t").addEventListener("click", function (e) {
   var pr = e.target.closest("tr[data-person]");
   // 1520: a person = their sessions, their feedback below FEEDBACK; a session = its time line, PERFORMANCE on the same session
   if (pr) { $("s-mode").value = "session"; sessPerson = pr.dataset.person; $("fb-q").value = pr.dataset.person; renderTelemetry(); return; }
-  var tr = e.target.closest("tr[data-s]"); if (!tr) return; pickedSession = prSession = tr.dataset.s; $("tl-sess").value = pickedSession; renderPerformance(); showTel("timeline");
+  var tr = e.target.closest("tr[data-s]"); if (!tr || plOnly()) return; pickedSession = prSession = tr.dataset.s; $("tl-sess").value = pickedSession; renderPerformance(); showTel("timeline");
 });
 $("tl-sess").addEventListener("change", function (e) { pickedSession = e.target.value; drawTimeline(); });
 var BAND = { SANDBOX: "#3a5d3a", BATTLE: "#6a3a33", SAIL: "#2d5566" };
