@@ -371,6 +371,7 @@ function fetchParts(parts) {
       if (gen !== loadGen) return;
       var errs = j.errors || {}; delete j.errors;
       Object.keys(j).forEach(function (x) { D[x] = j[x]; });
+      if (j.sessions) { delete D.events; delete D.codes; evCache = null; } else if (j.events) delete D.sessions;   // 1656.4: an old saved view never comes back
       Object.keys(errs).forEach(function (x) { D.errors[x] = errs[x]; });
       partMs[p] = Date.now() - t0; got[p] = 1; ldDraw();
       if (liveRender && D.tabs) softRender();
