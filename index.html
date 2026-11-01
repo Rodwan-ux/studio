@@ -1306,14 +1306,24 @@ function renderChangelog() {
   var bs = clBuilds(), shipped = bs.filter(function (b) { return b.version !== "NEXT BUILD"; });
   var cats = function (b) { var c = {}; b.items.forEach(function (i) { c[i.cat] = (c[i.cat] || 0) + 1; }); return c; };
   var row = function (i) { return "<div class='cl-row'><div class='cl-t' style='border-left:3px solid " + (CHG_COLOR[i.cat] || "var(--dim)") + ";padding-left:6px'>" + esc(i.title) + "</div>" + (i.text ? "<div class='muted' style='padding-left:9px'>" + esc(i.text) + "</div>" : "") + "</div>"; };
-  // one tile per shipped build - its date and changes per category; a click opens all its changes with their text under the grid
-  $("cl-bld-n").textContent = shipped.length + " builds";
-  var opened = shipped.filter(function (b) { return b.version === bldOpen; })[0];
-  $("cl-bld").innerHTML = shipped.map(function (b) {
-    var c = cats(b);
-    return "<div class='bld-t" + (b.version === bldOpen ? " on" : "") + "' data-v='" + esc(b.version) + "'><h3>" + esc(b.version) + "<b>" + b.items.length + "</b></h3><span class='muted'>" + esc(b.date) + "</span><div class='bld-chips'>" +
+  // 1775: one tile per minor build 0.N - 0.N.0 and all its 0.N.P patches summed; a click opens all their changes under the
+  // grid, under each patch version with its date
+  var groups = [], byMinor = {};
+  shipped.forEach(function (b) {
+    var k = b.version.split(".").slice(0, 2).join(".");
+    if (!byMinor[k]) groups.push(byMinor[k] = { version: k, builds: [], items: [] });
+    byMinor[k].builds.push(b); byMinor[k].items = byMinor[k].items.concat(b.items);
+  });
+  $("cl-bld-n").textContent = groups.length + " builds";
+  var opened = byMinor[bldOpen];
+  $("cl-bld").innerHTML = groups.map(function (g) {
+    var c = cats(g), last = g.builds[0], first = g.builds[g.builds.length - 1];
+    return "<div class='bld-t" + (g.version === bldOpen ? " on" : "") + "' data-v='" + esc(g.version) + "'><h3>" + esc(g.version) + "<b>" + g.items.length + "</b></h3><span class='muted'>" +
+      esc(g.builds.length > 1 ? first.version + " – " + last.version + " · " + last.date : last.version + " · " + last.date) + "</span><div class='bld-chips'>" +
       Object.keys(c).map(function (k) { return "<i style='border-left-color:" + (CHG_COLOR[k] || "var(--dim)") + "'>" + esc(k) + " " + c[k] + "</i>"; }).join("") + "</div></div>";
-  }).join("") + (opened ? "<div class='chg-l' style='grid-column:1/-1'>" + opened.items.map(row).join("") + "</div>" : "");
+  }).join("") + (opened ? "<div class='chg-l' style='grid-column:1/-1'>" + opened.builds.map(function (b) {
+    return "<div class='cl-t' style='margin-top:6px'>" + esc(b.version) + " <span class='muted'>" + esc(b.date) + "</span></div>" + b.items.map(row).join("");
+  }).join("") + "</div>" : "");
 }
 $("cl-bld").addEventListener("click", function (e) {
   var t = e.target.closest(".bld-t"); if (!t) return; bldOpen = bldOpen === t.dataset.v ? "" : t.dataset.v; renderChangelog();
