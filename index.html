@@ -117,7 +117,8 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 .dc-main .ql-editor h3{font-size:1.2em;margin-top:.6em;counter-increment:dch3}.dc-main .ql-editor h3::before{content:counter(dch1) "." counter(dch2) "." counter(dch3) "  ";color:var(--rose)}
 .dc-main .ql-editor blockquote{border-left:4px solid var(--plum);padding-left:10px;color:var(--dim)}
 .dc-main .ql-editor a{color:var(--cyan)}.dc-main .ql-snow .ql-tooltip{background:var(--panel);color:var(--fg);border-color:var(--line);box-shadow:none}
-</style></head><body><div id="mx-tip" hidden></div><div class="wrap">
+</style><script src="desktop.js"></script>
+</head><body><div id="mx-tip" hidden></div><div class="wrap">
 <header><span class="hello" id="hello"></span><span class="sub" id="status">Loading...</span><span class="spacer"></span><img class="brand" alt="RODWAN PIXELS" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAM0AAAAUCAYAAAAujbmOAAAByklEQVR42u2aP0tDMRTFE3FRcBDExS8g/QDq5ljQQUEHJ4tzCy466KDooCCuTg5ip4IKOjzBpaCT1k2w6CZIB6cODh3j/E4hl0vS955wflua3Jc/74ac81Lbbd8642G8tGyNAnyeFB/av7a/2OPNu30MpHfw89VNlacXNqxmzLHrpRyJnRPIkCGEqOCmIYSbhpDBMow/nGw3TIjexPiP+wvn08NS/9p4Le+tjkrfbtbOVeuDfkBq/3T1lntS4DuYmykZjefJuj60vfSOedIQQnlGCDcNIcX2NKj/KtWy0eg75DhpWNDDqjsAjK9Uyy5Ev0oeYmJyVKWPd7dWg/Sz5Bnz8DRSDny+fgc9/+j0OlW+Ozh0vnqJy7OHqPPHHF+Zn02Vl/b3LE8aQijPCOGmIeT/3NOgXkQNX28mXj2IevXm8cUM8ps56mHp3ii2npbuMCTP1+n9Ot96ZwF6ludWOygeQY+AOSHlGNK35knY/wtxfAjmDE8aQijPCOGmIaRYngY1uqS5kXozSbWfGhlzvnrtN3cpvq++Zrz9r/cWg8aH67Nj1pzGc2nXLwvQw+ActfEIehjtnLX3Mtr2Wt/Nk4YQyjNCuGkIKRR/dGkmxi2aFWgAAAAASUVORK5CYII="></header>
 <div class="ld" id="ld" hidden><span id="ld-txt"></span><div class="ld-track"><i id="ld-fill"></i></div></div>
 <div class="viewbar" id="viewbar" hidden>VIEWING AS <b id="viewbar-cat"></b><span class="muted">what this category sees; status changes are off</span><span class="spacer"></span><button id="viewbar-back">Back to owner</button></div>
@@ -420,7 +421,7 @@ $("key-go").addEventListener("click", function () { var k = $("key-in").value.tr
 $("key-in").addEventListener("keydown", function (e) { if (e.key === "Enter") $("key-go").click(); });
 function render() {
   document.querySelectorAll("#tabs button").forEach(function (b) { b.hidden = !topAllowed(b.dataset.tab); });
-  document.querySelector("#tabs button[data-tab=play]").disabled = !culturesOk();   // 1605 / 1609: PLAY stays shut for everyone but the owner and Jakub
+  document.querySelector("#tabs button[data-tab=play]").disabled = false;   // 1876: the testers' desktop download
   $("tabs").hidden = document.querySelectorAll("#tabs button:not([hidden])").length < 2;
   var errs = Object.keys(D.errors || {});
   $("hello").innerHTML = D.name ? "Hello <b style='color:" + personColor(D.name) + "'>" + esc(D.name) + "</b>" : "";
@@ -2321,6 +2322,20 @@ function pfKnown(own) {
 $("pf-run").addEventListener("click", function () { pfTry($("pf-code").value); });
 $("pf-run").addEventListener("mouseenter", function () { pfLit = 99; pfTitle(); });
 $("pf-run").addEventListener("mouseleave", function () { if (!pfBusy) { pfLit = 0; pfTitle(); } });
+// 1876: the code opens the desktop build here in the browser, it downloads as one zip (desktop.js)
+async function pfDesktop(meta, key, code) {
+  $("pf-code").disabled = true;
+  var blob = await desktopZip(meta, key, code, PF_B, fetch, function (done, all) { pfSay(Math.round(done * 100 / all) + "%"); });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "PixelFormation.zip";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  pfSay("");
+  $("pf-code").disabled = false;
+  pfBusy = false;
+}
 async function pfTry(code) {
   code = code.trim().toLowerCase();
   if (!code || pfBusy) return;
@@ -2338,6 +2353,7 @@ async function pfTry(code) {
       if (now !== code) pfTry(now); else pfSay("THIS CODE DOES NOT OPEN THE GAME", "err");
       return;
     }
+    if (meta.files) { await pfDesktop(meta, key, code); return; }   // 1876: the desktop build - a download
     try { if (!document.fullscreenElement) $("pf").requestFullscreen().catch(function () {}); } catch (x) {}   // the tab full screen - only soon after a key or a click
     try { localStorage.setItem(PF_KEEP, code); } catch (x) {}
     // 1500.4.1: the wave alone covers the screen until the game starts, as the game's curtain does
