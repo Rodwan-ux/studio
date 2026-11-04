@@ -162,7 +162,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 </section>
 
 <section class="panel" data-pane="people" hidden>
-<nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="settings" aria-selected="false">ROLES</button><button data-pp="visitors" aria-selected="false">VISITORS</button></nav>
+<nav id="p-tabs"><button data-pp="list" aria-selected="true">LIST</button><button data-pp="settings" aria-selected="false">ROLES</button><button data-pp="levels" aria-selected="false">LEVELS</button><button data-pp="visitors" aria-selected="false">VISITORS</button></nav>
 <div data-ppn="list"><div class="bar"><input id="p-q" type="search" placeholder="SEARCH NAME, MAIL, CODE..." style="flex:1;min-width:200px">
 <label for="p-cat">Role</label><select id="p-cat"></select><label for="p-tag">Tag</label><select id="p-tag"></select><span class="muted" id="p-n"></span><button id="p-cols-b">Columns</button></div>
 <div class="bar" id="p-cols" hidden></div>
@@ -170,6 +170,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div data-ppn="visitors" hidden><div class="bar"><label for="db-who">Person</label><select id="db-who"></select></div><div id="db-msg" class="msg" hidden></div><div class="tiles" id="db-tiles"></div>
 <div class="panel"><h2>By person</h2><div class="scroll"><table id="db-p"></table></div></div>
 <div class="panel"><h2>Latest</h2><div class="scroll"><table id="db-l"></table></div></div></div>
+<div data-ppn="levels" hidden><div class="msg" id="lv-msg" hidden></div><div class="scroll"><table id="lv-t" class="tight"></table></div></div>
 <div data-ppn="settings" hidden><div class="bar"><input id="r-new" maxlength="20" placeholder="NEW ROLE" style="width:160px"><button id="r-add">Add role</button><span class="muted" id="r-msg"></span><span class="spacer"></span><label for="view-as">View as</label><select id="view-as" hidden aria-label="View as"></select></div>
 <div class="scroll"><table id="r-t" class="tight"></table></div></div></section>
 
@@ -1094,6 +1095,27 @@ document.addEventListener("mousedown", function (e) {
   var up = function () { document.removeEventListener("mousemove", mv); document.removeEventListener("mouseup", up); try { localStorage.setItem("col_w", JSON.stringify(colW)); } catch (err) {} };
   document.addEventListener("mousemove", mv); document.addEventListener("mouseup", up);
 });
+// LEVELS (1843): the game codes' levels - days (0 = no limit) and rights of each, saved at once, the next code check takes them
+var lvData = null;
+function lvPost(body) { return fetch(API, { method: "POST", body: JSON.stringify(body), credentials: "omit" }).then(function (r) { return r.text(); }); }
+function lvMsg(t) { $("lv-msg").hidden = !t; $("lv-msg").textContent = t || ""; }
+function lvApply(text) { if (String(text).indexOf("{") !== 0) throw new Error(String(text).slice(0, 80)); lvData = JSON.parse(text); renderLevels(); }
+function loadLevels() { lvMsg(""); lvPost({ action: "studio_levels", k: KEY }).then(lvApply).catch(function (e) { lvMsg("NOT LOADED: " + String(e && e.message || e)); }); }
+function renderLevels() {
+  var head = "<tr><th>Level</th><th>Days</th>" + lvData.perms.map(function (p) { return "<th>" + esc(p.toUpperCase()) + "</th>"; }).join("") + "</tr>";
+  $("lv-t").innerHTML = head + lvData.names.map(function (n) {
+    var l = lvData.levels[n], have = String(l.perms || "").split(",");
+    return "<tr data-level='" + n + "'><td>" + n + "</td><td><input type='number' min='0' step='1' style='width:80px' data-lv='days' value='" + (+l.days || 0) + "'></td>" +
+      lvData.perms.map(function (p) { return "<td><input type='checkbox' data-lv='" + p + "'" + (have.indexOf(p) >= 0 ? " checked" : "") + "></td>"; }).join("") + "</tr>";
+  }).join("");
+}
+$("lv-t").addEventListener("change", function (e) {
+  var tr = e.target.closest("tr[data-level]"); if (!tr) return;
+  var perms = lvData.perms.filter(function (p) { return tr.querySelector("input[data-lv='" + p + "']").checked; });
+  lvMsg("SAVING...");
+  lvPost({ action: "studio_levels", k: KEY, level: tr.dataset.level, days: +tr.querySelector("input[data-lv='days']").value, perms: perms.join(",") })
+    .then(function (t) { lvApply(t); lvMsg("SAVED"); }).catch(function (err) { lvMsg("NOT SAVED: " + String(err && err.message || err)); });
+});
 // ROLES (1307): a row per role, a switch per tab; OWNER fixed
 var rQ = {};
 function renderRoles() {
@@ -1135,7 +1157,7 @@ $("r-add").addEventListener("click", function () {
 });
 $("r-new").addEventListener("keydown", function (e) { if (e.key === "Enter") $("r-add").click(); });
 function showPp(t) { document.querySelectorAll("#p-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pp === t)); }); document.querySelectorAll("[data-ppn]").forEach(function (p) { p.hidden = p.dataset.ppn !== t; }); }
-$("p-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-pp]"); if (b) { showPp(b.dataset.pp); logUse("PEOPLE / " + b.textContent); } });
+$("p-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-pp]"); if (b) { showPp(b.dataset.pp); if (b.dataset.pp === "levels") loadLevels(); logUse("PEOPLE / " + b.textContent); } });
 // the change goes into the loaded data, so the row shows it before the save comes back
 function pApply(r, f, v) {
   if (!r.t) { r.t = { name: r.name, category: "", codes: r.codes.slice(), packages: "", key: "", note: "", nick: "", tags: "" }; D.team = (D.team || []).concat([r.t]); }
