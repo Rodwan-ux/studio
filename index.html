@@ -211,7 +211,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <section class="panel" data-pane="play" hidden><nav id="pf-tabs" hidden><button data-pf="formation" aria-selected="true">FORMATION</button><button data-pf="cultures" aria-selected="false">CULTURES</button></nav><div class="pf" id="pf">
 <div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
 <div id="pf-gpu"></div>
-<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button" hidden>RUN</button></form>
+<form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button">DOWNLOAD</button></form>
 <div id="pf-msg"></div>
 <div id="pf-bar" hidden><i></i></div>
 <canvas id="pf-wave" hidden></canvas><canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
@@ -1984,7 +1984,8 @@ function pfPick(p) {
   PF_B = cul ? PC_B : PF_HOME; PF_TITLE = cul ? "PIXEL CULTURES" : "PIXEL FORMATION"; PF_KEEP = cul ? "pc_code" : "pf_code"; PF_DB = null; pfMeta = null;
   document.querySelectorAll("#pf-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pf === p)); });
   $("pf-tc").setAttribute("aria-label", PF_TITLE);
-  $("pf-code").value = ""; $("pf-code").hidden = false; $("pf-run").hidden = true; pfSay("");
+  $("pf-code").value = ""; $("pf-code").hidden = false; $("pf-run").hidden = cul; $("pf-run").textContent = cul ? "RUN" : "DOWNLOAD"; pfSay("");
+  $("pf-gpu").hidden = !cul; pfGpuNote();   // 1876: FORMATION is a download, the browser's GPU is no matter there
   pfLit = 0; pfTitle();
   if (D && D.playstats) renderPlayStats(); else pfKnown(cul ? "" : (D && D.mine || [])[0]);
 }
@@ -2114,7 +2115,7 @@ function renderPlayStats() {
 // ignored the request, so one line tells how to switch the browser to the main GPU
 var pfGpuAsked = false;
 function pfGpuNote() {
-  if (pfGpuAsked) return;
+  if (pfGpuAsked || PF_B !== PC_B) return;
   pfGpuAsked = true;
   try {
     var g = document.createElement("canvas").getContext("webgl2"), e = g && g.getExtension("WEBGL_debug_renderer_info");
@@ -2328,7 +2329,7 @@ $("pf-run").addEventListener("mouseleave", function () { if (!pfBusy) { pfLit = 
 // 1876: the code opens the desktop build here in the browser, it downloads as one zip (desktop.js)
 async function pfDesktop(meta, key, code) {
   var fill = $("pf-bar").firstElementChild;
-  $("pf-code").disabled = true;
+  $("pf-code").disabled = true; $("pf-run").disabled = true;
   $("pf-bar").hidden = false;
   fill.style.width = "0";
   pfSay("DOWNLOADING");
@@ -2344,7 +2345,7 @@ async function pfDesktop(meta, key, code) {
     $("pf-code").value = "";
   } finally {
     $("pf-bar").hidden = true;
-    $("pf-code").disabled = false;
+    $("pf-code").disabled = false; $("pf-run").disabled = false;
     pfBusy = false;
   }
 }
@@ -2382,6 +2383,7 @@ async function pfTry(code) {
 }
 $("pf-code").addEventListener("input", function () {
   pfSay(""); pfLit = $("pf-code").value.trim().length; pfTitle();
+  if (PF_B !== PC_B) return;   // 1876: FORMATION downloads from its button or Enter only
   clearTimeout(pfWait); pfWait = setTimeout(function () { pfTry($("pf-code").value); }, 400);
 });
 $("pf-f").addEventListener("submit", function (ev) { ev.preventDefault(); clearTimeout(pfWait); pfTry($("pf-code").value); });
