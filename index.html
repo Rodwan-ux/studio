@@ -1026,7 +1026,24 @@ var pTags = function (r) { return r.t ? String(r.t.tags || "").split(",").map(fu
 var ALL_PKGS = { OWNER: true, TEAM: true };   // these roles take every package
 var pStatus = {};
 function swBtn(attr, on, off, title) { return "<button class='sw' " + attr + " aria-pressed='" + on + "' title='" + esc(title) + "'" + (off ? " disabled" : "") + ">" + (on ? "ON" : "OFF") + "</button>"; }
+// 1879: the switch beside a code - OFF blocks it at the server, the game no longer opens with it
+var codeOff = {}, codeOffAsked = false;
+function askCodeOff() {
+  if (codeOffAsked) return;
+  codeOffAsked = true;
+  lvPost({ action: "code_block", k: KEY, list: true }).then(function (t) {
+    if (String(t).indexOf("OK") !== 0) return;
+    String(t).slice(3).split(",").filter(Boolean).forEach(function (c) { codeOff[c] = true; });
+    renderPeople();
+  });
+}
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("button[data-codeoff]"); if (!b) return;
+  var c = b.dataset.codeoff, off = !codeOff[c];
+  apiPost({ action: "code_block", k: KEY, block_code: c, off: off }).then(function () { codeOff[c] = off; renderPeople(); });
+});
 function renderPeople() {
+  askCodeOff();
   var rows = peopleRows();
   var s = $("p-cat"), v = s.value;
   s.innerHTML = "<option value=''>ALL</option>" + catOrder().concat(["NO PANEL"]).map(function (x) { return "<option>" + x + "</option>"; }).join(""); s.value = v;
@@ -1051,7 +1068,7 @@ function renderPeople() {
     ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return r.nick ? esc(r.name) : ""; }, "muted"],
     ["Role", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + catColor(c) + "'>" + [""].concat(catOrder()).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
   ].concat(tags.map(function (n) { return [n, function (r) { return swBtn("data-tag='" + esc(n) + "'", pTags(r).indexOf(n) >= 0, false, n); }, "sw-c"]; })).concat(pkgSw).concat([
-    ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return esc(r.codes.join(", ")); }, "x"],
+    ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return r.codes.map(function (c) { var off = !!codeOff[c]; return esc(c) + " <button class='sw' data-codeoff='" + esc(c) + "' aria-pressed='" + !off + "' title='Off = the game does not open with this code'>" + (off ? "OFF" : "ON") + "</button>"; }).join(" "); }, "x"],
     ["Note", function (r) { return esc(r.note); }, "x muted"],
     ["", function (r) { var st = pStatus[pId(r)]; return st ? "<span style='color:" + st.c + "'>" + esc(st.t) + "</span>" : ""; }],
   ]);
@@ -1102,10 +1119,10 @@ function lvMsg(t) { $("lv-msg").hidden = !t; $("lv-msg").textContent = t || ""; 
 function lvApply(text) { if (String(text).indexOf("{") !== 0) throw new Error(String(text).slice(0, 80)); lvData = JSON.parse(text); renderLevels(); }
 function loadLevels() { lvMsg(""); lvPost({ action: "studio_levels", k: KEY }).then(lvApply).catch(function (e) { lvMsg("NOT LOADED: " + String(e && e.message || e)); }); }
 function renderLevels() {
-  var head = "<tr><th>Level</th><th>Days</th><th>Hero picks</th>" + lvData.perms.map(function (p) { return "<th>" + esc(p.toUpperCase()) + "</th>"; }).join("") + "</tr>";
+  var head = "<tr><th>Level</th><th>Days</th><th>Active days</th><th>Hero picks</th>" + lvData.perms.map(function (p) { return "<th>" + esc(p.toUpperCase()) + "</th>"; }).join("") + "</tr>";
   $("lv-t").innerHTML = head + lvData.names.map(function (n) {
     var l = lvData.levels[n], have = String(l.perms || "").split(",");
-    return "<tr data-level='" + n + "'><td>" + n + "</td><td><input type='number' min='0' step='1' style='width:80px' data-lv='days' value='" + (+l.days || 0) + "'></td><td><input type='number' min='0' step='1' style='width:80px' data-lv='heroes' value='" + (+l.heroes || 0) + "'></td>" +
+    return "<tr data-level='" + n + "'><td>" + n + "</td><td><input type='number' min='0' step='1' style='width:80px' data-lv='days' value='" + (+l.days || 0) + "'></td><td><input type='number' min='0' step='1' style='width:80px' title='Calendar days from the code first start, 0 = no end' data-lv='active_days' value='" + (+l.active_days || 0) + "'></td><td><input type='number' min='0' step='1' style='width:80px' data-lv='heroes' value='" + (+l.heroes || 0) + "'></td>" +
       lvData.perms.map(function (p) { return "<td><input type='checkbox' data-lv='" + p + "'" + (have.indexOf(p) >= 0 ? " checked" : "") + "></td>"; }).join("") + "</tr>";
   }).join("");
 }
@@ -1113,7 +1130,7 @@ $("lv-t").addEventListener("change", function (e) {
   var tr = e.target.closest("tr[data-level]"); if (!tr) return;
   var perms = lvData.perms.filter(function (p) { return tr.querySelector("input[data-lv='" + p + "']").checked; });
   lvMsg("SAVING...");
-  lvPost({ action: "studio_levels", k: KEY, level: tr.dataset.level, days: +tr.querySelector("input[data-lv='days']").value, heroes: +tr.querySelector("input[data-lv='heroes']").value, perms: perms.join(",") })
+  lvPost({ action: "studio_levels", k: KEY, level: tr.dataset.level, days: +tr.querySelector("input[data-lv='days']").value, heroes: +tr.querySelector("input[data-lv='heroes']").value, active_days: +tr.querySelector("input[data-lv='active_days']").value, perms: perms.join(",") })
     .then(function (t) { lvApply(t); lvMsg("SAVED"); }).catch(function (err) { lvMsg("NOT SAVED: " + String(err && err.message || err)); });
 });
 // ROLES (1307): a row per role, a switch per tab; OWNER fixed
