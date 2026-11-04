@@ -1102,10 +1102,10 @@ function lvMsg(t) { $("lv-msg").hidden = !t; $("lv-msg").textContent = t || ""; 
 function lvApply(text) { if (String(text).indexOf("{") !== 0) throw new Error(String(text).slice(0, 80)); lvData = JSON.parse(text); renderLevels(); }
 function loadLevels() { lvMsg(""); lvPost({ action: "studio_levels", k: KEY }).then(lvApply).catch(function (e) { lvMsg("NOT LOADED: " + String(e && e.message || e)); }); }
 function renderLevels() {
-  var head = "<tr><th>Level</th><th>Days</th>" + lvData.perms.map(function (p) { return "<th>" + esc(p.toUpperCase()) + "</th>"; }).join("") + "</tr>";
+  var head = "<tr><th>Level</th><th>Days</th><th>Hero picks</th>" + lvData.perms.map(function (p) { return "<th>" + esc(p.toUpperCase()) + "</th>"; }).join("") + "</tr>";
   $("lv-t").innerHTML = head + lvData.names.map(function (n) {
     var l = lvData.levels[n], have = String(l.perms || "").split(",");
-    return "<tr data-level='" + n + "'><td>" + n + "</td><td><input type='number' min='0' step='1' style='width:80px' data-lv='days' value='" + (+l.days || 0) + "'></td>" +
+    return "<tr data-level='" + n + "'><td>" + n + "</td><td><input type='number' min='0' step='1' style='width:80px' data-lv='days' value='" + (+l.days || 0) + "'></td><td><input type='number' min='0' step='1' style='width:80px' data-lv='heroes' value='" + (+l.heroes || 0) + "'></td>" +
       lvData.perms.map(function (p) { return "<td><input type='checkbox' data-lv='" + p + "'" + (have.indexOf(p) >= 0 ? " checked" : "") + "></td>"; }).join("") + "</tr>";
   }).join("");
 }
@@ -1113,7 +1113,7 @@ $("lv-t").addEventListener("change", function (e) {
   var tr = e.target.closest("tr[data-level]"); if (!tr) return;
   var perms = lvData.perms.filter(function (p) { return tr.querySelector("input[data-lv='" + p + "']").checked; });
   lvMsg("SAVING...");
-  lvPost({ action: "studio_levels", k: KEY, level: tr.dataset.level, days: +tr.querySelector("input[data-lv='days']").value, perms: perms.join(",") })
+  lvPost({ action: "studio_levels", k: KEY, level: tr.dataset.level, days: +tr.querySelector("input[data-lv='days']").value, heroes: +tr.querySelector("input[data-lv='heroes']").value, perms: perms.join(",") })
     .then(function (t) { lvApply(t); lvMsg("SAVED"); }).catch(function (err) { lvMsg("NOT SAVED: " + String(err && err.message || err)); });
 });
 // ROLES (1307): a row per role, a switch per tab; OWNER fixed
