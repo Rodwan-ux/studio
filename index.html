@@ -91,6 +91,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 .bld{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.bld-t{background:var(--bg);border:2px solid var(--line);padding:6px 8px;cursor:pointer;display:grid;gap:4px}.bld-t:hover,.bld-t.on{background:var(--hover)}
 .bld-t h3{margin:0;display:flex;justify-content:space-between;align-items:baseline;font:600 16px var(--head)}.bld-t h3 b{font:600 18px var(--mono);color:var(--fg)}.bld-chips{display:flex;flex-wrap:wrap;gap:3px}.bld-chips i{font:600 11px var(--mono);font-style:normal;border-left:3px solid;padding:0 4px;background:var(--panel)}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px;border-radius:0}
+#pf-bar{box-sizing:content-box;width:304px;height:16px;margin:8px auto 0;padding:4px;border:4px solid var(--beige)}#pf-bar[hidden]{display:none}#pf-bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--beige) 0 6px,transparent 6px 8px)}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
 #pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
 #pf-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;z-index:10;opacity:0}#pf-canvas.on{opacity:1}
@@ -212,6 +213,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div id="pf-gpu"></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button" hidden>RUN</button></form>
 <div id="pf-msg"></div>
+<div id="pf-bar" hidden><i></i></div>
 <canvas id="pf-wave" hidden></canvas><canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
 </div>
 <script>
@@ -2314,6 +2316,7 @@ var pfWave = (function () {
 // field - opening the tab starts nothing
 var pfMeta = null, pfBusy = false, pfWait = 0;
 function pfKnown(own) {
+  if (PF_B !== PC_B) return;   // 1876: FORMATION is a download - the field every time, a code is never kept
   var kept = ""; try { kept = localStorage.getItem(PF_KEEP) || ""; } catch (e) {}
   var code = own || kept;
   if (!code || pfBusy) return;
@@ -2324,17 +2327,26 @@ $("pf-run").addEventListener("mouseenter", function () { pfLit = 99; pfTitle(); 
 $("pf-run").addEventListener("mouseleave", function () { if (!pfBusy) { pfLit = 0; pfTitle(); } });
 // 1876: the code opens the desktop build here in the browser, it downloads as one zip (desktop.js)
 async function pfDesktop(meta, key, code) {
+  var fill = $("pf-bar").firstElementChild;
   $("pf-code").disabled = true;
-  var blob = await desktopZip(meta, key, code, PF_B, fetch, function (done, all) { pfSay(Math.round(done * 100 / all) + "%"); });
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "PixelFormation.zip";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  pfSay("");
-  $("pf-code").disabled = false;
-  pfBusy = false;
+  $("pf-bar").hidden = false;
+  fill.style.width = "0";
+  pfSay("DOWNLOADING");
+  try {
+    var blob = await desktopZip(meta, key, code, PF_B, fetch, function (done, all) { fill.style.width = Math.floor(done * 38 / all) * 8 + "px"; });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "PixelFormation.zip";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    pfSay("");
+    $("pf-code").value = "";
+  } finally {
+    $("pf-bar").hidden = true;
+    $("pf-code").disabled = false;
+    pfBusy = false;
+  }
 }
 async function pfTry(code) {
   code = code.trim().toLowerCase();
