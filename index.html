@@ -66,7 +66,7 @@ a{color:var(--cyan)}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(-
 .viewbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 10px;border:2px solid var(--violet);color:var(--violet);font:600 15px var(--head);letter-spacing:.1em}.viewbar b{color:var(--fg)}
 .hello{font:700 30px/1 var(--head);letter-spacing:.06em;color:var(--fg)}
 .brand{width:205px;height:20px;image-rendering:pixelated;align-self:center}.hello b{color:var(--cyan)}
-table.tight{width:auto}table.tight td.nar{max-width:110px}td.sw-c{padding:3px 2px;text-align:center}th.sw-c{writing-mode:vertical-rl;transform:rotate(180deg);text-align:left;vertical-align:middle;padding:6px 2px}
+table.tight{width:auto}table.tight td.nar{max-width:110px}#ev-t td{white-space:nowrap}td.sw-c{padding:3px 2px;text-align:center}th.sw-c{writing-mode:vertical-rl;transform:rotate(180deg);text-align:left;vertical-align:middle;padding:6px 2px}
 .sw{padding:0;width:28px;height:17px;border-radius:9px;font-size:9px;letter-spacing:0;color:var(--dim)}.sw[aria-pressed=true]{background:#1c2a18;border-color:var(--green);color:var(--green)}.sw:disabled{opacity:.45;cursor:default}
 select.lvl{padding:1px 4px;font-size:11px}
 .ld{display:grid;gap:4px;transition:opacity .6s}.ld-track{height:4px;background:#2a2027;overflow:hidden}
@@ -150,7 +150,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div data-tp="feedback" hidden><div class="bar"><input id="fb-q" type="search" placeholder="SEARCH TEXT OR PERSON..." style="flex:1;min-width:200px"><span class="muted" id="fb-n"></span></div><div id="fb-msg" class="msg" hidden></div><div class="scroll"><table id="fb-t"></table></div></div>
 <div data-tp="sessions"><div class="bar"><select id="s-mode" aria-label="Sessions view"><option value="person">BY PERSON</option><option value="session">BY SESSION</option></select><label for="s-code">Person</label><select id="s-code"></select><span class="muted" id="s-hint"></span></div><div class="scroll"><table id="sess-t"></table></div></div>
 <div data-tp="timeline" hidden><div class="bar"><label for="tl-sess">Session</label><select id="tl-sess"></select></div><div class="legend" id="tl-legend"></div><div class="tl" id="tl"><div class="tip" id="tip" hidden></div></div></div>
-<div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Person</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t"></table></div><button id="ev-more" hidden>Show more</button></div>
+<div data-tp="events" hidden><div class="bar"><input id="ev-q" type="search" placeholder="SEARCH EVENT OR VALUES..." style="flex:1;min-width:200px"><label for="ev-code">Person</label><select id="ev-code"></select><label for="ev-cat">Kind</label><select id="ev-cat"></select><span class="muted" id="ev-n"></span></div><div class="scroll"><table id="ev-t" class="tight"></table></div><button id="ev-more" hidden>Show more</button></div>
 <div data-tp="performance" hidden>
 <div class="bar"><label for="pr-build">Build</label><select id="pr-build"></select><label for="pr-who">Person</label><select id="pr-who"></select><label for="pr-mode">Mode</label><select id="pr-mode"></select><span class="muted" id="pr-n"></span></div>
 <div id="pr-msg" class="msg" hidden></div><div class="tiles" id="pr-tiles"></div>
@@ -1109,6 +1109,8 @@ $("p-cols").addEventListener("click", function (e) {
 // past it cut with dots); the widths per table in this browser, set again each time the table is drawn
 var colW = {};
 try { colW = JSON.parse(localStorage.getItem("col_w") || "{}") || {}; var oldP = JSON.parse(localStorage.getItem("p_w") || "null"); if (oldP && !colW["p-t"]) colW["p-t"] = oldP; } catch (e) {}
+// 1893: EVENTS starts narrow whatever its cells hold, a width dragged in this browser wins
+colW["ev-t"] = Object.assign({ Time: 110, Who: 90, Kind: 80, Event: 150, Values: 200, Mode: 70, At: 50 }, colW["ev-t"]);
 var colKey = function (th, i) { return th.dataset.col || th.textContent.trim() || String(i); };
 function colWidths(t) {
   var W = colW[t.id]; if (!W) return;
