@@ -91,6 +91,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 .bld{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.bld-t{background:var(--bg);border:2px solid var(--line);padding:6px 8px;cursor:pointer;display:grid;gap:4px}.bld-t:hover,.bld-t.on{background:var(--hover)}
 .bld-t h3{margin:0;display:flex;justify-content:space-between;align-items:baseline;font:600 16px var(--head)}.bld-t h3 b{font:600 18px var(--mono);color:var(--fg)}.bld-chips{display:flex;flex-wrap:wrap;gap:3px}.bld-chips i{font:600 11px var(--mono);font-style:normal;border-left:3px solid;padding:0 4px;background:var(--panel)}
 #pf-f{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#pf-code{width:240px;text-align:center;letter-spacing:.12em;text-transform:lowercase;padding:8px 12px;border-radius:0}
+#pf-help{font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}#pf-help[hidden]{display:none}#pf-help a{color:inherit}
 #pf-bar{box-sizing:content-box;width:304px;height:16px;margin:8px auto 0;padding:4px;border:4px solid var(--beige)}#pf-bar[hidden]{display:none}#pf-bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--beige) 0 6px,transparent 6px 8px)}
 #pf-msg{min-height:20px;font:600 15px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:center}#pf-msg.err{color:var(--red)}#pf-msg.ok{color:var(--beige)}
 #pf-gpu{max-width:min(608px,92vw);font:600 13px var(--head);letter-spacing:.1em;color:var(--dim);text-align:center}
@@ -213,6 +214,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div id="pf-gpu"></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button">DOWNLOAD</button></form>
 <div id="pf-msg"></div>
+<div id="pf-help" hidden>PROBLEMS? <a href="mailto:pixelformation.help@gmail.com">pixelformation.help@gmail.com</a></div>
 <div id="pf-bar" hidden><i></i></div>
 <canvas id="pf-wave" hidden></canvas><canvas id="pf-canvas" hidden>Your browser does not support the canvas tag.</canvas></div></section>
 </div>
@@ -310,7 +312,7 @@ function showTab(t) {
   if (t === "changelog" && D) { renderHeatmap(); renderMechanics(); }   // the squares fill the width the tab has on screen
   if (t === "players" && D) renderGameStats();
   if (t === "bugs") showBt(btCur);
-  if (t === "play") { $("pf-tabs").hidden = !culturesOk(); if (!culturesOk() && PF_B === PC_B) pfPick("formation"); pfGpuNote(); pfTitle(); if (D.playstats) renderPlayStats(); }
+  if (t === "play") { $("pf-tabs").hidden = !culturesOk(); if (!culturesOk() && PF_B === PC_B) pfPick("formation"); pfGpuNote(); pfOwnState(); pfTitle(); if (D.playstats) renderPlayStats(); }
   if (t === "collaborate") { showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
   else loadLazy(t);
 }
@@ -766,6 +768,7 @@ function renderDashboard() {
   ], Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return String(b.last).localeCompare(String(a.last)); }));
   $("db-l").innerHTML = grid([
     ["Time", function (r) { return esc(short(r.TIME)); }], ["Who", function (r) { return nameTag(r.NAME); }], ["Tab", function (r) { return esc(r.TAB); }],
+    ["IP", function (r) { return esc(r.IP || ""); }], ["Country", function (r) { return esc(r.COUNTRY || ""); }],
     ["", function (r) { return r._v ? "<span class='muted'>NEW VISIT</span>" : ""; }],
   ], rows.slice(-100).reverse());
 }
@@ -1030,10 +1033,13 @@ var ALL_PKGS = { OWNER: true, TEAM: true };   // these roles take every package
 var pStatus = {};
 function swBtn(attr, on, off, title) { return "<button class='sw' " + attr + " aria-pressed='" + on + "' title='" + esc(title) + "'" + (off ? " disabled" : "") + ">" + (on ? "ON" : "OFF") + "</button>"; }
 // 1879: the switch beside a code - OFF blocks it at the server, the game no longer opens with it
-var codeOff = {}, codeOffAsked = false;
+var codeOff = {}, codeOffAsked = false, codeStat = {};
 function askCodeOff() {
   if (codeOffAsked) return;
   codeOffAsked = true;
+  lvPost({ action: "code_stats", k: KEY }).then(function (t) {   // 1886
+    if (String(t).indexOf("{") === 0) { codeStat = JSON.parse(t); renderPeople(); }
+  });
   lvPost({ action: "code_block", k: KEY, list: true }).then(function (t) {
     if (String(t).indexOf("OK") !== 0) return;
     String(t).slice(3).split(",").filter(Boolean).forEach(function (c) { codeOff[c] = true; });
@@ -1045,6 +1051,17 @@ document.addEventListener("click", function (e) {
   var c = b.dataset.codeoff, off = !codeOff[c];
   apiPost({ action: "code_block", k: KEY, block_code: c, off: off }).then(function () { codeOff[c] = off; renderPeople(); });
 });
+document.addEventListener("click", function (e) {   // 1887: one more download for this code
+  var b = e.target.closest && e.target.closest("button[data-dlreset]"); if (!b) return;
+  var c = b.dataset.dlreset;
+  lvPost({ action: "download_reset", k: KEY, reset_code: c }).then(function () { if (codeStat[c]) codeStat[c].downloaded = ""; renderPeople(); });
+});
+// 1886 / 1887: beside a code - how many different addresses started the game and from where, and its used download
+function codeStatText(c) {
+  var s = codeStat[c]; if (!s) return "";
+  return (s.addresses ? " <span class='muted'>" + esc(s.addresses) + " ADDR" + (s.countries ? " " + esc(s.countries) : "") + "</span>" : "") +
+    (s.downloaded ? " <button class='sw' data-dlreset='" + esc(c) + "' title='Downloaded: " + esc(s.downloaded) + ". Click = one more download'>DOWNLOADED</button>" : "");
+}
 function renderPeople() {
   askCodeOff();
   var rows = peopleRows();
@@ -1071,7 +1088,7 @@ function renderPeople() {
     ["Name", function (r) { return "<b>" + nameTag(r.nick || r.name) + "</b>"; }], ["Full name", function (r) { return r.nick ? esc(r.name) : ""; }, "muted"],
     ["Role", function (r) { var c = cat(r); return "<select class='lvl' data-lvl style='color:" + catColor(c) + "'>" + [""].concat(catOrder()).map(function (x) { return "<option value='" + x + "'" + (x === c ? " selected" : "") + ">" + (x || "NO PANEL") + "</option>"; }).join("") + "</select>"; }],
   ].concat(tags.map(function (n) { return [n, function (r) { return swBtn("data-tag='" + esc(n) + "'", pTags(r).indexOf(n) >= 0, false, n); }, "sw-c"]; })).concat(pkgSw).concat([
-    ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return r.codes.map(function (c) { var off = !!codeOff[c]; return esc(c) + " <button class='sw' data-codeoff='" + esc(c) + "' aria-pressed='" + !off + "' title='Off = the game does not open with this code'>" + (off ? "OFF" : "ON") + "</button>"; }).join(" "); }, "x"],
+    ["Mail", function (r) { return esc(r.mail); }, "x muted"], ["Codes", function (r) { return r.codes.map(function (c) { var off = !!codeOff[c]; return esc(c) + " <button class='sw' data-codeoff='" + esc(c) + "' aria-pressed='" + !off + "' title='Off = the game does not open with this code'>" + (off ? "OFF" : "ON") + "</button>" + codeStatText(c); }).join(" "); }, "x"],
     ["Note", function (r) { return esc(r.note); }, "x muted"],
     ["", function (r) { var st = pStatus[pId(r)]; return st ? "<span style='color:" + st.c + "'>" + esc(st.t) + "</span>" : ""; }],
   ]);
@@ -1986,6 +2003,7 @@ function pfPick(p) {
   $("pf-tc").setAttribute("aria-label", PF_TITLE);
   $("pf-code").value = ""; $("pf-code").hidden = false; $("pf-run").hidden = cul; $("pf-run").textContent = cul ? "RUN" : "DOWNLOAD"; pfSay("");
   $("pf-gpu").hidden = !cul; pfGpuNote();   // 1876: FORMATION is a download, the browser's GPU is no matter there
+  $("pf-f").hidden = false; $("pf-help").hidden = true; pfOwnState();
   pfLit = 0; pfTitle();
   if (D && D.playstats) renderPlayStats(); else pfKnown(cul ? "" : (D && D.mine || [])[0]);
 }
@@ -1994,6 +2012,15 @@ var PF_TD = (new URLSearchParams(location.search).get("td") || "").replace(/[^a-
 var pfB64 = function (s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); };
 var pfHex = function (buf) { return Array.from(new Uint8Array(buf), function (x) { return x.toString(16).padStart(2, "0"); }).join(""); };
 function pfSay(t, cls) { $("pf-msg").textContent = t; $("pf-msg").className = cls || ""; }
+// 1887: this code's download of this build was used - the words and the mail; `own` (the person's code at entry): no field either
+function pfUsed(own) { $("pf-f").hidden = own; pfSay("FILE ALREADY DOWNLOADED"); $("pf-help").hidden = false; }
+function pfOwnState() {
+  var own = (D && D.mine || [])[0];
+  if (PF_B === PC_B || !own) return;
+  (pfMeta || (pfMeta = fetch(PF_B + "gate.json", { cache: "no-store" }).then(function (r) { return r.json(); }))).then(function (meta) {
+    return meta.build ? lvPost({ action: "download_state", code: own, build: meta.build }) : "";
+  }).then(function (t) { if (t === "USED" && PF_B !== PC_B) pfUsed(true); }).catch(function () {});
+}
 
 // the game key for a code, or null for a code that is not on the list
 async function pfGameKey(meta, code) {
@@ -2001,7 +2028,13 @@ async function pfGameKey(meta, code) {
   var pass = await crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveBits"]);
   var bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: pfB64(meta.salt), iterations: meta.iter, hash: "SHA-256" }, pass, 512));
   var idk = await crypto.subtle.importKey("raw", bits.slice(0, 32), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  var e = meta.keys[pfHex(await crypto.subtle.sign("HMAC", idk, enc.encode("id"))).slice(0, 16)];
+  var id = pfHex(await crypto.subtle.sign("HMAC", idk, enc.encode("id"))).slice(0, 16), e = null;
+  if (meta.keys) e = meta.keys[id];
+  else {   // 1887: the desktop build's entry comes from the server, once per code and build
+    var t = await lvPost({ action: "download", code: code, id: id, build: meta.build });
+    if (t === "USED_DOWNLOAD") throw { pfUsed: true };
+    if (String(t).indexOf("{") === 0) e = JSON.parse(t);
+  }
   if (!e) return null;
   var wk = await crypto.subtle.importKey("raw", bits.slice(32), "AES-GCM", false, ["decrypt"]);
   var raw = await crypto.subtle.decrypt({ name: "AES-GCM", iv: pfB64(e.iv) }, wk, pfB64(e.key));
@@ -2377,6 +2410,7 @@ async function pfTry(code) {
     pfMusicGate(meta, key);
     await pfStartGodot(meta, pack, code, patch, libs);
   } catch (e) {
+    if (e && e.pfUsed) { pfBusy = false; pfUsed(false); return; }   // 1887
     pfMeta = null; $("pf-head").hidden = false; $("pf-msg").hidden = false; $("pf-f").hidden = false; pfSay(String(e && e.message || e), "err");
     $("pf-code").disabled = false; $("pf-run").disabled = false; pfBusy = false;
   }
