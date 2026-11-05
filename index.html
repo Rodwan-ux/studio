@@ -312,7 +312,7 @@ function showTab(t) {
   if (t === "changelog" && D) { renderHeatmap(); renderMechanics(); }   // the squares fill the width the tab has on screen
   if (t === "players" && D) renderGameStats();
   if (t === "bugs") showBt(btCur);
-  if (t === "play") { $("pf-tabs").hidden = !culturesOk(); if (!culturesOk() && PF_B === PC_B) pfPick("formation"); pfGpuNote(); pfOwnState(); pfTitle(); if (D.playstats) renderPlayStats(); }
+  if (t === "play") { if (!culturesOk() && PF_B === PC_B) pfPick("formation"); pfGpuNote(); pfOwnState(); pfTitle(); if (D.playstats) renderPlayStats(); }
   if (t === "collaborate") { showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
   else loadLazy(t);
 }
