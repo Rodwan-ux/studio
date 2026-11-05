@@ -80,7 +80,6 @@ select.lvl{padding:1px 4px;font-size:11px}
 #pf-head{text-align:center;display:grid;gap:10px;justify-items:center}#pf-title{margin:0;line-height:0}#pf-tc{display:block;image-rendering:pixelated}
 #pf>*:not(canvas){position:relative;z-index:12}#pf-wave{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:11;image-rendering:pixelated}
 #pf-run{font:600 18px var(--head);letter-spacing:.14em;padding:6px 26px;color:var(--beige);border-color:var(--rose);border-radius:0}#pf-run:hover{background:var(--hover);color:var(--fg)}
-#pf-sub{margin:0;font:600 12px var(--head);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 details.fold{background:var(--panel);border:2px solid var(--line);padding:6px 10px;margin-top:8px}details.fold>summary{cursor:pointer;font:600 14px var(--head);letter-spacing:.12em;color:var(--rose);list-style:none;display:flex;gap:10px;align-items:baseline}
 details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fold[open]>summary::before{content:"-"}details.fold>summary .muted{font:12px var(--mono);letter-spacing:0}details.fold>:not(summary){margin-top:8px}
 .mx{overflow-x:auto}.mx .on{animation:mx-lit .1s steps(1) forwards}.mx rect:hover{fill:rgb(100,255,255)!important}@keyframes mx-lit{to{fill:var(--c)}}
@@ -210,7 +209,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div class="dc-pop" id="dc-ask" hidden><input id="dc-ask-in" placeholder="COMMENT, ENTER TO ADD" aria-label="Comment"></div><div class="dc-pop" id="dc-tip" hidden></div></div></div></div></div>
 <div data-stp="backup" hidden><div class="bar"><span class="muted" id="bk-upd"></span></div><div id="bk-disks"></div><div class="panel"><h2>Copies</h2><div class="scroll"><table id="bk-t"></table></div></div></div></section>
 <section class="panel" data-pane="play" hidden><nav id="pf-tabs" hidden><button data-pf="formation" aria-selected="true">FORMATION</button><button data-pf="cultures" aria-selected="false">CULTURES</button></nav><div class="pf" id="pf">
-<div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1><p id="pf-sub"></p></div>
+<div id="pf-head"><h1 id="pf-title"><canvas id="pf-tc" role="img" aria-label="PIXEL FORMATION"></canvas></h1></div>
 <div id="pf-gpu"></div>
 <form id="pf-f" autocomplete="off"><input id="pf-code" placeholder="YOUR CODE" spellcheck="false" aria-label="Your code"><button id="pf-run" type="button">DOWNLOAD</button></form>
 <div id="pf-msg"></div>
@@ -1068,8 +1067,7 @@ function renderPeople() {
   var s = $("p-cat"), v = s.value;
   s.innerHTML = "<option value=''>ALL</option>" + catOrder().concat(["NO PANEL"]).map(function (x) { return "<option>" + x + "</option>"; }).join(""); s.value = v;
   // 1380: the tags in use (TAGS column of PEOPLE) - a filter and an ON / OFF column each
-  // 1621: the two playtest groups always have their switch
-  var tags = ["PLAYTEST TEAM", "PLAYTEST PUBLIC"]; rows.forEach(function (r) { pTags(r).forEach(function (x) { if (tags.indexOf(x) < 0) tags.push(x); }); }); tags.sort();
+  var tags = []; rows.forEach(function (r) { pTags(r).forEach(function (x) { if (tags.indexOf(x) < 0) tags.push(x); }); }); tags.sort();
   var tg = $("p-tag"), tv = tg.value;
   tg.innerHTML = "<option value=''>ALL</option>" + tags.map(function (x) { return "<option>" + esc(x) + "</option>"; }).join(""); tg.value = tags.indexOf(tv) >= 0 ? tv : "";
   var q = $("p-q").value.trim().toLowerCase();
@@ -2141,8 +2139,6 @@ function pfMusicGate(meta, key) {
 // PLAY: the build number under the title and the code kept in this browser
 function renderPlayStats() {
   pfKnown(PF_B === PC_B ? "" : (D.mine || [])[0]);
-  var d = (D.playstats || {}).dev || {};
-  $("pf-sub").textContent = PF_B === PC_B ? "" : d.version ? "PLAYTEST " + d.version : "PLAYTEST";
 }
 // 1423: which GPU the game will get, asked once the PLAY tab opens - an integrated or software renderer means the browser
 // ignored the request, so one line tells how to switch the browser to the main GPU
