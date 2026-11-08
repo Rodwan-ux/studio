@@ -127,7 +127,13 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <nav id="tabs">
 <button data-tab="changelog" aria-selected="false" hidden>CHANGELOG</button><button data-tab="players" aria-selected="false" hidden>PLAYERS</button><button data-tab="play" aria-selected="false" hidden disabled>PLAY</button><button data-tab="bugs" aria-selected="false" hidden>BUGS</button>
 <button data-tab="people" aria-selected="false" hidden>PEOPLE</button><button data-tab="community" aria-selected="false" hidden>COMMUNITY</button>
-<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button></nav>
+<button data-tab="collaborate" aria-selected="false" hidden>COLLABORATE</button><button data-tab="engine" aria-selected="false" hidden>PIXEL ENGINE</button></nav>
+
+<section class="panel" data-pane="engine" hidden>
+<nav id="en-tabs"><button data-en="tasks" aria-selected="true">TASKS</button><button data-en="bugs" aria-selected="false">BUGS</button><button data-en="docs" aria-selected="false">DOCS</button></nav>
+<div id="en-host"></div>
+<div data-enp="bugs" hidden><div class="bar"><input id="eb-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px"><label for="eb-st">Status</label><select id="eb-st"><option value="">ALL</option><option>TO DO</option><option>DONE</option><option>CONFIRMED</option></select><span class="muted" id="eb-n"></span></div>
+<div id="eb-msg" class="msg" hidden></div><div class="scroll"><table id="eb-t"></table></div></div></section>
 
 <section class="panel" data-pane="bugs" hidden>
 <nav id="bt-tabs" hidden><button data-bt="bugs" aria-selected="true">BUGS</button><button data-bt="tasks" aria-selected="false">TASKS</button></nav>
@@ -138,7 +144,7 @@ details.fold>summary::before{content:"+";color:var(--dim);width:10px}details.fol
 <div id="b-msg" class="msg" hidden></div><div class="detail" id="b-detail" hidden></div><div class="board" id="b-board"></div></div>
 <div data-btp="tasks" hidden>
 <div class="bar"><input id="t-q" type="search" placeholder="SEARCH NUMBER OR TEXT..." style="flex:1;min-width:200px">
-<label for="t-prj">Project</label><select id="t-prj"><option value="pixel">PIXEL</option><option value="studio">STUDIO</option><option value="cultures" hidden>CULTURES</option></select>
+<label for="t-prj">Project</label><select id="t-prj"><option value="pixel">PIXEL</option><option value="studio">STUDIO</option><option value="engine" hidden>PIXEL ENGINE</option></select>
 <label for="t-st">State</label><select id="t-st"><option value="active">OPEN + DOING</option><option value="doing">DOING</option><option value="open">OPEN</option><option value="bug">WITH A BUG</option><option value="done">DONE</option></select>
 <label for="t-code">Kind</label><select id="t-code"></select><span class="muted" id="t-n"></span></div>
 <div id="t-msg" class="msg" hidden></div><div class="scroll"><table id="t-t"></table></div></div></section>
@@ -290,13 +296,15 @@ function who(code) { return nameTag(nameOf(code)); }
 // tabs (the last one picked is remembered in this browser)
 // 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files, docs and backup (one view each)
 var STUDIO_SUB = ["calendar", "files", "docs", "backup"];
-// 1598 / 1605: PIXEL CULTURES - the owner's own project, never in a VIEW AS; a project in TASKS and a game in PLAY
+// 1598 / 1605: PIXEL CULTURES - the owner's own project, never in a VIEW AS; a game in PLAY (1916: its online build stays as it is)
 // 1609: and Jakub Czajczynski's - his own category stays, PLAY with both games comes on top (CULTURES opens with the
 // owner's code he was given)
 // (the studio names a person by the nick when the people list has one - his is Czaja)
 var playBoth = function () { var n = (D && D.name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); return n === "czaja" || n.indexOf("jakub czajczy") === 0; };
 var culturesOk = function () { return !!(D && !D.viewAs && (D.isOwner || playBoth())); };
-var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : allowed(t) || (t === "play" && culturesOk()); };
+// 1916: PIXEL ENGINE - the owner's own project tab (TASKS, BUGS, DOCS), never in a VIEW AS
+var engineOk = function () { return !!(D && !D.viewAs && D.isOwner); };
+var topAllowed = function (t) { return t === "collaborate" ? STUDIO_SUB.some(allowed) : t === "engine" ? engineOk() : allowed(t) || (t === "play" && culturesOk()); };
 function showTab(t) {
   if (!D || !D.tabs) return;
   if (STUDIO_SUB.indexOf(t) >= 0) { stCur = t; t = "collaborate"; }   // a tab kept from before 1520
@@ -310,9 +318,10 @@ function showTab(t) {
   try { localStorage.setItem("tab", t); } catch (e) {}
   if (t === "changelog" && D) { renderHeatmap(); renderMechanics(); }   // the squares fill the width the tab has on screen
   if (t === "players" && D) renderGameStats();
-  if (t === "bugs") showBt(btCur);
+  if (t === "bugs") { enHome(); showBt(btCur); }
+  if (t === "engine") showEn(enCur);
   if (t === "play") { if (!culturesOk() && PF_B === PC_B) pfPick("formation"); pfGpuNote(); pfOwnState(); pfTitle(); if (D.playstats) renderPlayStats(); }
-  if (t === "collaborate") { showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
+  if (t === "collaborate") { enHome(); showSt(stCur); STUDIO_SUB.forEach(function (s) { if (allowed(s)) loadLazy(s); }); }
   else loadLazy(t);
 }
 var stCur = "calendar";
@@ -324,6 +333,45 @@ function showSt(t) {
   if (t === "calendar" && D && (D.calendar || D.schedule)) renderTimeline();
 }
 $("st-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-st]"); if (b) { showSt(b.dataset.st); logUse("COLLABORATE / " + b.textContent); } });
+// 1916: PIXEL ENGINE / TASKS and DOCS are the one task table and the one doc editor, lent to the tab while it is open
+// (the task table shows the engine list, the editor the ENGINE docs alone); BUGS is the engine's own list
+var enCur = "tasks", ENG = false;
+var enPart = { tasks: function () { return document.querySelector("[data-btp=tasks]"); }, docs: function () { return document.querySelector("[data-stp=docs]"); } };
+function enHome() {
+  if (!ENG) return;
+  ENG = false;
+  document.querySelector("[data-pane=bugs]").appendChild(enPart.tasks());
+  document.querySelector("[data-pane=collaborate]").insertBefore(enPart.docs(), document.querySelector("[data-stp=backup]"));
+  $("t-prj").value = "pixel"; $("t-prj").disabled = false;
+  if (allowed("tasks")) renderTasks(); if (D.docs) renderDocs();
+}
+function showEn(t) {
+  enCur = t; ENG = true;
+  $("t-prj").value = "engine"; $("t-prj").disabled = true;
+  ["tasks", "docs"].forEach(function (p) { var el = enPart[p](); if (el.parentNode !== $("en-host")) $("en-host").appendChild(el); el.hidden = p !== t; });
+  document.querySelector("[data-enp=bugs]").hidden = t !== "bugs";
+  document.querySelectorAll("#en-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.en === t)); });
+  renderTasks(); renderEngineBugs(); if (D.docs) renderDocs();
+}
+$("en-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-en]"); if (b) { showEn(b.dataset.en); logUse("PIXEL ENGINE / " + b.textContent); } });
+function renderEngineBugs() {
+  var msg = $("eb-msg"), src = D.engine && D.engine.bugs;
+  if (!src) { msg.hidden = false; msg.className = "msg"; msg.textContent = "The engine bugs did not load: " + ((D.errors && D.errors.engine) || (!got.engine ? "loading" : "none yet")); $("eb-t").innerHTML = ""; return; }
+  msg.hidden = !!src.length; msg.className = "msg"; msg.textContent = "No engine bugs yet.";
+  var st = $("eb-st").value, q = $("eb-q").value.trim().toLowerCase();
+  var list = src.filter(function (b) { return (!st || (b.STATUS || "TO DO") === st) && (!q || (b.ID + " " + b.DESCRIPTION).toLowerCase().indexOf(q) >= 0); })
+    .sort(function (a, b) { return a.ID < b.ID ? 1 : -1; });
+  $("eb-n").textContent = list.length + " OF " + src.length;
+  $("eb-t").innerHTML = grid([
+    ["#", function (b) { return "<b>" + esc(b.ID) + "</b>"; }],
+    ["Status", function (b) { var s = b.STATUS || "TO DO"; return "<span class='chip " + (s === "TO DO" ? "st-NEW" : s === "DONE" ? "st-FIXED" : "st-CONFIRMED") + "'>" + esc(s) + "</span>"; }],
+    ["Severity", function (b) { return esc(b.SEVERITY || ""); }],
+    ["Bug", function (b) { return esc(b.DESCRIPTION || ""); }],
+    ["Task", function (b) { return b.TASK ? "<b>" + esc(b.TASK) + "</b>" : ""; }],
+    ["Time", function (b) { return "<span class='muted'>" + esc(b.TIME || "") + "</span>"; }],
+  ], list.slice(0, 400));
+}
+["eb-q", "eb-st"].forEach(function (id) { $(id).addEventListener("input", renderEngineBugs); });
 // 1520: BUGS / TASKS - the task list is the OWNER's working view inside BUGS
 var btCur = "bugs";
 function showBt(t) {
@@ -344,10 +392,10 @@ $("tel-tabs").addEventListener("click", function (e) { var b = e.target.closest(
 // loading (1276): the data comes in parts, all asked for at once; the slow ones (LAZY) only when their tab first opens.
 // The bar above the tabs fills as parts arrive and names the one it waits for; on hover, each part's time.
 var EAGER = ["changelog", "tasks", "activity", "bugs", "codes", "events", "people", "team"];
-var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar", "schedule"], files: ["files"], community: ["players", "youtube"], play: ["playstats"], docs: ["docs"], backup: ["backups"], cultures: ["cultures"] };
+var LAZY = { people: ["panel", "packages"], players: ["feedback", "playstats"], changelog: ["playstats"], calendar: ["calendar", "schedule"], files: ["files"], community: ["players", "youtube"], play: ["playstats"], docs: ["docs"], backup: ["backups"], engine: ["engine", "docs"] };
 var PART_LABEL = { changelog: "Reading the ship's log", tasks: "Sorting the orders", activity: "Counting the days at the forge", bugs: "Hunting bugs",
   codes: "Checking the passwords at the gate", events: "Unrolling the battle chronicles", people: "Counting the crew", team: "Calling the council",
-  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", schedule: "Reading the plan", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", docs: "Unrolling the scrolls", packages: "Opening the shares", cultures: "Sorting the cultures' orders" };
+  feedback: "Opening the letters", panel: "Reading the visitors' book", calendar: "Asking the oracle", schedule: "Reading the plan", files: "Loading the cargo", players: "Listening to the crowd on X", youtube: "Reading the comments under the videos", backups: "Counting the copies in the vaults", docs: "Unrolling the scrolls", packages: "Opening the shares", engine: "Sorting the engine's orders" };
 var loadGen = 0, asked = {}, got = {}, partMs = {}, ldParts = [];
 // 1578: the bar as the RODWAN PIXELS logo - one row of 4 px squares side by side, each a shade of the logo's six at random;
 // it grows square by square and stays faded when all is in
@@ -439,6 +487,7 @@ function render() {
   if (allowed("changelog")) renderOverview();
   if (allowed("bugs")) renderBugs();
   if (allowed("tasks")) renderTasks();
+  if (engineOk()) renderEngineBugs();
   if (allowed("players")) { renderTelemetry(); renderPerformance(); renderRuns(); renderGameStats(); }
   if (allowed("people")) renderPeople();
   if (allowed("community") && (got.players || D.players)) renderPlayers();
@@ -540,16 +589,15 @@ function moveBug(id, st) {
 ["b-q", "b-sev", "b-type", "b-who", "b-mine"].forEach(function (id) { $(id).addEventListener("input", renderBugs); });
 
 // ── tasks ──
-// 1605: one list, three projects - PIXEL (game tasks, with a mechanic), STUDIO (tools and studio, no mechanic) and
-// CULTURES (its own list and numbers, studio_cli --cultures, the owner only)
+// 1605: one list, two projects - PIXEL (game tasks, with a mechanic) and STUDIO (tools and studio, no mechanic);
+// 1916: the PIXEL ENGINE tab shows the engine's own list here (its own numbers, studio_cli --engine, the owner only)
 function renderTasks() {
   var msg = $("t-msg"), ps = $("t-prj");
-  ps.querySelector("option[value=cultures]").hidden = !culturesOk();
-  if (ps.value === "cultures" && !culturesOk()) ps.value = "pixel";
-  var prj = ps.value, src = prj === "cultures" ? D.cultures : D.tasks;
-  if (!src) { msg.hidden = false; msg.className = "msg"; msg.textContent = "The tasks did not load: " + ((D.errors && D.errors[prj === "cultures" ? "cultures" : "tasks"]) || (prj === "cultures" && !got.cultures ? "loading" : "no tasks yet")); $("t-t").innerHTML = ""; return; }
+  if (!ENG && ps.value === "engine") ps.value = "pixel";
+  var prj = ps.value, src = prj === "engine" ? D.engine && D.engine.tasks : D.tasks;
+  if (!src) { msg.hidden = false; msg.className = "msg"; msg.textContent = "The tasks did not load: " + ((D.errors && D.errors[prj === "engine" ? "engine" : "tasks"]) || (prj === "engine" && !got.engine ? "loading" : "no tasks yet")); $("t-t").innerHTML = ""; return; }
   msg.hidden = true;
-  if (prj !== "cultures") src = src.filter(function (t) { return prj === "pixel" ? !!t.mech : !t.mech; });
+  if (prj !== "engine") src = src.filter(function (t) { return prj === "pixel" ? !!t.mech : !t.mech; });
   var cs = $("t-code"), kc = cs.value, codes = Array.from(new Set(src.map(function (t) { return t.code; }))).sort();
   cs.innerHTML = "<option value=''>ALL</option>" + codes.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join(""); cs.value = codes.indexOf(kc) >= 0 ? kc : "";
   var st = $("t-st").value, q = $("t-q").value.trim().toLowerCase(), key = function (t) { return prj + ":" + t.no; };
@@ -567,7 +615,6 @@ function renderTasks() {
 }
 $("t-t").addEventListener("click", function (e) { var r = e.target.closest("tr[data-task]"); if (!r) return; openTask[r.dataset.task] = !openTask[r.dataset.task]; renderTasks(); });
 ["t-q", "t-st", "t-code", "t-prj"].forEach(function (id) { $(id).addEventListener("input", renderTasks); });
-$("t-prj").addEventListener("input", function () { if (this.value === "cultures") loadLazy("cultures"); });
 
 // ── telemetry ──
 var KINDS = [
@@ -1832,11 +1879,13 @@ function dcHeads() {
     .filter(function (h) { return h.level && h.title; }).map(function (h) { n[h.level - 1]++; for (var i = h.level; i < 3; i++) n[i] = 0; h.no = n.slice(0, h.level).join("."); return h; }) : [];
 }
 var dcProj = "";
-var dcProjs = function () { var o = []; (D.docs || []).forEach(function (x) { if (o.indexOf(x.section) < 0) o.push(x.section); }); return o.sort(); };
+// 1916: the ENGINE docs show in PIXEL ENGINE / DOCS alone, the rest in COLLABORATE / DOCS
+var dcIn = function (x) { return ENG ? x.section === "ENGINE" : x.section !== "ENGINE"; };
+var dcProjs = function () { var o = []; (D.docs || []).filter(dcIn).forEach(function (x) { if (o.indexOf(x.section) < 0) o.push(x.section); }); return o.sort(); };
 var dcList = function (pr) { return (D.docs || []).filter(function (x) { return x.section === pr; }).sort(function (a, b) { return a.no < b.no ? -1 : a.no > b.no ? 1 : a.name < b.name ? -1 : 1; }); };
 function dcPanel() {
   var d = dcDoc(), hs = dcHeads();
-  var projs = dcProjs(); if (d) dcProj = d.section; else if (projs.indexOf(dcProj) < 0) dcProj = projs[0] || "";
+  var projs = dcProjs(); if (d) dcProj = d.section; else if (projs.indexOf(dcProj) < 0) dcProj = projs[0] || (ENG ? "ENGINE" : "");
   $("dc-proj").hidden = projs.length < 2;
   $("dc-proj").innerHTML = projs.map(function (x) { return "<button data-proj='" + esc(x) + "' aria-selected='" + (x === dcProj) + "'>" + esc(x || "OTHER") + "</button>"; }).join("");
   $("dc-docs").innerHTML = dcList(dcProj).map(function (x) {
@@ -1880,8 +1929,8 @@ function dcSave() {
   }, function (e) { dcSaving = false; dcSay(String(e && e.message || e), true); dcState(); });
 }
 function renderDocs() {
-  var docs = D.docs || [], own = D.category === "OWNER" && !D.viewAs;
-  if (!dcDoc()) { dcCur = docs.length ? docs[0].name : ""; dcBase = -1; dcDirty = false; }
+  var docs = (D.docs || []).filter(dcIn), own = D.category === "OWNER" && !D.viewAs;
+  if (!dcDoc() || !dcIn(dcDoc())) { dcCur = docs.length ? docs[0].name : ""; dcBase = -1; dcDirty = false; }
   var d = dcDoc();
   $("dc-new").hidden = !own; $("dc-ed").hidden = $("dc-num").hidden = $("dc-sec").hidden = !d || !own; $("dc-body").hidden = !docs.length && !own;
   $("dc-main").hidden = !d;
