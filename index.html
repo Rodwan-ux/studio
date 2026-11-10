@@ -296,7 +296,7 @@ function who(code) { return nameTag(nameOf(code)); }
 // tabs (the last one picked is remembered in this browser)
 // 1520: the top tabs; a right (D.tabs) names a tab, except STUDIO = the rights calendar, files, docs and backup (one view each)
 var STUDIO_SUB = ["calendar", "files", "docs", "backup"];
-// 1598 / 1605: PIXEL CULTURES - the owner's own project, never in a VIEW AS; a game in PLAY (1916: its online build stays as it is)
+// 1598 / 1605: PIXEL ENGINE - the owner's own project, never in a VIEW AS; a game in PLAY (1916: its online build stays as it is)
 // 1609: and Jakub Czajczynski's - his own category stays, PLAY with both games comes on top (CULTURES opens with the
 // owner's code he was given)
 // (the studio names a person by the nick when the people list has one - his is Czaja)
@@ -2041,13 +2041,13 @@ $("files").addEventListener("click", function (e) {
 // covers it.
 var PF_B = (function (b) { var home = "https://rodwan-ux.github.io/play/";   // 1485: another build only under the play repo
   return b && b.indexOf(home) === 0 && /^([\w.-]+\/)*$/.test(b.slice(home.length)) && b.indexOf("..") < 0 ? b : home; })(new URLSearchParams(location.search).get("b"));
-// 1598: PIXEL CULTURES' sealed build (its own Pages repo, the owner's code only); its PLAY keeps its own code and store
+// 1598: PIXEL ENGINE' sealed build (its own Pages repo, the owner's code only); its PLAY keeps its own code and store
 var PC_B = "https://rodwan-ux.github.io/cultures/", PF_KEEP = "pf_code", PF_HOME = PF_B;
 // 1605: PLAY / FORMATION and PLAY / CULTURES - the owner's two games; everyone else has PLAY alone
 function pfPick(p) {
   if (pfBusy) return;
   var cul = p === "cultures";
-  PF_B = cul ? PC_B : PF_HOME; PF_TITLE = cul ? "PIXEL CULTURES" : "PIXEL FORMATION"; PF_KEEP = cul ? "pc_code" : "pf_code"; PF_DB = null; pfMeta = null;
+  PF_B = cul ? PC_B : PF_HOME; PF_TITLE = cul ? "PIXEL ENGINE" : "PIXEL FORMATION"; PF_KEEP = cul ? "pc_code" : "pf_code"; PF_DB = null; pfMeta = null;
   document.querySelectorAll("#pf-tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.pf === p)); });
   $("pf-tc").setAttribute("aria-label", PF_TITLE);
   $("pf-code").value = ""; $("pf-code").hidden = false; $("pf-run").hidden = cul; $("pf-run").textContent = cul ? "RUN" : "DOWNLOAD"; pfSay("");
