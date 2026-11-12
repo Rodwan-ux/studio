@@ -2072,17 +2072,23 @@ function pfOwnState() {
 }
 
 // the game key for a code, or null for a code that is not on the list
+// 1926: the server's answer to a refused download, as the page names it under the code
+var PF_WHY = { NO: "UNKNOWN CODE", OFF: "CODE IS OFF", NO_ENTRY: "CODE NOT IN THIS BUILD", NO_BUILD: "BUILD NOT ON THE SERVER", ERROR: "SERVER ERROR" }, pfWhy = "";
 async function pfGameKey(meta, code) {
   var enc = new TextEncoder();
   var pass = await crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveBits"]);
   var bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: pfB64(meta.salt), iterations: meta.iter, hash: "SHA-256" }, pass, 512));
   var idk = await crypto.subtle.importKey("raw", bits.slice(0, 32), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   var id = pfHex(await crypto.subtle.sign("HMAC", idk, enc.encode("id"))).slice(0, 16), e = null;
+  pfWhy = "THIS CODE DOES NOT OPEN THE GAME";
   if (meta.keys) e = meta.keys[id];
   else {   // 1887: the desktop build's entry comes from the server, once per code and build
-    var t = await lvPost({ action: "download", code: code, id: id, build: meta.build });
+    var t;
+    try { t = await lvPost({ action: "download", code: code, id: id, build: meta.build }); }
+    catch (x) { throw new Error("NO CONNECTION"); }   // 1926
     if (t === "USED_DOWNLOAD") throw { pfUsed: true };
     if (String(t).indexOf("{") === 0) e = JSON.parse(t);
+    else pfWhy = PF_WHY[t] || "SERVER ERROR";   // 1926: the server's refusal named under the code
   }
   if (!e) return null;
   var wk = await crypto.subtle.importKey("raw", bits.slice(32), "AES-GCM", false, ["decrypt"]);
@@ -2443,7 +2449,7 @@ async function pfTry(code) {
         $("pf-code").hidden = false; $("pf-run").hidden = true; $("pf-code").value = ""; pfLit = 0; pfTitle();
       }
       var now = $("pf-code").value.trim().toLowerCase();   // typed on while this one was checked
-      if (now !== code) pfTry(now); else pfSay("THIS CODE DOES NOT OPEN THE GAME", "err");
+      if (now !== code) pfTry(now); else pfSay(pfWhy, "err");
       return;
     }
     if (meta.files) { await pfDesktop(meta, key, code); return; }   // 1876: the desktop build - a download
